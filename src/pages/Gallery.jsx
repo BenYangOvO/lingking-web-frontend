@@ -1,30 +1,35 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { Heart, ChevronDown } from 'lucide-react'
+import { api } from '../api'
 import '../styles/pages/gallery.css'
-
-const PHOTOS = [
-  { title: '晨光中的城市', author: '张明远', likes: 128, cat: '风光', bg: 'aspect-ratio:3/4;background:linear-gradient(160deg,#1E3A5F,#2D5F8A,#4A90D9,#6AADE8);' },
-  { title: '雨后巷弄', author: '李思琪', likes: 96, cat: '街拍', bg: 'aspect-ratio:1/1;background:linear-gradient(135deg,#0F766E,#14B8A6,#5EEAD4);' },
-  { title: '星空下的远山', author: '王浩宇', likes: 214, cat: '风光', bg: 'aspect-ratio:4/5;background:linear-gradient(145deg,#1E1B4B,#312E81,#4F46E5,#818CF8);' },
-  { title: '秋日暖阳', author: '陈雨薇', likes: 87, cat: '风光', bg: 'aspect-ratio:3/2;background:linear-gradient(170deg,#78350F,#B45309,#F59E0B,#FCD34D);' },
-  { title: '海边的黄昏', author: '林子涵', likes: 175, cat: '风光', bg: 'aspect-ratio:2/3;background:linear-gradient(150deg,#0C4A6E,#0284C7,#38BDF8,#7DD3FC);' },
-  { title: '老街记忆', author: '赵一凡', likes: 143, cat: '纪实', bg: 'aspect-ratio:1/1;background:linear-gradient(130deg,#1C1917,#44403C,#78716C,#A8A29E);' },
-  { title: '光影交错', author: '周思远', likes: 109, cat: '创意', bg: 'aspect-ratio:4/3;background:linear-gradient(155deg,#7C2D12,#C2410C,#FB923C,#FDBA74);' },
-  { title: '静物之美', author: '孙晓婷', likes: 76, cat: '纪实', bg: 'aspect-ratio:3/4;background:linear-gradient(140deg,#134E4A,#0D9488,#2DD4BF,#99F6E4);' },
-  { title: '霓虹夜色', author: '黄乐天', likes: 201, cat: '创意', bg: 'aspect-ratio:1/1;background:linear-gradient(165deg,#3B0764,#7E22CE,#A855F7,#C084FC);' },
-  { title: '山间云海', author: '吴昊然', likes: 162, cat: '风光', bg: 'aspect-ratio:3/5;background:linear-gradient(135deg,#14532D,#16A34A,#4ADE80,#86EFAC);' },
-  { title: '城市天际线', author: '郑雨萱', likes: 135, cat: '建筑', bg: 'aspect-ratio:16/9;background:linear-gradient(125deg,#1E3A5F,#4A90D9,#7DD3FC,#BAE6FD);' },
-  { title: '花间人像', author: '刘诗雅', likes: 188, cat: '人像', bg: 'aspect-ratio:4/5;background:linear-gradient(148deg,#881337,#E11D48,#FB7185,#FDA4AF);' },
-]
 
 const FILTERS = ['全部', '风光', '人像', '街拍', '纪实', '创意', '建筑']
 
+const PHOTO_ASPECTS = ['3/4', '1/1', '4/5', '3/2', '2/3', '1/1', '4/3', '3/4', '1/1', '3/5', '16/9', '4/5']
+
 function Gallery() {
+  const [photos, setPhotos] = useState([])
   const [filter, setFilter] = useState('全部')
   const [visible, setVisible] = useState(9)
+  const [loading, setLoading] = useState(true)
 
-  const filtered = filter === '全部' ? PHOTOS : PHOTOS.filter((p) => p.cat === filter)
+  useEffect(() => {
+    api('/photos').then((data) => {
+      setPhotos(data.photos || [])
+      setLoading(false)
+    }).catch(() => setLoading(false))
+  }, [])
+
+  const filtered = filter === '全部' ? photos : photos.filter((p) => p.cat === filter)
+
+  const getStyle = (photo, idx) => {
+    const aspect = PHOTO_ASPECTS[idx % PHOTO_ASPECTS.length]
+    return {
+      aspectRatio: aspect,
+      background: `linear-gradient(135deg, ${photo.grad})`,
+    }
+  }
 
   return (
     <>
@@ -56,9 +61,11 @@ function Gallery() {
       </div>
 
       <div className="lj-masonry-grid">
-        {filtered.slice(0, visible).map((p) => (
-          <div className="lj-photo-card" key={p.title}>
-            <div className="lj-photo-card-img" style={{ ...parseStyle(p.bg) }}>
+        {loading && <div style={{ gridColumn: '1/-1', textAlign: 'center', padding: 40, color: '#6b7280' }}>加载作品中...</div>}
+        {!loading && filtered.length === 0 && <div style={{ gridColumn: '1/-1', textAlign: 'center', padding: 40, color: '#6b7280' }}>暂无作品</div>}
+        {!loading && filtered.slice(0, visible).map((p, idx) => (
+          <div className="lj-photo-card" key={p.id || p.title}>
+            <div className="lj-photo-card-img" style={getStyle(p, idx)}>
               <div className="lj-photo-card-overlay">
                 <div className="lj-photo-card-title">{p.title}</div>
                 <div className="lj-photo-card-meta">

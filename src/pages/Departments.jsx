@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import {
   Camera,
@@ -16,60 +17,48 @@ import {
   Bell,
   Handshake,
 } from 'lucide-react'
+import { api } from '../api'
 import '../styles/pages/departments.css'
 
-const DEPARTMENTS = [
-  {
-    icon: Camera,
-    name: '摄影部',
-    tag: '80+ 成员',
-    desc: '负责社团核心摄影创作，组织外拍活动，策划影展。这里是每一个热爱摄影之人的主场，用镜头捕捉世界的每一个精彩瞬间。',
-    responsibilities: [
-      { icon: MapPin, label: '周常外拍' },
-      { icon: Palette, label: '主题摄影' },
-      { icon: Image, label: '影展策划' },
-      { icon: Star, label: '作品评审' },
-    ],
-    stats: [
-      { value: '200+', label: '年产出作品' },
-      { value: '15+', label: '组织外拍' },
-    ],
-  },
-  {
-    icon: Cpu,
-    name: '技术部',
-    tag: '45+ 成员',
-    desc: '网站开发维护，后期技术支持，器材技术指导。用技术赋能创作，让每一张作品都达到最佳呈现效果。',
-    responsibilities: [
-      { icon: Globe, label: '网站运维' },
-      { icon: SlidersHorizontal, label: '后期教学' },
-      { icon: Scan, label: '器材评测' },
-      { icon: Share2, label: '技术分享' },
-    ],
-    stats: [
-      { value: '50+', label: '技术教程' },
-      { value: '3个', label: '维护项目' },
-    ],
-  },
-  {
-    icon: Megaphone,
-    name: '宣传部',
-    tag: '35+ 成员',
-    desc: '品牌形象管理，社交媒体运营，活动宣传推广。让凌镜的声音传得更远，让更多人感受到摄影的魅力。',
-    responsibilities: [
-      { icon: Smartphone, label: '社媒运营' },
-      { icon: PenTool, label: '海报设计' },
-      { icon: Bell, label: '活动宣传' },
-      { icon: Handshake, label: '品牌合作' },
-    ],
-    stats: [
-      { value: '5000+', label: '粉丝' },
-      { value: '100+', label: '海报' },
-    ],
-  },
-]
+const ICON_MAP = { camera: Camera, cpu: Cpu, megaphone: Megaphone }
+
+const RESPONSIBILITIES_MAP = {
+  '摄影部': [
+    { icon: MapPin, label: '周常外拍' },
+    { icon: Palette, label: '主题摄影' },
+    { icon: Image, label: '影展策划' },
+    { icon: Star, label: '作品评审' },
+  ],
+  '技术部': [
+    { icon: Globe, label: '网站运维' },
+    { icon: SlidersHorizontal, label: '后期教学' },
+    { icon: Scan, label: '器材评测' },
+    { icon: Share2, label: '技术分享' },
+  ],
+  '宣传部': [
+    { icon: Smartphone, label: '社媒运营' },
+    { icon: PenTool, label: '海报设计' },
+    { icon: Bell, label: '活动宣传' },
+    { icon: Handshake, label: '品牌合作' },
+  ],
+}
+
+const STATS_MAP = {
+  '摄影部': [{ value: '200+', label: '年产出作品' }, { value: '15+', label: '组织外拍' }],
+  '技术部': [{ value: '50+', label: '技术教程' }, { value: '3个', label: '维护项目' }],
+  '宣传部': [{ value: '5000+', label: '粉丝' }, { value: '100+', label: '海报' }],
+}
 
 function Departments() {
+  const [departments, setDepartments] = useState([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    api('/departments').then((data) => {
+      setDepartments(data.departments || [])
+      setLoading(false)
+    }).catch(() => setLoading(false))
+  }, [])
   return (
     <>
       <section className="lj-page-header">
@@ -85,37 +74,43 @@ function Departments() {
       </section>
 
       <div className="lj-dept-section">
-        {DEPARTMENTS.map((d) => (
-          <div className="lj-dept-card" key={d.name}>
-            <div className="lj-dept-card-head">
-              <div className="lj-dept-icon-wrap">
-                <d.icon style={{ width: 22, height: 22 }} />
-              </div>
-              <div className="lj-dept-card-head-text">
-                <div className="lj-dept-name">
-                  {d.name}
-                  <span className="lj-dept-count-tag">{d.tag}</span>
+        {loading && <div style={{ textAlign: 'center', padding: 40, color: '#6b7280' }}>加载部门中...</div>}
+        {!loading && departments.map((d) => {
+          const IconComp = ICON_MAP[d.icon] || Camera
+          const responsibilities = RESPONSIBILITIES_MAP[d.name] || []
+          const stats = STATS_MAP[d.name] || []
+          return (
+            <div className="lj-dept-card" key={d.id || d.name}>
+              <div className="lj-dept-card-head">
+                <div className="lj-dept-icon-wrap">
+                  <IconComp style={{ width: 22, height: 22 }} />
                 </div>
-                <p className="lj-dept-desc">{d.desc}</p>
+                <div className="lj-dept-card-head-text">
+                  <div className="lj-dept-name">
+                    {d.name}
+                    <span className="lj-dept-count-tag">{d.count}+ 成员</span>
+                  </div>
+                  <p className="lj-dept-desc">{d.desc}</p>
+                </div>
+              </div>
+              <div className="lj-dept-responsibilities">
+                {responsibilities.map((r) => (
+                  <span className="lj-resp-tag" key={r.label}>
+                    <r.icon style={{ width: 14, height: 14 }} /> {r.label}
+                  </span>
+                ))}
+              </div>
+              <div className="lj-dept-stats">
+                {stats.map((s) => (
+                  <div className="lj-dept-stat" key={s.label}>
+                    <div className="lj-dept-stat-value">{s.value}</div>
+                    <div className="lj-dept-stat-label">{s.label}</div>
+                  </div>
+                ))}
               </div>
             </div>
-            <div className="lj-dept-responsibilities">
-              {d.responsibilities.map((r) => (
-                <span className="lj-resp-tag" key={r.label}>
-                  <r.icon style={{ width: 14, height: 14 }} /> {r.label}
-                </span>
-              ))}
-            </div>
-            <div className="lj-dept-stats">
-              {d.stats.map((s) => (
-                <div className="lj-dept-stat" key={s.label}>
-                  <div className="lj-dept-stat-value">{s.value}</div>
-                  <div className="lj-dept-stat-label">{s.label}</div>
-                </div>
-              ))}
-            </div>
-          </div>
-        ))}
+          )
+        })}
       </div>
 
       <div className="lj-join-section">

@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import {
   Image,
@@ -8,27 +9,7 @@ import {
   Monitor,
   Megaphone,
 } from 'lucide-react'
-
-const FEATURED_WORKS = [
-  {
-    title: '晨光中的城市',
-    author: '张明远',
-    tag: '城市风光',
-    bg: 'linear-gradient(135deg, #2D5F8A, #4A90D9, #6AADE8)',
-  },
-  {
-    title: '雨后巷弄',
-    author: '李思琪',
-    tag: '街拍纪实',
-    bg: 'linear-gradient(135deg, #3670B0, #4A90D9, #81B4E8)',
-  },
-  {
-    title: '星空下的远山',
-    author: '王浩宇',
-    tag: '自然风景',
-    bg: 'linear-gradient(135deg, #2A4D7A, #4A90D9, #5BA3E0)',
-  },
-]
+import { api } from '../api'
 
 const STATS = [
   { value: '200+', label: '成员人数' },
@@ -37,28 +18,20 @@ const STATS = [
   { value: '2018', label: '成立年份' },
 ]
 
-const DEPARTMENTS = [
-  {
-    icon: Camera,
-    name: '摄影部',
-    desc: '负责社团核心摄影创作，包括外拍活动策划、主题拍摄项目以及日常创作交流。从人像到风光，从纪实到创意，这里汇聚了社团最活跃的摄影师。',
-    count: '成员 80+ 人',
-  },
-  {
-    icon: Monitor,
-    name: '技术部',
-    desc: '专注于后期处理、视频剪辑与新媒体技术。提供 Lightroom、Photoshop、Premiere 等软件的教学与指导，助力成员提升作品品质。',
-    count: '成员 60+ 人',
-  },
-  {
-    icon: Megaphone,
-    name: '宣传部',
-    desc: '负责社团品牌运营与对外宣传，包括社交媒体管理、活动文案撰写、海报设计与线上展览策划，是社团对外发声的重要窗口。',
-    count: '成员 55+ 人',
-  },
-]
+const DEPT_ICONS = { '摄影部': Camera, '技术部': Monitor, '宣传部': Megaphone }
 
 function Home() {
+  const [photos, setPhotos] = useState([])
+  const [depts, setDepts] = useState([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    Promise.all([api('/photos'), api('/departments')]).then(([p, d]) => {
+      setPhotos((p.photos || []).slice(0, 3))
+      setDepts(d.departments || [])
+      setLoading(false)
+    }).catch(() => setLoading(false))
+  }, [])
   return (
     <>
       {/* Hero */}
@@ -87,14 +60,15 @@ function Home() {
         <div className="lj-section-inner">
           <h2 className="lj-section-title">精选作品</h2>
           <div className="lj-featured-grid">
-            {FEATURED_WORKS.map((w) => (
-              <div className="lj-featured-card" key={w.title}>
-                <div className="lj-featured-card-img" style={{ background: w.bg }} />
+            {loading && <div style={{ gridColumn: '1/-1', textAlign: 'center', padding: 40, color: '#6b7280' }}>加载中...</div>}
+            {!loading && photos.map((w) => (
+              <div className="lj-featured-card" key={w.id || w.title}>
+                <div className="lj-featured-card-img" style={{ background: `linear-gradient(135deg, ${w.grad})` }} />
                 <div className="lj-featured-card-body">
                   <h3 className="lj-featured-card-title">{w.title}</h3>
                   <div className="lj-featured-card-meta">
                     <span className="lj-featured-card-author">摄影：{w.author}</span>
-                    <span className="lj-tag">{w.tag}</span>
+                    <span className="lj-tag">{w.cat}</span>
                   </div>
                 </div>
               </div>
@@ -152,16 +126,20 @@ function Home() {
         <div className="lj-section-inner">
           <h2 className="lj-section-title">部门一览</h2>
           <div className="lj-dept-grid">
-            {DEPARTMENTS.map((d) => (
-              <div className="lj-dept-card" key={d.name}>
-                <div className="lj-dept-icon">
-                  <d.icon style={{ width: 22, height: 22 }} />
+            {loading && <div style={{ gridColumn: '1/-1', textAlign: 'center', padding: 40, color: '#6b7280' }}>加载中...</div>}
+            {!loading && depts.map((d) => {
+              const IconComp = DEPT_ICONS[d.name] || Camera
+              return (
+                <div className="lj-dept-card" key={d.id || d.name}>
+                  <div className="lj-dept-icon">
+                    <IconComp style={{ width: 22, height: 22 }} />
+                  </div>
+                  <h3 className="lj-dept-name">{d.name}</h3>
+                  <p className="lj-dept-desc">{d.desc}</p>
+                  <div className="lj-dept-count">成员 {d.count}+ 人</div>
                 </div>
-                <h3 className="lj-dept-name">{d.name}</h3>
-                <p className="lj-dept-desc">{d.desc}</p>
-                <div className="lj-dept-count">{d.count}</div>
-              </div>
-            ))}
+              )
+            })}
           </div>
           <div style={{ textAlign: 'center', marginTop: 48 }}>
             <Link to="/departments" className="lj-btn-secondary">

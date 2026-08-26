@@ -1,6 +1,18 @@
 /* auto-extracted from history.html style blocks */
 /* ===== 凌镜摄影社团 - Brand Design Tokens ===== */
 
+/* Color aliases used by timeline CSS */
+:root {
+  --color-brand: var(--lj-brand);
+  --color-brand-light: var(--lj-brand-light);
+  --color-brand-dark: var(--lj-brand-dark);
+  --color-surface: var(--lj-surface);
+  --color-surface-2: var(--lj-surface-2);
+  --color-ink: var(--lj-ink);
+  --color-ink-2: var(--lj-ink-2);
+  --color-ink-3: var(--lj-ink-3);
+}
+
 :root {
   /* Brand Primary - Cool Indigo/Cyan */
   --lj-brand: #4A90D9;

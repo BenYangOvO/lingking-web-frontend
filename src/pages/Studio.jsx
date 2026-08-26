@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react'
 import {
   Sparkles,
   UserPlus,
@@ -20,6 +21,7 @@ import {
   MessageCircle,
   MapPin,
 } from 'lucide-react'
+import { api } from '../api'
 import '../styles/pages/studio.css'
 
 const FEATURES = [
@@ -56,6 +58,16 @@ const CONTACTS = [
 ]
 
 function Studio() {
+  const [equipment, setEquipment] = useState([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    api('/studio/equipment').then((data) => {
+      setEquipment(data.equipment || [])
+      setLoading(false)
+    }).catch(() => setLoading(false))
+  }, [])
+
   return (
     <>
       <section className="lj-hero-studio">
@@ -127,6 +139,50 @@ function Studio() {
               </div>
             </div>
           </div>
+        </div>
+      </section>
+
+      {/* 设备清单 */}
+      <section className="lj-section">
+        <div className="lj-section-inner">
+          <h2 className="lj-section-title" style={{ textAlign: 'center' }}>
+            工作室设备清单
+          </h2>
+          <p style={{ textAlign: 'center', color: 'var(--lj-ink-2)', marginBottom: 40 }}>
+            共享器材，按需借用
+          </p>
+          {loading && <div style={{ textAlign: 'center', padding: 40, color: '#6b7280' }}>加载设备中...</div>}
+          {!loading && (
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 16 }}>
+              {equipment.map((eq, i) => (
+                <div key={i} style={{
+                  background: 'var(--lj-surface)',
+                  border: '1px solid var(--lj-border)',
+                  borderRadius: 12,
+                  padding: '16px 20px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  transition: 'all 0.2s',
+                }}>
+                  <div>
+                    <div style={{ fontWeight: 600, fontSize: 15, color: 'var(--lj-ink)' }}>{eq.name}</div>
+                    <div style={{ fontSize: 13, color: 'var(--lj-ink-3)', marginTop: 2 }}>{eq.type}</div>
+                  </div>
+                  <span style={{
+                    fontSize: 12,
+                    padding: '4px 12px',
+                    borderRadius: 20,
+                    background: eq.status === '可用' ? 'rgba(16,185,129,0.1)' : 'rgba(239,68,68,0.1)',
+                    color: eq.status === '可用' ? '#059669' : '#DC2626',
+                    fontWeight: 500,
+                  }}>
+                    {eq.status}
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </section>
 

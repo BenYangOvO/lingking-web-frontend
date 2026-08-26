@@ -1,17 +1,18 @@
+import { useState, useEffect } from 'react'
 import { Image } from 'lucide-react'
+import { api } from '../api'
 import '../styles/pages/history.css'
 
-const TIMELINE = [
-  { year: '2018', title: '凌镜诞生', desc: '社团成立，首届成员招募。一群热爱摄影的年轻人走到一起，用镜头记录校园的每一个瞬间，开启了凌镜的故事。' },
-  { year: '2019', title: '第一次影展', desc: '举办校园摄影展，获广泛好评。百余幅作品展出，吸引了上千名师生驻足观看，凌镜的名字第一次被广泛认识。' },
-  { year: '2020', title: '线上转型', desc: '疫情期间坚持线上教学与分享。隔着屏幕传递摄影知识，组织线上打卡与点评，让热爱不受距离阻隔。' },
-  { year: '2021', title: '品牌升级', desc: '确立凌镜品牌体系，开设微信公众号。统一视觉形象，系统化内容输出，凌镜开始走向更广阔的舞台。' },
-  { year: '2022', title: '跨校合作', desc: '与多所高校摄影社团联合办展。打破校园边界，与兄弟社团交流学习，在更广阔的平台上展示凌镜的实力。' },
-  { year: '2023', title: '工作室成立', desc: '校外工作室"因为热爱"正式成立。从校园走向社会，有了属于自己的创作空间，凌镜的梦想有了安放的角落。' },
-  { year: '2024', title: '十周年筹备', desc: '社团影响力持续扩大。成员遍及各行各业，作品传播于更广阔的平台，凌镜正蓄力迎接新的篇章。' },
-]
-
 function History() {
+  const [events, setEvents] = useState([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    api('/history').then((data) => {
+      setEvents(data.events || [])
+      setLoading(false)
+    }).catch(() => setLoading(false))
+  }, [])
   return (
     <>
       <section className="lj-hero pt-16">
@@ -43,7 +44,8 @@ function History() {
           </div>
 
           <div className="lj-timeline">
-            {TIMELINE.map((e) => (
+            {loading && <div style={{ textAlign: 'center', padding: 40, color: '#6b7280' }}>加载历史中...</div>}
+            {!loading && events.map((e) => (
               <div className="lj-timeline-item lj-fade-in" key={e.year}>
                 <div className="lj-timeline-node" />
                 <div className="lj-timeline-card">
