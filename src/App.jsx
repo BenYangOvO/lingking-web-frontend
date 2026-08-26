@@ -10,6 +10,8 @@ import Members from './pages/Members'
 import Studio from './pages/Studio'
 import About from './pages/About'
 import Auth from './pages/Auth'
+import Submit from './pages/Submit'
+import Admin from './pages/Admin'
 import NotFound from './pages/NotFound'
 
 function App() {
@@ -26,6 +28,8 @@ function App() {
         <Route path="/studio" element={<Studio />} />
         <Route path="/about" element={<About />} />
         <Route path="/auth" element={<Auth />} />
+        <Route path="/submit" element={<Submit />} />
+        <Route path="/admin" element={<Admin />} />
         <Route path="*" element={<NotFound />} />
       </Route>
     </Routes>

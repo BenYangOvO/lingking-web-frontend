@@ -6,11 +6,14 @@
  *
  * 因此前端代码里永远只写相对路径 /api/*，不需要区分环境。
  */
+import { getToken } from './auth'
+
 const BASE = '/api'
 
-export async function api(path, { method = 'GET', body, token } = {}) {
+export async function api(path, { method = 'GET', body, token, auth = false } = {}) {
   const headers = { 'Content-Type': 'application/json' }
-  if (token) headers.Authorization = `Bearer ${token}`
+  const t = token || (auth ? getToken() : null)
+  if (t) headers.Authorization = `Bearer ${t}`
 
   let res
   try {
@@ -34,4 +37,48 @@ export async function api(path, { method = 'GET', body, token } = {}) {
     throw new Error(data.error || `请求失败 (${res.status})`)
   }
   return data
+}
+
+// ---------- 投稿（需登录） ---------- //
+
+export function submitWork(board, payload) {
+  return api('/submissions', { method: 'POST', auth: true, body: { board, payload } })
+}
+
+export function listMySubmissions() {
+  return api('/submissions/mine', { auth: true })
+}
+
+// ---------- 管理员 ---------- //
+
+export function getAdminStats() {
+  return api('/admin/stats', { auth: true })
+}
+
+export function listAdminSubmissions({ board, status } = {}) {
+  const q = new URLSearchParams()
+  if (board) q.set('board', board)
+  if (status) q.set('status', status)
+  const qs = q.toString()
+  return api(`/admin/submissions${qs ? '?' + qs : ''}`, { auth: true })
+}
+
+export function listAdminUsers() {
+  return api('/admin/users', { auth: true })
+}
+
+export function reviewSubmission(id, status, note) {
+  return api(`/admin/submissions/${id}/review`, {
+    method: 'POST',
+    auth: true,
+    body: { status, note },
+  })
+}
+
+export function deleteSubmission(id) {
+  return api(`/admin/submissions/${id}`, { method: 'DELETE', auth: true })
+}
+
+export function setUserRole(uid, role) {
+  return api(`/admin/users/${uid}/role`, { method: 'POST', auth: true, body: { role } })
 }

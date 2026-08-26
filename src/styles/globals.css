@@ -245,6 +245,144 @@ body {
   border-color: var(--lj-ink-3);
 }
 
+.lj-btn-ghost {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px 16px;
+  background: transparent;
+  color: var(--lj-ink-2);
+  border-radius: var(--radius-md);
+  font-weight: 500;
+  font-size: 14px;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: all 160ms ease;
+  text-decoration: none;
+  white-space: nowrap;
+}
+.lj-btn-ghost:hover {
+  color: var(--lj-ink);
+  background: var(--lj-surface-hover);
+  border-color: var(--lj-line);
+}
+
+.lj-btn-danger {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  background: rgba(248, 113, 113, 0.12);
+  color: #FCA5A5;
+  border: 1px solid rgba(248, 113, 113, 0.25);
+  border-radius: var(--radius-md);
+  font-weight: 500;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 160ms ease;
+}
+.lj-btn-danger:hover {
+  background: rgba(248, 113, 113, 0.22);
+  color: #FECACA;
+}
+
+.lj-btn-primary:disabled,
+.lj-btn-secondary:disabled,
+.lj-btn-ghost:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  transform: none !important;
+}
+
+/* ---- 表单通用 ---- */
+.lj-form-group { display: flex; flex-direction: column; gap: 6px; }
+.lj-form-label {
+  font-size: 13px;
+  color: var(--lj-ink-2);
+  font-weight: 500;
+  letter-spacing: 0.01em;
+}
+.lj-form-input,
+textarea.lj-form-input,
+select.lj-form-input {
+  width: 100%;
+  background: var(--lj-surface);
+  color: var(--lj-ink);
+  border: 1px solid var(--lj-line-strong);
+  border-radius: var(--radius-md);
+  padding: 10px 12px;
+  font-size: 14px;
+  font-family: inherit;
+  outline: none;
+  transition: border-color 160ms ease, box-shadow 160ms ease;
+  box-sizing: border-box;
+}
+textarea.lj-form-input { resize: vertical; min-height: 80px; line-height: 1.6; }
+.lj-form-input:focus {
+  border-color: var(--lj-brand);
+  box-shadow: 0 0 0 3px var(--lj-brand-muted);
+}
+select.lj-form-input {
+  appearance: none;
+  background-image: linear-gradient(45deg, transparent 50%, var(--lj-ink-3) 50%),
+                    linear-gradient(135deg, var(--lj-ink-3) 50%, transparent 50%);
+  background-position: calc(100% - 18px) 50%, calc(100% - 12px) 50%;
+  background-size: 6px 6px, 6px 6px;
+  background-repeat: no-repeat;
+  padding-right: 32px;
+}
+.lj-form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+}
+@media (max-width: 640px) {
+  .lj-form-grid { grid-template-columns: 1fr; }
+}
+.lj-form-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.lj-form-error {
+  background: rgba(248, 113, 113, 0.08);
+  border: 1px solid rgba(248, 113, 113, 0.25);
+  color: #FCA5A5;
+  padding: 10px 14px;
+  border-radius: var(--radius-md);
+  font-size: 14px;
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+}
+.lj-form-success {
+  background: rgba(52, 211, 153, 0.08);
+  border: 1px solid rgba(52, 211, 153, 0.25);
+  color: #6EE7B7;
+  padding: 10px 14px;
+  border-radius: var(--radius-md);
+  font-size: 14px;
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+}
+
+.lj-page-title {
+  font-family: var(--font-display);
+  font-size: 32px;
+  margin: 0 0 8px;
+  color: var(--lj-ink);
+}
+.lj-page-subtitle {
+  color: var(--lj-ink-2);
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.6;
+}
+
 .lj-section-padding {
   padding-top: var(--s-8);
   padding-bottom: var(--s-8);
@@ -270,15 +408,29 @@ body {
   z-index: 0;
 }
 
+/* Mouse cursor trail particles - sits above background but below page content */
+.lj-cursor-canvas {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 1;
+  mix-blend-mode: screen;
+}
+
 /* Prevent any horizontal overflow that could create a scroll gap on the right */
 html, body {
   overflow-x: hidden !important;
 }
 
-/* Content above particles */
+/* Content above particles and cursor trail */
 .lj-content-layer {
   position: relative;
-  z-index: 1;
+  z-index: 2;
 }
 
 /* Glowing accent line */

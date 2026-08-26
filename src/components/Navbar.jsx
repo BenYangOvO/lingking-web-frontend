@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link, NavLink, useNavigate } from 'react-router-dom'
-import { Menu, LogIn, UserPlus, LogOut } from 'lucide-react'
-import { isLoggedIn, getUsername, logout, onAuthChange } from '../auth'
+import { Menu, LogIn, UserPlus, LogOut, PenLine, Shield, Crown } from 'lucide-react'
+import { isLoggedIn, getUsername, logout, onAuthChange, isAdmin } from '../auth'
 
 const NAV_LINKS = [
   { to: '/', label: '首页', domId: 'nav-home' },
@@ -17,12 +17,11 @@ const NAV_LINKS = [
 
 function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false)
-  const [user, setUser] = useState(null)
+  const [userInfo, setUserInfo] = useState({ loggedIn: false, username: null, role: 'member' })
   const navigate = useNavigate()
 
   useEffect(() => {
-    const sync = () => setUser(isLoggedIn() ? getUsername() : null)
-    sync()
+    const sync = (info) => setUserInfo(info || { loggedIn: isLoggedIn(), username: getUsername(), role: isAdmin() ? 'admin' : 'member' })
     return onAuthChange(sync)
   }, [])
 
@@ -30,6 +29,8 @@ function Navbar() {
     logout()
     navigate('/')
   }
+
+  const { loggedIn, username, role } = userInfo
 
   return (
     <nav className="lj-nav">
@@ -51,17 +52,46 @@ function Navbar() {
               </NavLink>
             </li>
           ))}
+          {loggedIn && (
+            <li>
+              <NavLink
+                to="/submit"
+                className={({ isActive }) => (isActive ? 'active' : 'lj-nav-submit')}
+                onClick={() => setMenuOpen(false)}
+              >
+                <PenLine size={14} style={{ verticalAlign: '-2px', marginRight: 4 }} />
+                投稿
+              </NavLink>
+            </li>
+          )}
+          {loggedIn && role === 'admin' && (
+            <li>
+              <NavLink
+                to="/admin"
+                className={({ isActive }) => (isActive ? 'active' : 'lj-nav-admin')}
+                onClick={() => setMenuOpen(false)}
+              >
+                <Shield size={14} style={{ verticalAlign: '-2px', marginRight: 4 }} />
+                审核后台
+              </NavLink>
+            </li>
+          )}
         </ul>
 
         <div className="lj-nav-actions">
-          {user ? (
+          {loggedIn ? (
             <>
-              <span className="lj-nav-user" title={user}>
-                {user}
+              <span className="lj-nav-user" title={username}>
+                {role === 'admin' && (
+                  <Crown size={14} style={{ color: '#FBBF24', marginRight: 4, verticalAlign: '-2px' }} />
+                )}
+                {username}
               </span>
-              <button className="lj-btn-secondary" onClick={handleLogout}>
+              <Link to="/submit" className="lj-btn-secondary" onClick={() => setMenuOpen(false)} title="投稿">
+                <PenLine size={16} />
+              </Link>
+              <button className="lj-btn-secondary" onClick={handleLogout} title="退出登录">
                 <LogOut size={16} />
-                退出
               </button>
             </>
           ) : (

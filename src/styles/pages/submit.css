@@ -1,0 +1,172 @@
+/* 凌镜摄影社团 - 投稿页面样式 */
+
+.lj-submit-page {
+  padding: var(--s-7) 0 var(--s-9);
+}
+
+.lj-submit-inner {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 0 24px;
+}
+
+.lj-submit-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 32px;
+}
+
+.lj-submit-login-hint {
+  max-width: 520px;
+  margin: 100px auto;
+  padding: 40px 32px;
+  text-align: center;
+  background: var(--lj-surface);
+  border: 1px solid var(--lj-line);
+  border-radius: var(--radius-lg);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+}
+.lj-submit-login-hint h2 { margin: 8px 0 0; color: var(--lj-ink); }
+.lj-submit-login-hint p { color: var(--lj-ink-2); margin: 0; line-height: 1.7; }
+.lj-submit-login-hint .lj-btn-primary { margin-top: 8px; }
+
+.lj-my-submissions {
+  background: var(--lj-surface);
+  border: 1px solid var(--lj-line);
+  border-radius: var(--radius-lg);
+  padding: 20px 24px;
+  margin-bottom: 24px;
+}
+.lj-my-submissions h3 { margin: 0 0 16px; color: var(--lj-ink); font-size: 16px; }
+.lj-my-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 8px; }
+.lj-my-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  border-radius: var(--radius-md);
+  background: var(--lj-bg-alt);
+  border: 1px solid var(--lj-line);
+}
+.lj-my-main { display: flex; align-items: center; gap: 10px; flex: 1; min-width: 0; }
+.lj-my-board {
+  font-size: 12px; font-weight: 600; padding: 2px 8px; border-radius: var(--radius-full);
+  background: var(--lj-brand-muted); color: var(--lj-brand-light);
+}
+.lj-my-title { color: var(--lj-ink); font-size: 14px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.lj-status-chip {
+  padding: 4px 10px;
+  border-radius: var(--radius-full);
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.lj-status-chip.lj-status-pending  { background: rgba(251, 191, 36, 0.14); color: #FCD34D; }
+.lj-status-chip.lj-status-approved { background: rgba(52, 211, 153, 0.14); color: #6EE7B7; }
+.lj-status-chip.lj-status-rejected { background: rgba(248, 113, 113, 0.14); color: #FCA5A5; }
+
+.lj-submit-board-tabs {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin-bottom: 16px;
+}
+@media (max-width: 760px) {
+  .lj-submit-board-tabs { grid-template-columns: 1fr; }
+}
+.lj-board-tab {
+  background: var(--lj-surface);
+  border: 1px solid var(--lj-line-strong);
+  border-radius: var(--radius-lg);
+  padding: 16px 18px;
+  color: var(--lj-ink-2);
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  text-align: left;
+  cursor: pointer;
+  transition: all 180ms ease;
+}
+.lj-board-tab:hover {
+  border-color: var(--lj-brand);
+  background: var(--lj-surface-hover);
+  color: var(--lj-ink);
+}
+.lj-board-tab.active {
+  border-color: var(--lj-brand);
+  background: var(--lj-brand-muted);
+  color: var(--lj-ink);
+  box-shadow: 0 0 0 1px var(--lj-brand) inset;
+}
+.lj-board-tab-body {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+}
+.lj-board-tab-body strong { color: inherit; font-size: 15px; }
+.lj-board-tab-body span { color: var(--lj-ink-3); font-size: 13px; line-height: 1.5; }
+
+.lj-submit-hint {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  background: var(--lj-brand-muted-2);
+  border: 1px solid var(--lj-line);
+  border-radius: var(--radius-md);
+  color: var(--lj-ink-2);
+  font-size: 13px;
+  margin-bottom: 20px;
+}
+
+.lj-submit-form {
+  background: var(--lj-surface);
+  border: 1px solid var(--lj-line);
+  border-radius: var(--radius-lg);
+  padding: 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  box-shadow: var(--shadow-2);
+}
+@media (max-width: 640px) {
+  .lj-submit-form { padding: 20px 16px; }
+}
+
+.lj-grad-presets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.lj-grad-opt {
+  width: 52px;
+  height: 52px;
+  border-radius: var(--radius-md);
+  border: 2px solid transparent;
+  cursor: pointer;
+  padding: 0;
+  transition: all 160ms ease;
+}
+.lj-grad-opt:hover { transform: translateY(-1px); }
+.lj-grad-opt.active {
+  border-color: var(--lj-brand);
+  box-shadow: 0 0 0 3px var(--lj-brand-muted);
+}
+
+.lj-submit-actions {
+  display: flex;
+  gap: 12px;
+  padding-top: 4px;
+  border-top: 1px dashed var(--lj-line);
+  padding-top: 20px;
+  flex-wrap: wrap;
+}
