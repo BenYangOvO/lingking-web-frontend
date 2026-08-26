@@ -1,0 +1,743 @@
+/* auto-extracted from diary.html style blocks */
+/* ===== 凌镜摄影社团 - Brand Design Tokens ===== */
+
+:root {
+  /* Brand Primary - Cool Indigo/Cyan */
+  --lj-brand: #4A90D9;
+  --lj-brand-light: #6AADE8;
+  --lj-brand-dark: #3670B0;
+  --lj-brand-ink: #FFFFFF;
+  --lj-brand-muted: rgba(74, 144, 217, 0.12);
+  --lj-brand-muted-2: rgba(74, 144, 217, 0.06);
+
+  /* Neutrals */
+  --lj-bg: #0C0E14;
+  --lj-bg-alt: #111420;
+  --lj-surface: #171B28;
+  --lj-surface-2: #1E2335;
+  --lj-surface-hover: #252A3D;
+  --lj-ink: #E8EAF0;
+  --lj-ink-2: #9CA3B4;
+  --lj-ink-3: #5C6478;
+  --lj-line: rgba(255, 255, 255, 0.08);
+  --lj-line-strong: rgba(255, 255, 255, 0.14);
+
+  /* State Colors */
+  --state-success: #34D399;
+  --state-warning: #FBBF24;
+  --state-error: #F87171;
+  --state-info: #60A5FA;
+
+  /* Radius */
+  --radius-xs: 2px;
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-full: 999px;
+
+  /* Shadows */
+  --shadow-1: 0 1px 2px rgba(0, 0, 0, 0.04), 0 1px 1px rgba(0, 0, 0, 0.03);
+  --shadow-2: 0 8px 24px -8px rgba(0, 0, 0, 0.25);
+  --shadow-3: 0 24px 60px -20px rgba(0, 0, 0, 0.45);
+
+  /* Spacing */
+  --s-1: 4px;
+  --s-2: 8px;
+  --s-3: 12px;
+  --s-4: 16px;
+  --s-5: 24px;
+  --s-6: 32px;
+  --s-7: 48px;
+  --s-8: 80px;
+  --s-9: 120px;
+
+  /* Semantic Aliases for Tailwind */
+  --background: var(--lj-bg);
+  --foreground: var(--lj-ink);
+  --card: var(--lj-surface);
+  --card-foreground: var(--lj-ink);
+  --popover: var(--lj-surface-2);
+  --popover-foreground: var(--lj-ink);
+  --primary: var(--lj-brand);
+  --primary-foreground: var(--lj-brand-ink);
+  --muted: var(--lj-surface);
+  --muted-foreground: var(--lj-ink-2);
+  --border: var(--lj-line);
+  --input: var(--lj-line-strong);
+  --ring: var(--lj-brand);
+  --radius-small: var(--radius-sm);
+  --radius-medium: var(--radius-md);
+  --radius-large: var(--radius-lg);
+}
+
+/* Dark mode is default - light class for toggle reference */
+html.light {
+  --lj-bg: #F5F7FA;
+  --lj-bg-alt: #EBEEF3;
+  --lj-surface: #FFFFFF;
+  --lj-surface-2: #F0F2F5;
+  --lj-surface-hover: #E5E8ED;
+  --lj-ink: #1A1D2E;
+  --lj-ink-2: #5A6170;
+  --lj-ink-3: #9CA3AF;
+  --lj-line: rgba(0, 0, 0, 0.08);
+  --lj-line-strong: rgba(0, 0, 0, 0.14);
+  --shadow-1: 0 1px 2px rgba(15, 23, 42, 0.05), 0 1px 1px rgba(15, 23, 42, 0.03);
+  --shadow-2: 0 8px 24px -8px rgba(15, 23, 42, 0.18);
+  --shadow-3: 0 24px 60px -20px rgba(15, 23, 42, 0.30);
+  --background: var(--lj-bg);
+  --foreground: var(--lj-ink);
+  --card: var(--lj-surface);
+  --card-foreground: var(--lj-ink);
+  --popover: var(--lj-surface-2);
+  --popover-foreground: var(--lj-ink);
+  --muted: var(--lj-surface);
+  --muted-foreground: var(--lj-ink-2);
+  --border: var(--lj-line);
+  --input: var(--lj-line-strong);
+}
+
+/* ===== Typography ===== */
+
+:root {
+  --font-display: 'Noto Serif SC', 'Inter', serif;
+  --font-body: 'Inter', 'Noto Sans SC', system-ui, sans-serif;
+}
+
+body {
+  font-family: var(--font-body);
+  color: var(--lj-ink);
+  background-color: var(--lj-bg);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.lj-display {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: clamp(40px, 6vw, 80px);
+  line-height: 1.05;
+  letter-spacing: -0.03em;
+  text-wrap: balance;
+  word-break: keep-all;
+}
+
+.lj-h1 {
+  font-family: var(--font-body);
+  font-weight: 700;
+  font-size: clamp(28px, 3.5vw, 44px);
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+  text-wrap: balance;
+  word-break: keep-all;
+}
+
+.lj-h2 {
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: clamp(22px, 2.4vw, 32px);
+  line-height: 1.25;
+  letter-spacing: -0.015em;
+  text-wrap: balance;
+  word-break: keep-all;
+}
+
+.lj-h3 {
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: 20px;
+  line-height: 1.3;
+  letter-spacing: -0.01em;
+}
+
+.lj-body {
+  font-family: var(--font-body);
+  font-weight: 400;
+  font-size: 15px;
+  line-height: 1.6;
+}
+
+.lj-body-lg {
+  font-family: var(--font-body);
+  font-weight: 400;
+  font-size: 17px;
+  line-height: 1.55;
+}
+
+.lj-caption {
+  font-family: var(--font-body);
+  font-weight: 400;
+  font-size: 13px;
+  line-height: 1.5;
+  letter-spacing: 0.005em;
+  color: var(--lj-ink-3);
+}
+
+.lj-brand-text {
+  font-family: var(--font-display);
+  color: var(--lj-brand);
+}
+
+/* ===== Utility Classes ===== */
+.lj-surface {
+  background: var(--lj-surface);
+  border: 1px solid var(--lj-line);
+  border-radius: var(--radius-md);
+}
+
+.lj-surface-hover:hover {
+  background: var(--lj-surface-hover);
+}
+
+.lj-btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 20px;
+  background: var(--lj-brand);
+  color: var(--lj-brand-ink);
+  border-radius: var(--radius-md);
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 160ms cubic-bezier(0.2, 0.8, 0.2, 1);
+  text-decoration: none;
+  border: none;
+  white-space: nowrap;
+}
+
+.lj-btn-primary:hover {
+  background: var(--lj-brand-light);
+  transform: translateY(-1px);
+}
+
+.lj-btn-primary:active {
+  transform: translateY(0);
+}
+
+.lj-btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 20px;
+  background: transparent;
+  color: var(--lj-ink);
+  border: 1px solid var(--lj-line-strong);
+  border-radius: var(--radius-md);
+  font-weight: 500;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 160ms cubic-bezier(0.2, 0.8, 0.2, 1);
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.lj-btn-secondary:hover {
+  background: var(--lj-surface-hover);
+  border-color: var(--lj-ink-3);
+}
+
+.lj-section-padding {
+  padding-top: var(--s-8);
+  padding-bottom: var(--s-8);
+}
+
+.lj-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding-left: 24px;
+  padding-right: 24px;
+}
+
+/* Particle canvas layer - covers full viewport, never clipped by horizontal scroll */
+.lj-particles-canvas {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Prevent any horizontal overflow that could create a scroll gap on the right */
+html, body {
+  overflow-x: hidden !important;
+}
+
+/* Content above particles */
+.lj-content-layer {
+  position: relative;
+  z-index: 1;
+}
+
+/* Glowing accent line */
+.lj-glow-line {
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--lj-brand), transparent);
+  opacity: 0.4;
+}
+
+/* Tag */
+.lj-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 10px;
+  font-size: 12px;
+  font-weight: 500;
+  border-radius: var(--radius-full);
+  background: var(--lj-brand-muted);
+  color: var(--lj-brand);
+  white-space: nowrap;
+}
+
+/* Card grid */
+.lj-card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: var(--s-6);
+}
+
+@media (min-width: 768px) {
+  .lj-card-grid {
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  }
+}
+
+/* ===== WordPress container background override ===== */
+body, .wp-site-blocks, main, .entry-content, 
+#page, #content, .site-content, 
+.elementor-section, .elementor-widget-container,
+.elementor-element, .elementor-column, .elementor-widget-wrap,
+.wp-block-group, .wp-block-group__inner-container,
+.elementor-section-wrap, .elementor-background-overlay {
+  background: transparent !important;
+  background-color: transparent !important;
+}
+
+body {
+  background-color: #0C0E14 !important;
+}
+
+/* Ensure fixed canvas isn't clipped by transformed/overflow ancestors in Elementor */
+.elementor-widget-container,
+.elementor-widget-wrap,
+.elementor-column,
+.elementor-section,
+.elementor-section-wrap {
+  overflow: visible !important;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    /* Nav */
+    .lj-nav {
+      position: fixed; top: 0; left: 0; right: 0; height: 64px; z-index: 50;
+      background: rgba(12, 14, 20, 0.85); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--lj-line); display: flex; align-items: center;
+    }
+    .lj-nav-inner {
+      max-width: 1200px; width: 100%; margin: 0 auto; padding-left: 24px; padding-right: 24px;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .lj-nav-logo {
+      font-family: var(--font-display); font-weight: 700; font-size: 22px;
+      color: var(--lj-brand); text-decoration: none; letter-spacing: -0.02em;
+    }
+    .lj-nav-links { display: flex; align-items: center; gap: 4px; list-style: none; }
+    .lj-nav-links a {
+      font-size: 14px; font-weight: 500; color: var(--lj-ink-2); text-decoration: none;
+      padding: 6px 12px; border-radius: var(--radius-sm); transition: color 160ms, background 160ms; white-space: nowrap;
+    }
+    .lj-nav-links a:hover { color: var(--lj-ink); background: var(--lj-surface-hover); }
+    .lj-nav-actions { display: flex; align-items: center; gap: 8px; }
+    .lj-nav-hamburger {
+      display: none; background: none; border: none; color: var(--lj-ink); cursor: pointer; padding: 8px;
+    }
+
+    /* Page Header */
+    .lj-page-header {
+      padding: 120px 24px 48px;
+      text-align: center;
+    }
+    .lj-page-header-inner {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    .lj-page-title {
+      font-family: var(--font-display);
+      font-weight: 700;
+      font-size: clamp(36px, 5vw, 56px);
+      line-height: 1.1;
+      color: var(--lj-brand);
+      letter-spacing: -0.03em;
+      word-break: keep-all;
+      margin-bottom: 12px;
+    }
+    .lj-page-subtitle {
+      font-family: var(--font-body);
+      font-size: clamp(15px, 1.8vw, 18px);
+      color: var(--lj-ink-2);
+      line-height: 1.6;
+      max-width: 480px;
+      margin: 0 auto;
+    }
+
+    /* Diary Featured Entry */
+    .lj-diary-featured {
+      max-width: 1200px;
+      margin: 0 auto 40px;
+      padding: 0 24px;
+    }
+    .lj-diary-featured-card {
+      background: var(--lj-surface);
+      border: 1px solid var(--lj-line);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      display: grid;
+      grid-template-columns: 1fr;
+      transition: box-shadow 280ms cubic-bezier(0.2, 0.8, 0.2, 1),
+                  transform 280ms cubic-bezier(0.2, 0.8, 0.2, 1);
+      cursor: pointer;
+    }
+    .lj-diary-featured-card:hover {
+      box-shadow: var(--shadow-2);
+      transform: translateY(-2px);
+    }
+    .lj-diary-featured-cover {
+      width: 100%;
+      aspect-ratio: 16/7;
+      background: linear-gradient(145deg, #1E3A5F 0%, #2D5F8A 30%, #4A90D9 65%, #6AADE8 100%);
+      position: relative;
+    }
+    .lj-diary-featured-cover::after {
+      content: '';
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      height: 60%;
+      background: linear-gradient(to top, var(--lj-surface), transparent);
+    }
+    .lj-diary-featured-body {
+      padding: 28px 28px 32px;
+    }
+    .lj-diary-featured-meta {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 14px;
+      flex-wrap: wrap;
+    }
+    .lj-diary-date-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 4px 10px;
+      font-size: 12px;
+      font-weight: 500;
+      border-radius: var(--radius-sm);
+      background: var(--lj-brand-muted);
+      color: var(--lj-brand);
+    }
+    .lj-diary-mood-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 3px 10px;
+      font-size: 12px;
+      font-weight: 500;
+      border-radius: var(--radius-full);
+    }
+    .mood-inspired { background: rgba(251, 191, 36, 0.15); color: #FBBF24; }
+    .mood-peaceful { background: rgba(52, 211, 153, 0.15); color: #34D399; }
+    .mood-excited { background: rgba(248, 113, 113, 0.15); color: #F87171; }
+    .mood-nostalgic { background: rgba(168, 162, 158, 0.2); color: #A8A29E; }
+    .mood-curious { background: rgba(96, 165, 250, 0.15); color: #60A5FA; }
+    .mood-wonder { background: rgba(168, 85, 247, 0.15); color: #A855F7; }
+    .lj-diary-featured-title {
+      font-family: var(--font-display);
+      font-weight: 700;
+      font-size: clamp(24px, 3vw, 32px);
+      line-height: 1.25;
+      color: var(--lj-ink);
+      letter-spacing: -0.02em;
+      margin-bottom: 12px;
+      word-break: keep-all;
+    }
+    .lj-diary-featured-excerpt {
+      font-family: var(--font-body);
+      font-size: 15px;
+      line-height: 1.7;
+      color: var(--lj-ink-2);
+      margin-bottom: 20px;
+      display: -webkit-box;
+      -webkit-line-clamp: 3;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+    .lj-diary-featured-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    .lj-diary-author {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .lj-diary-avatar {
+      width: 36px;
+      height: 36px;
+      border-radius: var(--radius-full);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      font-weight: 600;
+      color: #fff;
+      flex-shrink: 0;
+    }
+    .lj-diary-author-info {
+      display: flex;
+      flex-direction: column;
+    }
+    .lj-diary-author-name {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--lj-ink);
+    }
+    .lj-diary-read-time {
+      font-size: 12px;
+      color: var(--lj-ink-3);
+    }
+    .lj-diary-stats {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    .lj-diary-stat {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 13px;
+      color: var(--lj-ink-3);
+      transition: color 160ms;
+      cursor: pointer;
+    }
+    .lj-diary-stat:hover { color: var(--lj-brand); }
+
+    /* Diary Grid */
+    .lj-diary-grid {
+      max-width: 1200px;
+      margin: 0 auto 60px;
+      padding: 0 24px;
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 20px;
+    }
+
+    /* Diary Card (standard) */
+    .lj-diary-card {
+      background: var(--lj-surface);
+      border: 1px solid var(--lj-line);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      transition: box-shadow 280ms cubic-bezier(0.2, 0.8, 0.2, 1),
+                  transform 280ms cubic-bezier(0.2, 0.8, 0.2, 1);
+      cursor: pointer;
+    }
+    .lj-diary-card:hover {
+      box-shadow: var(--shadow-2);
+      transform: translateY(-2px);
+    }
+    .lj-diary-card-cover {
+      width: 100%;
+      aspect-ratio: 16/9;
+      position: relative;
+    }
+    .lj-diary-card-cover::after {
+      content: '';
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      height: 50%;
+      background: linear-gradient(to top, var(--lj-surface), transparent);
+    }
+    .lj-diary-card-body {
+      padding: 20px;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+    .lj-diary-card-meta {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 10px;
+      flex-wrap: wrap;
+    }
+    .lj-diary-card-title {
+      font-family: var(--font-body);
+      font-weight: 600;
+      font-size: 18px;
+      line-height: 1.3;
+      color: var(--lj-ink);
+      letter-spacing: -0.01em;
+      margin-bottom: 8px;
+      word-break: keep-all;
+    }
+    .lj-diary-card-excerpt {
+      font-size: 14px;
+      line-height: 1.65;
+      color: var(--lj-ink-2);
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+      margin-bottom: 16px;
+      flex: 1;
+    }
+    .lj-diary-card-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding-top: 14px;
+      border-top: 1px solid var(--lj-line);
+    }
+
+    /* Tag Cloud Section */
+    .lj-tag-cloud-section {
+      max-width: 1200px;
+      margin: 0 auto 80px;
+      padding: 0 24px;
+      text-align: center;
+    }
+    .lj-tag-cloud-title {
+      font-family: var(--font-body);
+      font-weight: 600;
+      font-size: 20px;
+      color: var(--lj-ink);
+      margin-bottom: 24px;
+    }
+    .lj-tag-cloud {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .lj-tag-cloud-item {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 18px;
+      font-size: 13px;
+      font-weight: 500;
+      border-radius: var(--radius-full);
+      border: 1px solid var(--lj-line-strong);
+      background: transparent;
+      color: var(--lj-ink-2);
+      cursor: pointer;
+      transition: all 160ms cubic-bezier(0.2, 0.8, 0.2, 1);
+      white-space: nowrap;
+      text-decoration: none;
+    }
+    .lj-tag-cloud-item:hover {
+      background: var(--lj-brand-muted);
+      color: var(--lj-brand);
+      border-color: var(--lj-brand);
+    }
+    .lj-tag-cloud-item .tag-count {
+      font-size: 11px;
+      padding: 1px 6px;
+      border-radius: var(--radius-full);
+      background: var(--lj-surface-2);
+      color: var(--lj-ink-3);
+    }
+
+    /* Footer */
+    .lj-footer {
+      background: var(--lj-bg-alt); border-top: 1px solid var(--lj-line); padding: 60px 24px 32px;
+    }
+    .lj-footer-inner { max-width: 1200px; margin: 0 auto; }
+    .lj-footer-grid { display: grid; grid-template-columns: 1fr; gap: 40px; margin-bottom: 40px; }
+    .lj-footer-logo { font-family: var(--font-display); font-weight: 700; font-size: 20px; color: var(--lj-brand); margin-bottom: 8px; }
+    .lj-footer-tagline { font-size: 13px; color: var(--lj-ink-3); line-height: 1.5; }
+    .lj-footer-heading { font-weight: 600; font-size: 14px; color: var(--lj-ink); margin-bottom: 12px; }
+    .lj-footer-links { list-style: none; display: flex; flex-direction: column; gap: 8px; }
+    .lj-footer-links a { font-size: 13px; color: var(--lj-ink-3); text-decoration: none; transition: color 160ms; }
+    .lj-footer-links a:hover { color: var(--lj-ink-2); }
+    .lj-footer-contact { font-size: 13px; color: var(--lj-ink-3); line-height: 1.7; }
+    .lj-footer-bottom { border-top: 1px solid var(--lj-line); padding-top: 24px; text-align: center; font-size: 12px; color: var(--lj-ink-3); }
+
+    /* Glow line */
+    .lj-glow-line {
+      height: 2px;
+      background: linear-gradient(90deg, transparent, var(--lj-brand), transparent);
+      opacity: 0.4;
+    }
+
+    /* Responsive: 768px+ */
+    @media (min-width: 768px) {
+      .lj-diary-featured-card {
+        grid-template-columns: 1fr 1fr;
+      }
+      .lj-diary-featured-cover {
+        aspect-ratio: auto;
+        min-height: 320px;
+      }
+      .lj-diary-grid {
+        grid-template-columns: 1fr 1fr;
+        gap: 24px;
+      }
+      .lj-footer-grid { grid-template-columns: 1.2fr 1fr 1fr; }
+    }
+
+    /* Responsive: < 768px hide nav links */
+    /* Responsive: < 1100px hide nav links, show hamburger */
+    @media (max-width: 1100px) {
+      .lj-nav-links { display: none; }
+      .lj-nav-hamburger { display: block; }
+      /* Mobile nav open state */
+      .lj-nav-links.open {
+        display: flex;
+        flex-direction: column;
+        position: absolute;
+        top: 64px;
+        left: 0;
+        right: 0;
+        background: rgba(12, 14, 20, 0.95);
+        backdrop-filter: blur(12px);
+        padding: 16px;
+        border-bottom: 1px solid var(--lj-line);
+        gap: 4px;
+      }
+    }
+
+    /* Extra-compact nav for very small screens */
+    @media (max-width: 480px) {
+      .lj-nav-actions .lj-btn-secondary,
+      .lj-nav-actions .lj-btn-primary {
+        display: none;
+      }
+    }
+
+    
+  /* Cursor Trail Canvas - sits above all content, never clipped */
+    .lj-cursor-trail-canvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 9999;
+    }
