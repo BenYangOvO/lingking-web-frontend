@@ -775,9 +775,6 @@ body {
       .lj-resource-grid {
         grid-template-columns: repeat(2, 1fr);
       }
-      .lj-resources-layout {
-        grid-template-columns: 1fr 280px;
-      }
       .lj-footer-grid {
         grid-template-columns: 1.2fr 1fr 1fr;
       }
