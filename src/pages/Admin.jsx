@@ -19,6 +19,7 @@ import {
   UserCog,
   Crown,
   Search,
+  Layers,
 } from 'lucide-react'
 import {
   getAdminStats,
@@ -26,6 +27,8 @@ import {
   listAdminUsers,
   reviewSubmission,
   deleteSubmission,
+  listAdminContent,
+  deleteContent,
   setUserRole,
 } from '../api'
 import { isAdmin as authIsAdmin, logout } from '../auth'
@@ -157,6 +160,12 @@ function SubmissionPreview({ s, onClose }) {
 
 const GRAD_FALLBACK = 'linear-gradient(135deg,#2D5F8A,#4A90D9,#6AADE8)'
 
+const CONTENT_TYPES = [
+  { key: 'photo', label: '作品展示', icon: Image },
+  { key: 'resource', label: '资源库', icon: FileText },
+  { key: 'diary', label: '日记本', icon: BookOpen },
+]
+
 function Admin() {
   const navigate = useNavigate()
   const [error, setError] = useState('')
@@ -164,12 +173,18 @@ function Admin() {
   const [subs, setSubs] = useState([])
   const [users, setUsers] = useState([])
   const [usersTab, setUsersTab] = useState(false)
+  const [contentTab, setContentTab] = useState(false)
   const [filterBoard, setFilterBoard] = useState('')
   const [filterStatus, setFilterStatus] = useState('pending')
   const [search, setSearch] = useState('')
   const [preview, setPreview] = useState(null)
   const [loading, setLoading] = useState(false)
   const [acting, setActing] = useState(null)
+
+  // 内容管理状态
+  const [contentType, setContentType] = useState('photo')
+  const [contentList, setContentList] = useState([])
+  const [contentLoading, setContentLoading] = useState(false)
 
   const isAdminUser = authIsAdmin()
 
@@ -189,10 +204,29 @@ function Admin() {
     }
   }
 
+  async function loadContent() {
+    setContentLoading(true)
+    setError('')
+    try {
+      const res = await listAdminContent(contentType)
+      setContentList(res.items || [])
+    } catch (err) {
+      setError(err.message || '加载内容失败')
+      setContentList([])
+    } finally {
+      setContentLoading(false)
+    }
+  }
+
   useEffect(() => {
-    if (isAdminUser) loadAll()
+    if (isAdminUser && !contentTab) loadAll()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filterBoard, filterStatus, isAdminUser])
+
+  useEffect(() => {
+    if (isAdminUser && contentTab) loadContent()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [contentType, contentTab, isAdminUser])
 
   const filteredList = useMemo(() => {
     if (!search) return subs
@@ -246,6 +280,20 @@ function Admin() {
       await loadAll()
     } catch (err) {
       setError(err.message || '操作失败')
+    }
+  }
+
+  async function handleDeleteContent(id) {
+    const label = id >= 10000 ? '此投稿内容' : '此静态内容'
+    if (!window.confirm(`确定要从公开页面移除${label}吗？`)) return
+    setActing(id)
+    try {
+      await deleteContent(contentType, id)
+      await loadContent()
+    } catch (err) {
+      setError(err.message || '删除失败')
+    } finally {
+      setActing(null)
     }
   }
 
@@ -334,17 +382,75 @@ function Admin() {
           />
         </div>
 
-        {/* ---- Tabs: 投稿 / 用户 ---- */}
+        {/* ---- Tabs: 投稿 / 内容 / 用户 ---- */}
         <div className="lj-admin-tabs">
-          <button className={`lj-admin-tab${!usersTab ? ' active' : ''}`} onClick={() => setUsersTab(false)}>
+          <button
+            className={`lj-admin-tab${!usersTab && !contentTab ? ' active' : ''}`}
+            onClick={() => { setUsersTab(false); setContentTab(false) }}
+          >
             <ShieldAlert size={16} /> 投稿审核 <span className="lj-tab-count">{stats?.pending_count ?? 0}</span>
           </button>
-          <button className={`lj-admin-tab${usersTab ? ' active' : ''}`} onClick={() => setUsersTab(true)}>
+          <button
+            className={`lj-admin-tab${contentTab ? ' active' : ''}`}
+            onClick={() => { setUsersTab(false); setContentTab(true) }}
+          >
+            <Layers size={16} /> 内容管理
+          </button>
+          <button
+            className={`lj-admin-tab${usersTab ? ' active' : ''}`}
+            onClick={() => { setUsersTab(false); setContentTab(false) }}
+          >
             <UserCog size={16} /> 用户管理
           </button>
         </div>
 
-        {!usersTab ? (
+        {contentTab ? (
+          <>
+            {/* ---- 内容管理板块选择 ---- */}
+            <div className="lj-admin-filters">
+              <div className="lj-filter-group">
+                <label className="lj-filter-label"><Layers size={14} /> 板块</label>
+                <div className="lj-chip-group">
+                  {CONTENT_TYPES.map((c) => {
+                    const Icon = c.icon
+                    return (
+                      <button
+                        key={c.key}
+                        className={`lj-chip${contentType === c.key ? ' active' : ''}`}
+                        onClick={() => setContentType(c.key)}
+                      >
+                        <Icon size={14} /> {c.label}
+                      </button>
+                    )
+                  })}
+                </div>
+              </div>
+              <button className="lj-btn-ghost" onClick={loadContent}>刷新</button>
+            </div>
+
+            {/* ---- 内容列表 ---- */}
+            {contentLoading ? (
+              <div className="lj-empty"><p style={{ color: 'var(--lj-ink-2)' }}>加载中...</p></div>
+            ) : contentList.length === 0 ? (
+              <div className="lj-empty">
+                <CheckCircle2 size={32} style={{ color: 'var(--lj-ink-3)' }} />
+                <p style={{ color: 'var(--lj-ink-2)' }}>当前板块暂无内容。</p>
+              </div>
+            ) : (
+              <div className="lj-sub-list">
+                {contentList.map((item) => (
+                  <ContentCard
+                    key={item.id}
+                    item={item}
+                    type={contentType}
+                    onDelete={() => handleDeleteContent(item.id)}
+                    acting={acting === item.id}
+                  />
+                ))}
+              </div>
+            )}
+          </>
+        ) : !usersTab ? (
           <>
             {/* ---- 过滤栏 ---- */}
             <div className="lj-admin-filters">
@@ -566,6 +672,72 @@ function SubmissionCard({ s, onPreview, onApprove, onReject, onDelete, acting })
           >
             <Trash2 size={14} />
             删除
+          </button>
+        </div>
+      </div>
+    </article>
+  )
+}
+
+function ContentCard({ item, type, onDelete, acting }) {
+  const isSubmission = item.from_submission || item.id >= 10000
+  let cover = GRAD_FALLBACK
+  let title = ''
+  let excerpt = ''
+  let meta = ''
+
+  if (type === 'photo') {
+    cover = item.image ? undefined : (item.grad || GRAD_FALLBACK)
+    title = item.title || '（无标题）'
+    excerpt = (item.desc || '暂无描述').slice(0, 100)
+    meta = `${item.cat || '摄影'} · ${item.author || '佚名'} · ${item.likes || 0} 赞`
+  } else if (type === 'resource') {
+    cover = item.coverGrad || 'linear-gradient(135deg,#667EEA,#764BA2)'
+    title = item.title || '（无标题）'
+    excerpt = (item.summary || item.fullDesc || '').slice(0, 120)
+    meta = `${item.cat || '资源'} · ${item.author || '佚名'} · ${item.views || 0} 浏览`
+  } else {
+    cover = 'linear-gradient(135deg,#6366F1,#8B5CF6)'
+    title = item.title || '（无标题）'
+    excerpt = (item.content || '').slice(0, 120)
+    meta = `${item.date || ''} · ${item.author || '佚名'} · ${item.mood || ''}`
+  }
+
+  return (
+    <article className="lj-sub-card lj-status-approved">
+      <div
+        className="lj-sub-cover"
+        style={
+          type === 'photo' && item.image
+            ? { backgroundImage: `url(${item.image})`, backgroundSize: 'cover', backgroundPosition: 'center' }
+            : { background: cover }
+        }
+      >
+        {type === 'photo' && <Image size={22} style={{ opacity: 0.85 }} />}
+        {type === 'resource' && <FileText size={22} style={{ opacity: 0.85 }} />}
+        {type === 'diary' && <BookOpen size={22} style={{ opacity: 0.85 }} />}
+      </div>
+      <div className="lj-sub-body">
+        <div className="lj-sub-headline">
+          <h3>{title}</h3>
+          <span className="lj-status-chip lj-status-approved">
+            {isSubmission ? '📝 投稿' : '📦 原始'}
+          </span>
+        </div>
+        <div className="lj-sub-meta">
+          <span>{meta}</span>
+          <span>ID: {item.id}</span>
+        </div>
+        <p className="lj-sub-excerpt">{excerpt}</p>
+        <div className="lj-sub-actions">
+          <button
+            className="lj-btn-danger"
+            onClick={onDelete}
+            disabled={acting}
+            style={{ display: 'inline-flex', gap: 6, alignItems: 'center' }}
+          >
+            <Trash2 size={14} />
+            {acting ? '删除中…' : '删除内容'}
           </button>
         </div>
       </div>

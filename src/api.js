@@ -79,6 +79,14 @@ export function deleteSubmission(id) {
   return api(`/admin/submissions/${id}`, { method: 'DELETE', auth: true })
 }
 
+export function listAdminContent(type) {
+  return api(`/admin/content?type=${type}`, { auth: true })
+}
+
+export function deleteContent(type, id) {
+  return api(`/admin/content?type=${type}&id=${id}`, { method: 'DELETE', auth: true })
+}
+
 export function setUserRole(uid, role) {
   return api(`/admin/users/${uid}/role`, { method: 'POST', auth: true, body: { role } })
 }
