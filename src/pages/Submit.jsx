@@ -1,7 +1,7 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useRef } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
-import { Upload, FileText, BookImage, BookOpen, Send, CheckCircle, AlertCircle, Eye } from 'lucide-react'
-import { submitWork, listMySubmissions } from '../api'
+import { Upload, FileText, BookImage, BookOpen, Send, CheckCircle, AlertCircle, Eye, ImagePlus, X } from 'lucide-react'
+import { submitWork, listMySubmissions, uploadImage } from '../api'
 import { isLoggedIn } from '../auth'
 import '../styles/pages/submit.css'
 
@@ -66,6 +66,10 @@ function Submit() {
   const [pDesc, setPDesc] = useState('')
   const [pImage, setPImage] = useState('')
   const [pGrad, setPGrad] = useState(GRAD_PRESETS[0])
+  const [pUploadProgress, setPUploadProgress] = useState(0)
+  const [pUploading, setPUploading] = useState(false)
+  const [pPreview, setPPreview] = useState('')
+  const pFileRef = useRef(null)
 
   // resource form
   const [rTitle, setRTitle] = useState('')
@@ -149,6 +153,37 @@ function Submit() {
     } catch (err) {
       setError(err.message || '无法加载我的投稿')
     }
+  }
+
+  async function handlePhotoFileChange(e) {
+    const file = e.target.files && e.target.files[0]
+    if (!file) return
+    // 安全清空 input，防止同一个文件被视为没改无法再次 onChange
+    e.target.value = ''
+    setError('')
+    setSuccess('')
+    setPUploading(true)
+    setPUploadProgress(5)
+    setPPreview(URL.createObjectURL(file))
+    try {
+      const res = await uploadImage(file, {
+        onProgress: (p) => setPUploadProgress(p),
+      })
+      setPImage(res.url || '')
+      setSuccess('图片上传成功！已自动填入图片链接，可继续填写作品信息')
+    } catch (err) {
+      setPPreview('')
+      setError(err.message || '图片上传失败')
+    } finally {
+      setPUploading(false)
+    }
+  }
+
+  function clearPhotoUpload() {
+    setPImage('')
+    setPPreview('')
+    setPUploadProgress(0)
+    if (pFileRef.current) pFileRef.current.value = ''
   }
 
   if (!isLoggedIn()) {
@@ -269,9 +304,69 @@ function Submit() {
                 <label className="lj-form-label">署名（留空则使用你的用户名）</label>
                 <input className="lj-form-input" value={pAuthor} onChange={(e) => setPAuthor(e.target.value)} placeholder="例如：张明远" />
               </div>
-              <div className="lj-form-group">
-                <label className="lj-form-label">图片链接（可选）</label>
-                <input className="lj-form-input" value={pImage} onChange={(e) => setPImage(e.target.value)} placeholder="https://... （留空则使用渐变封面）" />
+              <div className="lj-form-group" style={{ gridColumn: '1 / -1' }}>
+                <label className="lj-form-label">作品图片 * <span style={{ fontWeight: 400, color: 'var(--lj-ink-3)' }}>（推荐上传本地文件，也可填写链接）</span></label>
+
+                <div style={{ display: 'flex', gap: 12, alignItems: 'center', marginBottom: 10 }}>
+                  <input
+                    ref={pFileRef}
+                    type="file"
+                    accept="image/*"
+                    style={{ display: 'none' }}
+                    onChange={handlePhotoFileChange}
+                  />
+                  <button
+                    type="button"
+                    className="lj-btn-secondary"
+                    disabled={pUploading}
+                    onClick={() => pFileRef.current && pFileRef.current.click()}
+                    style={{ display: 'inline-flex', gap: 6, alignItems: 'center', padding: '10px 16px', opacity: pUploading ? 0.6 : 1 }}
+                  >
+                    <ImagePlus size={16} />
+                    {pUploading ? `上传中 ${pUploadProgress}%` : '选择本地图片上传'}
+                  </button>
+                  <span style={{ fontSize: 12, color: 'var(--lj-ink-3)' }}>
+                    支持 JPG / PNG / WEBP，单张 ≤ 5MB
+                  </span>
+                  {(pPreview || pImage) && (
+                    <button
+                      type="button"
+                      className="lj-btn-ghost"
+                      onClick={clearPhotoUpload}
+                      style={{ padding: '6px 10px', color: '#F87171', borderColor: 'rgba(248,113,113,0.3)', marginLeft: 'auto' }}
+                    >
+                      <X size={14} /> 清除图片
+                    </button>
+                  )}
+                </div>
+
+                {pUploading && (
+                  <div style={{ width: '100%', height: 6, background: 'var(--lj-bg-alt)', borderRadius: 3, marginBottom: 10, overflow: 'hidden' }}>
+                    <div style={{ height: '100%', width: `${pUploadProgress}%`, background: 'linear-gradient(90deg, var(--lj-brand), #22d3ee)', transition: 'width .2s' }} />
+                  </div>
+                )}
+
+                {(pPreview || pImage) && (
+                  <div style={{ borderRadius: 10, padding: 8, border: '1px solid var(--lj-border)', marginBottom: 10, background: 'var(--lj-bg-alt)', display: 'flex', gap: 12, alignItems: 'center' }}>
+                    <img
+                      src={pPreview || pImage}
+                      alt="上传预览"
+                      style={{ width: 96, height: 96, objectFit: 'cover', borderRadius: 8, background: pGrad }}
+                      onError={(e) => { e.currentTarget.style.background = pGrad; e.currentTarget.style.opacity = 0 }}
+                    />
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: 13, fontWeight: 500, marginBottom: 4 }}>✅ 已设置作品封面</div>
+                      <div style={{ fontSize: 12, color: 'var(--lj-ink-3)', wordBreak: 'break-all' }}>
+                        {pImage || '(本地预览中... 上传完成后自动填入)'}
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                <label className="lj-form-label" style={{ marginTop: 4, fontSize: 12, color: 'var(--lj-ink-3)' }}>
+                  或填写图片网络链接（可选，如已有图床）
+                </label>
+                <input className="lj-form-input" value={pImage} onChange={(e) => { setPImage(e.target.value); setPPreview('') }} placeholder="https://... （上传了本地图可忽略此项）" />
               </div>
               <div className="lj-form-group" style={{ gridColumn: '1 / -1' }}>
                 <label className="lj-form-label">作品简介（可选）</label>
