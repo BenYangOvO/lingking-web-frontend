@@ -116,7 +116,7 @@ export function uploadImage(file, { onProgress } = {}) {
       reject(new Error('参数必须是文件对象'))
       return
     }
-    const maxMB = 5
+    const maxMB = 10
     if (file.size > maxMB * 1024 * 1024) {
       reject(new Error(`图片大小不能超过 ${maxMB}MB`))
       return

@@ -326,7 +326,7 @@ function Submit() {
                     {pUploading ? `上传中 ${pUploadProgress}%` : '选择本地图片上传'}
                   </button>
                   <span style={{ fontSize: 12, color: 'var(--lj-ink-3)' }}>
-                    支持 JPG / PNG / WEBP，单张 ≤ 5MB
+                    支持 JPG / PNG / WEBP，单张 ≤ 10MB
                   </span>
                   {(pPreview || pImage) && (
                     <button
