@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { User, Mail, Key, Save, Eye, EyeOff, Crown, Camera, Cake, Image as ImageIcon, FileImage } from 'lucide-react'
+import { User, Mail, Key, Save, Eye, EyeOff, Crown, Camera, Cake, Image as ImageIcon, FileImage, Pencil } from 'lucide-react'
 import { getMyProfile, updateProfile, changePassword } from '../api'
 import { updateLocalUser, isLoggedIn } from '../auth'
 
@@ -33,10 +33,12 @@ function pickInitial(name) {
 
 function Profile() {
   const navigate = useNavigate()
+  const containerRef = useRef(null)
   const [user, setUser] = useState(null)
   const [loading, setLoading] = useState(true)
   const [err, setErr] = useState('')
   const [success, setSuccess] = useState('')
+  const [tab, setTab] = useState('edit') // edit = 编辑资料 / password = 修改密码
 
   const [editForm, setEditForm] = useState({ username: '', nickname: '', avatar: '', birthday: '', bio: '' })
   const [avatarMode, setAvatarMode] = useState('gradient') // gradient | emoji | image
@@ -71,6 +73,19 @@ function Profile() {
     }).catch((e) => setErr(e.message || '加载失败'))
       .finally(() => setLoading(false))
   }, [])
+
+  // 修复 lj-fade-in 默认 opacity=0 的问题（与 History.jsx 相同逻辑）
+  useEffect(() => {
+    if (!loading && containerRef.current) {
+      const timer = setTimeout(() => {
+        const fadeEls = containerRef.current.querySelectorAll('.lj-fade-in')
+        fadeEls.forEach((el, i) => {
+          setTimeout(() => el.classList.add('visible'), i * 80)
+        })
+      }, 60)
+      return () => clearTimeout(timer)
+    }
+  }, [loading, tab])
 
   const onEdit = (k, v) => setEditForm((f) => ({ ...f, [k]: v }))
   const onPwd = (k, v) => setPwdForm((f) => ({ ...f, [k]: v }))
@@ -107,19 +122,19 @@ function Profile() {
 
   if (loading) {
     return (
-      <div className="lj-fade-in" style={{ padding: 40, textAlign: 'center', color: 'var(--lj-ink-3)' }}>
-        加载中...
+      <div ref={containerRef} className="lj-fade-in visible" style={{ padding: 60, textAlign: 'center', color: 'var(--lj-ink-3)' }}>
+        <div style={{ fontSize: 18 }}>加载中，请稍候...</div>
       </div>
     )
   }
 
   return (
-    <div className="lj-fade-in">
+    <div ref={containerRef} className="lj-fade-in">
       <section className="lj-hero pt-16" style={{ minHeight: 'auto', padding: '80px 24px 40px' }}>
         <div className="max-w-3xl mx-auto px-4 sm:px-6 text-center">
-          <AvatarDisplay avatar={user?.avatar || pickInitial(editForm.username)} initial={(editForm.nickname || editForm.username || '?').charAt(0).toUpperCase()} size={96} />
-          <h1 className="font-serif text-3xl sm:text-4xl font-bold mb-2">
-            {editForm.nickname || editForm.username}
+          <AvatarDisplay avatar={user?.avatar || pickInitial(editForm.username)} initial={(editForm.nickname || editForm.username || '?').charAt(0).toUpperCase()} size={108} />
+          <h1 className="font-serif text-3xl sm:text-4xl font-bold mb-2" style={{ marginTop: 20 }}>
+            {user?.nickname || editForm.nickname || user?.username || editForm.username || '我的资料'}
             {user?.role === 'admin' && (
               <span style={{ marginLeft: 8, color: '#FBBF24', fontSize: 20 }}>
                 <Crown size={20} style={{ display: 'inline', verticalAlign: '-4px' }} />
@@ -133,7 +148,7 @@ function Profile() {
             )}
           </div>
           {user?.bio && (
-            <p style={{ maxWidth: 520, margin: '20px auto 0', color: 'var(--lj-ink-2)', lineHeight: 1.8, fontSize: 15 }}>
+            <p style={{ maxWidth: 560, margin: '20px auto 0', color: 'var(--lj-ink-2)', lineHeight: 1.8, fontSize: 15 }}>
               {user.bio}
             </p>
           )}
@@ -142,6 +157,25 @@ function Profile() {
 
       <section className="pb-20">
         <div className="max-w-2xl mx-auto px-4 sm:px-6 space-y-6">
+
+          {/* 醒目的 Tab 切换：编辑资料 / 修改密码 */}
+          <div className="lj-admin-tabs" style={{ justifyContent: 'center', marginTop: -10 }}>
+            <button
+              className={`lj-admin-tab${tab === 'edit' ? ' active' : ''}`}
+              onClick={() => setTab('edit')}
+              style={{ fontSize: 15, padding: '10px 20px', borderRadius: 10 }}
+            >
+              <Pencil size={16} /> 编辑个人资料
+            </button>
+            <button
+              className={`lj-admin-tab${tab === 'password' ? ' active' : ''}`}
+              onClick={() => setTab('password')}
+              style={{ fontSize: 15, padding: '10px 20px', borderRadius: 10 }}
+            >
+              <Key size={16} /> 修改密码
+            </button>
+          </div>
+
           {err && (
             <div style={{
               background: 'rgba(248,113,113,0.12)', color: '#F87171',
@@ -155,8 +189,9 @@ function Profile() {
             }}>{success}</div>
           )}
 
-          {/* 基本资料 */}
-          <div className="lj-surface" style={{ padding: 24 }}>
+          {/* 编辑资料 Tab */}
+          {tab === 'edit' && (
+            <div className="lj-surface" style={{ padding: 24 }}>
             <h2 style={{ fontSize: 20, fontWeight: 600, marginBottom: 20, display: 'flex', alignItems: 'center', gap: 8 }}>
               <User size={18} style={{ color: 'var(--lj-brand)' }} />
               基本资料
@@ -315,14 +350,16 @@ function Profile() {
               </div>
             </form>
           </div>
+          )}
 
-          {/* 修改密码 */}
-          <div className="lj-surface" style={{ padding: 24 }}>
-            <h2 style={{ fontSize: 20, fontWeight: 600, marginBottom: 20, display: 'flex', alignItems: 'center', gap: 8 }}>
-              <Key size={18} style={{ color: 'var(--lj-brand)' }} />
-              修改密码
-            </h2>
-            <form onSubmit={handleChangePassword} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+          {/* 修改密码 Tab */}
+          {tab === 'password' && (
+            <div className="lj-surface" style={{ padding: 24 }}>
+              <h2 style={{ fontSize: 20, fontWeight: 600, marginBottom: 20, display: 'flex', alignItems: 'center', gap: 8 }}>
+                <Key size={18} style={{ color: 'var(--lj-brand)' }} />
+                修改密码
+              </h2>
+              <form onSubmit={handleChangePassword} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
               <PwdInput
                 label="当前密码"
                 value={pwdForm.old}
@@ -352,6 +389,7 @@ function Profile() {
               </div>
             </form>
           </div>
+          )}
         </div>
       </section>
     </div>
