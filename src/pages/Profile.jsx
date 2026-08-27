@@ -130,10 +130,12 @@ function Profile() {
 
   return (
     <div ref={containerRef} style={{ minHeight: '100vh' }}>
-      <section className="lj-hero pt-16" style={{ minHeight: 'auto', padding: '80px 24px 40px' }}>
-        <div className="max-w-3xl mx-auto px-4 sm:px-6 text-center">
-          <AvatarDisplay avatar={user?.avatar || pickInitial(editForm.username)} initial={(editForm.nickname || editForm.username || '?').charAt(0).toUpperCase()} size={108} />
-          <h1 className="font-serif text-3xl sm:text-4xl font-bold mb-2" style={{ marginTop: 20 }}>
+      <section className="lj-hero pt-16" style={{ minHeight: 'auto', padding: '80px 24px 40px', alignItems: 'center', display: 'flex', flexDirection: 'column' }}>
+        <div className="max-w-3xl w-full px-4 sm:px-6" style={{ textAlign: 'center', margin: '0 auto' }}>
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 20 }}>
+            <AvatarDisplay avatar={user?.avatar || pickInitial(editForm.username)} initial={(editForm.nickname || editForm.username || '?').charAt(0).toUpperCase()} size={108} />
+          </div>
+          <h1 className="font-serif text-3xl sm:text-4xl font-bold mb-2" style={{ textAlign: 'center' }}>
             {user?.nickname || editForm.nickname || user?.username || editForm.username || '我的资料'}
             {user?.role === 'admin' && (
               <span style={{ marginLeft: 8, color: '#FBBF24', fontSize: 20 }}>
