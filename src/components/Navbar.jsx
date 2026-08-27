@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link, NavLink, useNavigate } from 'react-router-dom'
-import { Menu, LogIn, UserPlus, LogOut, PenLine, Shield, Crown } from 'lucide-react'
+import { Menu, LogIn, UserPlus, LogOut, PenLine, Shield, Crown, UserCircle2 } from 'lucide-react'
 import { isLoggedIn, getUsername, logout, onAuthChange, isAdmin } from '../auth'
 
 const NAV_LINKS = [
@@ -52,30 +52,6 @@ function Navbar() {
               </NavLink>
             </li>
           ))}
-          {loggedIn && (
-            <li>
-              <NavLink
-                to="/submit"
-                className={({ isActive }) => (isActive ? 'active' : 'lj-nav-submit')}
-                onClick={() => setMenuOpen(false)}
-              >
-                <PenLine size={14} style={{ verticalAlign: '-2px', marginRight: 4 }} />
-                投稿
-              </NavLink>
-            </li>
-          )}
-          {loggedIn && role === 'admin' && (
-            <li>
-              <NavLink
-                to="/admin"
-                className={({ isActive }) => (isActive ? 'active' : 'lj-nav-admin')}
-                onClick={() => setMenuOpen(false)}
-              >
-                <Shield size={14} style={{ verticalAlign: '-2px', marginRight: 4 }} />
-                审核后台
-              </NavLink>
-            </li>
-          )}
         </ul>
 
         <div className="lj-nav-actions">
@@ -89,6 +65,14 @@ function Navbar() {
               </span>
               <Link to="/submit" className="lj-btn-secondary" onClick={() => setMenuOpen(false)} title="投稿">
                 <PenLine size={16} />
+              </Link>
+              {role === 'admin' && (
+                <Link to="/admin" className="lj-btn-secondary" onClick={() => setMenuOpen(false)} title="审核后台">
+                  <Shield size={16} />
+                </Link>
+              )}
+              <Link to="/profile" className="lj-btn-secondary" onClick={() => setMenuOpen(false)} title="个人资料">
+                <UserCircle2 size={16} />
               </Link>
               <button className="lj-btn-secondary" onClick={handleLogout} title="退出登录">
                 <LogOut size={16} />

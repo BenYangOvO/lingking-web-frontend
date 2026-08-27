@@ -12,6 +12,7 @@ import About from './pages/About'
 import Auth from './pages/Auth'
 import Submit from './pages/Submit'
 import Admin from './pages/Admin'
+import Profile from './pages/Profile'
 import NotFound from './pages/NotFound'
 
 function App() {
@@ -30,6 +31,7 @@ function App() {
         <Route path="/auth" element={<Auth />} />
         <Route path="/submit" element={<Submit />} />
         <Route path="/admin" element={<Admin />} />
+        <Route path="/profile" element={<Profile />} />
         <Route path="*" element={<NotFound />} />
       </Route>
     </Routes>

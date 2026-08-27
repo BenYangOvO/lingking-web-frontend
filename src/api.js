@@ -82,3 +82,21 @@ export function deleteSubmission(id) {
 export function setUserRole(uid, role) {
   return api(`/admin/users/${uid}/role`, { method: 'POST', auth: true, body: { role } })
 }
+
+// ---------- 用户资料 ---------- //
+
+export function getMyProfile() {
+  return api('/auth/me', { auth: true })
+}
+
+export function updateProfile({ username, nickname, avatar, bio }) {
+  return api('/auth/profile', { method: 'POST', auth: true, body: { username, nickname, avatar, bio } })
+}
+
+export function changePassword(oldPassword, newPassword) {
+  return api('/auth/password', {
+    method: 'POST',
+    auth: true,
+    body: { old_password: oldPassword, new_password: newPassword },
+  })
+}
