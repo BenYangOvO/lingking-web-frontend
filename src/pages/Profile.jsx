@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { User, Mail, Key, Save, Eye, EyeOff, Crown, Camera } from 'lucide-react'
+import { User, Mail, Key, Save, Eye, EyeOff, Crown, Camera, Cake, Image as ImageIcon, FileImage } from 'lucide-react'
 import { getMyProfile, updateProfile, changePassword } from '../api'
 import { updateLocalUser, isLoggedIn } from '../auth'
 
@@ -14,6 +14,14 @@ const AVATAR_GRADIENTS = [
   'linear-gradient(135deg, #99F6E4, #5EEAD4)',
   'linear-gradient(135deg, #FECDD3, #FDA4AF)',
   'linear-gradient(135deg, #A5F3FC, #67E8F9)',
+  'linear-gradient(135deg, #FCA5A5, #F87171)',
+  'linear-gradient(135deg, #818CF8, #6366F1)',
+  'linear-gradient(135deg, #34D399, #10B981)',
+]
+
+const AVATAR_EMOJI = [
+  '📷', '🎨', '🌙', '🌸', '🍂', '🎯', '🎬', '📚',
+  '🌊', '🏔️', '🌆', '🌈', '🔥', '💫', '🎵', '🚀',
 ]
 
 function pickInitial(name) {
@@ -30,7 +38,9 @@ function Profile() {
   const [err, setErr] = useState('')
   const [success, setSuccess] = useState('')
 
-  const [editForm, setEditForm] = useState({ username: '', nickname: '', avatar: '', bio: '' })
+  const [editForm, setEditForm] = useState({ username: '', nickname: '', avatar: '', birthday: '', bio: '' })
+  const [avatarMode, setAvatarMode] = useState('gradient') // gradient | emoji | image
+  const [customImg, setCustomImg] = useState('')
   const [pwdForm, setPwdForm] = useState({ old: '', next: '', confirm: '' })
   const [showPwd, setShowPwd] = useState({ old: false, next: false, confirm: false })
   const [saving, setSaving] = useState(false)
@@ -43,10 +53,19 @@ function Profile() {
     getMyProfile().then((d) => {
       const u = d.user
       setUser(u)
+      const a = u.avatar || pickInitial(u.username)
+      const detectedMode = a.startsWith('emoji:')
+        ? 'emoji'
+        : (a.startsWith('http://') || a.startsWith('https://') || a.startsWith('data:'))
+          ? 'image'
+          : 'gradient'
+      setAvatarMode(detectedMode)
+      if (detectedMode === 'image') setCustomImg(a)
       setEditForm({
         username: u.username || '',
         nickname: u.nickname || '',
-        avatar: u.avatar || pickInitial(u.username),
+        avatar: a,
+        birthday: u.birthday || '',
         bio: u.bio || '',
       })
     }).catch((e) => setErr(e.message || '加载失败'))
@@ -98,18 +117,7 @@ function Profile() {
     <div className="lj-fade-in">
       <section className="lj-hero pt-16" style={{ minHeight: 'auto', padding: '80px 24px 40px' }}>
         <div className="max-w-3xl mx-auto px-4 sm:px-6 text-center">
-          <div
-            className="mx-auto mb-6"
-            style={{
-              width: 96, height: 96, borderRadius: '50%',
-              background: user?.avatar || pickInitial(editForm.username),
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontSize: 36, fontWeight: 700, color: '#fff',
-              boxShadow: '0 8px 32px rgba(0,0,0,0.3)',
-            }}
-          >
-            {(editForm.nickname || editForm.username || '?').charAt(0).toUpperCase()}
-          </div>
+          <AvatarDisplay avatar={user?.avatar || pickInitial(editForm.username)} initial={(editForm.nickname || editForm.username || '?').charAt(0).toUpperCase()} size={96} />
           <h1 className="font-serif text-3xl sm:text-4xl font-bold mb-2">
             {editForm.nickname || editForm.username}
             {user?.role === 'admin' && (
@@ -118,9 +126,14 @@ function Profile() {
               </span>
             )}
           </h1>
-          <p style={{ color: 'var(--lj-ink-3)' }}>{user?.email}</p>
+          <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: 12, color: 'var(--lj-ink-3)', fontSize: 14, marginTop: 6 }}>
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}><Mail size={14} /> {user?.email}</span>
+            {user?.birthday && (
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}><Cake size={14} /> {user.birthday}</span>
+            )}
+          </div>
           {user?.bio && (
-            <p style={{ maxWidth: 520, margin: '16px auto 0', color: 'var(--lj-ink-2)', lineHeight: 1.7 }}>
+            <p style={{ maxWidth: 520, margin: '20px auto 0', color: 'var(--lj-ink-2)', lineHeight: 1.8, fontSize: 15 }}>
               {user.bio}
             </p>
           )}
@@ -159,45 +172,139 @@ function Profile() {
                 />
               </label>
               <label style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                <span style={{ fontSize: 13, color: 'var(--lj-ink-3)' }}>昵称</span>
+                <span style={{ fontSize: 13, color: 'var(--lj-ink-3)' }}>昵称（对外展示）</span>
                 <input
                   value={editForm.nickname}
                   onChange={(e) => onEdit('nickname', e.target.value)}
                   style={inputStyle}
-                  placeholder="显示名称"
+                  placeholder="给自己取个展示名称吧"
                 />
               </label>
               <label style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                 <span style={{ fontSize: 13, color: 'var(--lj-ink-3)', display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <Cake size={14} /> 生日
+                </span>
+                <input
+                  type="date"
+                  value={editForm.birthday}
+                  onChange={(e) => onEdit('birthday', e.target.value)}
+                  style={inputStyle}
+                />
+              </label>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                <span style={{ fontSize: 13, color: 'var(--lj-ink-3)', display: 'flex', alignItems: 'center', gap: 6 }}>
                   <Camera size={14} /> 头像
                 </span>
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-                  {AVATAR_GRADIENTS.map((g, i) => (
-                    <button
-                      type="button"
-                      key={i}
-                      onClick={() => onEdit('avatar', g)}
-                      style={{
-                        width: 44, height: 44, borderRadius: '50%',
-                        background: g,
-                        border: editForm.avatar === g ? '3px solid var(--lj-brand)' : '3px solid transparent',
-                        cursor: 'pointer', padding: 0,
-                      }}
-                    />
-                  ))}
+                <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                  <button
+                    type="button"
+                    onClick={() => { setAvatarMode('gradient'); if (!AVATAR_GRADIENTS.includes(editForm.avatar)) onEdit('avatar', AVATAR_GRADIENTS[0]) }}
+                    className={`lj-admin-tab small${avatarMode === 'gradient' ? ' active' : ''}`}
+                    style={{ padding: '6px 12px', borderRadius: 999, marginBottom: 0, width: 'auto' }}
+                  >
+                    渐变配色
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => { setAvatarMode('emoji'); if (!editForm.avatar.startsWith('emoji:')) onEdit('avatar', 'emoji:' + AVATAR_EMOJI[0]) }}
+                    className={`lj-admin-tab small${avatarMode === 'emoji' ? ' active' : ''}`}
+                    style={{ padding: '6px 12px', borderRadius: 999, marginBottom: 0, width: 'auto' }}
+                  >
+                    表情符号
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => { setAvatarMode('image'); if (!customImg) { const g = 'https://picsum.photos/seed/' + Date.now() + '/160'; setCustomImg(g); onEdit('avatar', g) } }}
+                    className={`lj-admin-tab small${avatarMode === 'image' ? ' active' : ''}`}
+                    style={{ padding: '6px 12px', borderRadius: 999, marginBottom: 0, width: 'auto' }}
+                  >
+                    <FileImage size={14} style={{ marginRight: 4 }} /> 图片/链接
+                  </button>
                 </div>
-              </label>
+
+                {avatarMode === 'gradient' && (
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                    {AVATAR_GRADIENTS.map((g, i) => (
+                      <button
+                        type="button"
+                        key={i}
+                        onClick={() => onEdit('avatar', g)}
+                        style={{
+                          width: 48, height: 48, borderRadius: '50%',
+                          background: g,
+                          border: editForm.avatar === g ? '3px solid var(--lj-brand)' : '3px solid transparent',
+                          cursor: 'pointer', padding: 0, boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
+                        }}
+                        title={`渐变配色 ${i + 1}`}
+                      />
+                    ))}
+                  </div>
+                )}
+
+                {avatarMode === 'emoji' && (
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                    {AVATAR_EMOJI.map((e, i) => {
+                      const val = 'emoji:' + e
+                      return (
+                        <button
+                          type="button"
+                          key={i}
+                          onClick={() => onEdit('avatar', val)}
+                          style={{
+                            width: 48, height: 48, borderRadius: '50%',
+                            background: 'var(--lj-bg-alt)',
+                            border: editForm.avatar === val ? '3px solid var(--lj-brand)' : '3px solid transparent',
+                            cursor: 'pointer', padding: 0, fontSize: 22, lineHeight: 1,
+                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                          }}
+                          title={e}
+                        >
+                          {e}
+                        </button>
+                      )
+                    })}
+                  </div>
+                )}
+
+                {avatarMode === 'image' && (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                    <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                      <input
+                        type="text"
+                        value={customImg}
+                        onChange={(e) => { setCustomImg(e.target.value); onEdit('avatar', e.target.value) }}
+                        style={{ ...inputStyle, flex: 1 }}
+                        placeholder="输入图片 URL 或 data:image/..."
+                      />
+                      <button
+                        type="button"
+                        onClick={() => { const g = 'https://picsum.photos/seed/' + Date.now() + '/160'; setCustomImg(g); onEdit('avatar', g) }}
+                        className="lj-btn-ghost"
+                        style={{ padding: '10px 14px', whiteSpace: 'nowrap' }}
+                      >
+                        <ImageIcon size={14} /> 随机
+                      </button>
+                    </div>
+                    <div style={{ display: 'flex', gap: 8 }}>
+                      <AvatarDisplay avatar={editForm.avatar} initial="图" size={60} />
+                      <span style={{ color: 'var(--lj-ink-3)', fontSize: 12, alignSelf: 'center' }}>
+                        预览：{customImg ? '已设置' : '暂未设置，将使用渐变配色'}
+                      </span>
+                    </div>
+                  </div>
+                )}
+              </div>
               <label style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                <span style={{ fontSize: 13, color: 'var(--lj-ink-3)' }}>个人简介</span>
+                <span style={{ fontSize: 13, color: 'var(--lj-ink-3)' }}>个人简介（自我介绍）</span>
                 <textarea
                   value={editForm.bio}
                   onChange={(e) => onEdit('bio', e.target.value)}
-                  style={{ ...inputStyle, minHeight: 100, resize: 'vertical' }}
-                  placeholder="介绍一下自己吧..."
-                  maxLength={500}
+                  style={{ ...inputStyle, minHeight: 120, resize: 'vertical', lineHeight: 1.7 }}
+                  placeholder="介绍一下自己吧，比如喜欢的摄影风格、常用器材、座右铭..."
+                  maxLength={1000}
                 />
                 <span style={{ fontSize: 12, color: 'var(--lj-ink-3)', textAlign: 'right' }}>
-                  {editForm.bio.length}/500
+                  {editForm.bio.length}/1000
                 </span>
               </label>
               <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
@@ -289,4 +396,57 @@ function PwdInput({ label, value, onChange, show, onToggle }) {
   )
 }
 
+function AvatarDisplay({ avatar, initial = '?', size = 44, style = {} }) {
+  let bg = AVATAR_GRADIENTS[0]
+  let content = initial || '?'
+  let isImg = false
+  if (avatar) {
+    if (avatar.startsWith('emoji:')) {
+      content = avatar.slice(6)
+    } else if (avatar.startsWith('http://') || avatar.startsWith('https://') || avatar.startsWith('data:')) {
+      isImg = true
+      bg = avatar
+    } else if (avatar.startsWith('linear-gradient') || avatar.startsWith('radial-gradient') || avatar.startsWith('#') || avatar.startsWith('rgb')) {
+      bg = avatar
+    } else {
+      bg = avatar
+    }
+  }
+  const baseStyle = {
+    width: size, height: size, borderRadius: '50%',
+    display: 'flex', alignItems: 'center', justifyContent: 'center',
+    fontWeight: 700, boxShadow: '0 4px 16px rgba(0,0,0,0.25)',
+    flexShrink: 0,
+    ...style,
+  }
+  if (isImg) {
+    return (
+      <img
+        src={bg}
+        alt=""
+        style={{
+          ...baseStyle,
+          background: AVATAR_GRADIENTS[0],
+          objectFit: 'cover',
+          border: 'none',
+          fontSize: Math.floor(size * 0.45),
+          color: '#fff',
+        }}
+        onError={(e) => { e.currentTarget.style.display = 'none' }}
+      />
+    )
+  }
+  return (
+    <div style={{
+      ...baseStyle,
+      background: bg,
+      color: '#fff',
+      fontSize: avatar?.startsWith('emoji:') ? Math.floor(size * 0.55) : Math.floor(size * 0.42),
+    }}>
+      {content}
+    </div>
+  )
+}
+
+export { AvatarDisplay }
 export default Profile

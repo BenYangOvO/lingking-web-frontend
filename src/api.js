@@ -97,8 +97,8 @@ export function getMyProfile() {
   return api('/auth/me', { auth: true })
 }
 
-export function updateProfile({ username, nickname, avatar, bio }) {
-  return api('/auth/profile', { method: 'POST', auth: true, body: { username, nickname, avatar, bio } })
+export function updateProfile({ username, nickname, avatar, birthday, bio }) {
+  return api('/auth/profile', { method: 'POST', auth: true, body: { username, nickname, avatar, birthday, bio } })
 }
 
 export function changePassword(oldPassword, newPassword) {
