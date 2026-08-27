@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Image } from 'lucide-react'
 import { api } from '../api'
 import '../styles/pages/history.css'
@@ -6,6 +6,7 @@ import '../styles/pages/history.css'
 function History() {
   const [events, setEvents] = useState([])
   const [loading, setLoading] = useState(true)
+  const containerRef = useRef(null)
 
   useEffect(() => {
     api('/history').then((data) => {
@@ -13,6 +14,18 @@ function History() {
       setLoading(false)
     }).catch(() => setLoading(false))
   }, [])
+
+  useEffect(() => {
+    if (!loading && events.length > 0 && containerRef.current) {
+      const timer = setTimeout(() => {
+        const fadeEls = containerRef.current.querySelectorAll('.lj-fade-in')
+        fadeEls.forEach((el, i) => {
+          setTimeout(() => el.classList.add('visible'), i * 80)
+        })
+      }, 100)
+      return () => clearTimeout(timer)
+    }
+  }, [loading, events])
   return (
     <>
       <section className="lj-hero pt-16">
@@ -43,7 +56,7 @@ function History() {
             <p className="text-ink-2 mt-4 text-base sm:text-lg">从萌芽到绽放，每一步都是热爱的印记</p>
           </div>
 
-          <div className="lj-timeline">
+          <div className="lj-timeline" ref={containerRef}>
             {loading && <div style={{ textAlign: 'center', padding: 40, color: '#6b7280' }}>加载历史中...</div>}
             {!loading && events.map((e) => (
               <div className="lj-timeline-item lj-fade-in" key={e.year}>
