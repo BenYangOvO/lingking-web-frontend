@@ -122,14 +122,14 @@ function Profile() {
 
   if (loading) {
     return (
-      <div ref={containerRef} className="lj-fade-in visible" style={{ padding: 60, textAlign: 'center', color: 'var(--lj-ink-3)' }}>
+      <div ref={containerRef} style={{ padding: 60, textAlign: 'center', color: 'var(--lj-ink-3)' }}>
         <div style={{ fontSize: 18 }}>加载中，请稍候...</div>
       </div>
     )
   }
 
   return (
-    <div ref={containerRef} className="lj-fade-in">
+    <div ref={containerRef} style={{ minHeight: '100vh' }}>
       <section className="lj-hero pt-16" style={{ minHeight: 'auto', padding: '80px 24px 40px' }}>
         <div className="max-w-3xl mx-auto px-4 sm:px-6 text-center">
           <AvatarDisplay avatar={user?.avatar || pickInitial(editForm.username)} initial={(editForm.nickname || editForm.username || '?').charAt(0).toUpperCase()} size={108} />
