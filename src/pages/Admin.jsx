@@ -213,6 +213,11 @@ function Admin() {
   const [siteEditorContent, setSiteEditorContent] = useState(null)
   const [siteEditorOpen, setSiteEditorOpen] = useState(false)
 
+  // 站点内容管理 tab 状态
+  const [siteTab, setSiteTab] = useState(false)
+  const [siteInfo, setSiteInfo] = useState({})
+  const [siteInfoLoading, setSiteInfoLoading] = useState(false)
+
   async function openSiteQuickEditor(slug) {
     let content = SITE_DEFAULTS[slug]
     try {
@@ -222,6 +227,22 @@ function Admin() {
     setSiteEditorSlug(slug)
     setSiteEditorContent(content)
     setSiteEditorOpen(true)
+  }
+
+  async function loadSiteInfo() {
+    setSiteInfoLoading(true)
+    setError('')
+    try {
+      const slugs = SITE_EDIT_QUICK.map(s => s.slug)
+      const results = await Promise.all(slugs.map(s => getSiteContent(s)))
+      const info = {}
+      slugs.forEach((slug, i) => { info[slug] = results[i] })
+      setSiteInfo(info)
+    } catch (err) {
+      setError(err.message || '加载站点内容信息失败')
+    } finally {
+      setSiteInfoLoading(false)
+    }
   }
 
   const isAdminUser = authIsAdmin()
@@ -257,7 +278,7 @@ function Admin() {
   }
 
   useEffect(() => {
-    if (isAdminUser && !contentTab) loadAll()
+    if (isAdminUser && !contentTab && !siteTab) loadAll()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filterBoard, filterStatus, isAdminUser])
 
@@ -265,6 +286,11 @@ function Admin() {
     if (isAdminUser && contentTab) loadContent()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [contentType, contentTab, isAdminUser])
+
+  useEffect(() => {
+    if (isAdminUser && siteTab) loadSiteInfo()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [siteTab, isAdminUser])
 
   const filteredList = useMemo(() => {
     if (!search) return subs
@@ -446,147 +472,174 @@ function Admin() {
         {/* ---- Tabs: 投稿 / 内容 / 用户 ---- */}
         <div className="lj-admin-tabs">
           <button
-            className={`lj-admin-tab${!usersTab && !contentTab ? ' active' : ''}`}
-            onClick={() => { setUsersTab(false); setContentTab(false) }}
+            className={`lj-admin-tab${!usersTab && !contentTab && !siteTab ? ' active' : ''}`}
+            onClick={() => { setUsersTab(false); setContentTab(false); setSiteTab(false) }}
           >
             <ShieldAlert size={16} /> 投稿审核 <span className="lj-tab-count">{stats?.pending_count ?? 0}</span>
           </button>
           <button
+            className={`lj-admin-tab${siteTab ? ' active' : ''}`}
+            onClick={() => { setUsersTab(false); setContentTab(false); setSiteTab(true) }}
+          >
+            <Edit3 size={16} /> 站点内容
+          </button>
+          <button
             className={`lj-admin-tab${contentTab ? ' active' : ''}`}
-            onClick={() => { setUsersTab(false); setContentTab(true) }}
+            onClick={() => { setUsersTab(false); setContentTab(true); setSiteTab(false) }}
           >
             <Layers size={16} /> 内容管理
           </button>
           <button
             className={`lj-admin-tab${usersTab ? ' active' : ''}`}
-            onClick={() => { setUsersTab(true); setContentTab(false) }}
+            onClick={() => { setUsersTab(true); setContentTab(false); setSiteTab(false) }}
           >
             <UserCog size={16} /> 用户管理
           </button>
         </div>
 
-        {contentTab ? (
+        {siteTab ? (
           <>
-            {/* ---- 固定板块快速编辑 ---- */}
+            {/* ---- 站点内容管理 ---- */}
             <div style={{
-              marginBottom: 28,
-              padding: 20,
-              background: 'rgba(74, 144, 217, 0.05)',
-              border: '1px solid rgba(74, 144, 217, 0.18)',
-              borderRadius: 14,
+              marginBottom: 20,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              flexWrap: 'wrap',
+              gap: 8,
             }}>
-              <div style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                marginBottom: 14,
-                flexWrap: 'wrap',
-                gap: 8,
-              }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <span style={{
-                    fontSize: 12,
-                    letterSpacing: '0.1em',
-                    textTransform: 'uppercase',
-                    color: 'var(--lj-brand-light)',
-                    fontWeight: 600,
-                  }}>STATIC PAGES</span>
-                  <span style={{ fontSize: 15, fontWeight: 600, color: 'var(--lj-ink)' }}>
-                    固定板块快速编辑
-                  </span>
-                </div>
-                <span style={{ fontSize: 12, color: 'var(--lj-ink-3)' }}>
-                  直接在后台编辑即可，保存后立即生效
-                </span>
+              <div>
+                <h2 style={{ fontSize: 20, fontWeight: 700, color: 'var(--lj-ink)', margin: '0 0 4px' }}>
+                  固定板块内容管理
+                </h2>
+                <p style={{ fontSize: 13, color: 'var(--lj-ink-3)', margin: 0 }}>
+                  点击「编辑」可直接修改对应页面的文字内容，保存后立即生效。各页面也支持在前台点击「编辑本页」按钮编辑。
+                </p>
               </div>
-              <div style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fill, minmax(210px, 1fr))',
-                gap: 12,
-              }}>
-                {SITE_EDIT_QUICK.map((item) => {
-                  const IconComp = item.icon
-                  return (
-                    <div
-                      key={item.slug}
-                      style={{
-                        background: 'var(--lj-surface)',
-                        border: '1px solid var(--lj-border)',
-                        borderRadius: 12,
-                        padding: 14,
-                        display: 'flex',
-                        flexDirection: 'column',
-                        gap: 10,
-                        transition: 'all 0.18s',
-                      }}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.borderColor = 'rgba(74, 144, 217, 0.5)'
-                        e.currentTarget.style.transform = 'translateY(-2px)'
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.borderColor = ''
-                        e.currentTarget.style.transform = ''
-                      }}
-                    >
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                        <div style={{
-                          width: 34, height: 34,
-                          borderRadius: 10,
-                          background: 'linear-gradient(135deg, rgba(74,144,217,0.18), rgba(106,173,232,0.08))',
-                          color: 'var(--lj-brand-light)',
-                          display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        }}>
-                          <IconComp size={17} />
-                        </div>
-                        <div style={{ fontWeight: 600, color: 'var(--lj-ink)', fontSize: 14.5 }}>
-                          {item.label}
-                        </div>
-                      </div>
-                      <div style={{
-                        fontSize: 12,
-                        color: 'var(--lj-ink-3)',
-                        marginBottom: 2,
-                        fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace',
-                      }}>
-                        /{item.slug === 'home' ? '' : item.slug}
-                      </div>
-                      <div style={{ display: 'flex', gap: 8, marginTop: 'auto' }}>
-                        <button
-                          className="lj-btn-primary"
-                          style={{
-                            padding: '7px 12px',
-                            fontSize: 12.5,
-                            flex: 1,
-                            justifyContent: 'center',
-                          }}
-                          onClick={() => openSiteQuickEditor(item.slug)}
-                        >
-                          <Edit3 size={13} /> 编辑
-                        </button>
-                        <Link
-                          to={item.path}
-                          className="lj-btn-secondary"
-                          style={{
-                            padding: '7px 10px',
-                            fontSize: 12.5,
-                            textDecoration: 'none',
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            gap: 4,
-                          }}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          title="在新标签页查看页面"
-                        >
-                          <ExternalLink size={13} />
-                        </Link>
-                      </div>
-                    </div>
-                  )
-                })}
-              </div>
+              <button className="lj-btn-ghost" onClick={loadSiteInfo} disabled={siteInfoLoading}>
+                {siteInfoLoading ? '加载中…' : '刷新信息'}
+              </button>
             </div>
 
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
+              gap: 16,
+            }}>
+              {SITE_EDIT_QUICK.map((item) => {
+                const IconComp = item.icon
+                const info = siteInfo[item.slug]
+                const hasSaved = info?.saved
+                const updatedAt = info?.updated_at
+                const updatedBy = info?.updated_by
+                return (
+                  <div
+                    key={item.slug}
+                    style={{
+                      background: 'var(--lj-surface)',
+                      border: '1px solid var(--lj-border)',
+                      borderRadius: 14,
+                      padding: 20,
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: 12,
+                      transition: 'all 0.18s',
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.borderColor = 'rgba(74, 144, 217, 0.5)'
+                      e.currentTarget.style.boxShadow = '0 4px 20px rgba(74, 144, 217, 0.1)'
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.borderColor = ''
+                      e.currentTarget.style.boxShadow = ''
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                      <div style={{
+                        width: 44, height: 44,
+                        borderRadius: 12,
+                        background: 'linear-gradient(135deg, rgba(74,144,217,0.18), rgba(106,173,232,0.08))',
+                        color: 'var(--lj-brand-light)',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        flexShrink: 0,
+                      }}>
+                        <IconComp size={22} />
+                      </div>
+                      <div>
+                        <div style={{ fontWeight: 700, color: 'var(--lj-ink)', fontSize: 16 }}>
+                          {item.label}
+                        </div>
+                        <div style={{
+                          fontSize: 12,
+                          color: 'var(--lj-ink-3)',
+                          fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace',
+                        }}>
+                          {item.path}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div style={{
+                      fontSize: 12,
+                      color: 'var(--lj-ink-2)',
+                      padding: '8px 12px',
+                      background: hasSaved ? 'rgba(16, 185, 129, 0.06)' : 'rgba(148, 163, 184, 0.06)',
+                      borderRadius: 8,
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 6,
+                    }}>
+                      {hasSaved ? (
+                        <>
+                          <CheckCircle2 size={13} style={{ color: '#10b981', flexShrink: 0 }} />
+                          <span>已自定义 · 更新于 {fmtTime(updatedAt)}{updatedBy ? ` · UID ${updatedBy}` : ''}</span>
+                        </>
+                      ) : (
+                        <>
+                          <Clock size={13} style={{ color: 'var(--lj-ink-3)', flexShrink: 0 }} />
+                          <span>使用默认内容（尚未自定义编辑）</span>
+                        </>
+                      )}
+                    </div>
+
+                    <div style={{ display: 'flex', gap: 8, marginTop: 'auto' }}>
+                      <button
+                        className="lj-btn-primary"
+                        style={{
+                          padding: '9px 16px',
+                          fontSize: 13,
+                          flex: 1,
+                          justifyContent: 'center',
+                        }}
+                        onClick={() => openSiteQuickEditor(item.slug)}
+                      >
+                        <Edit3 size={14} /> 编辑内容
+                      </button>
+                      <Link
+                        to={item.path}
+                        className="lj-btn-secondary"
+                        style={{
+                          padding: '9px 14px',
+                          fontSize: 13,
+                          textDecoration: 'none',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: 4,
+                        }}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        title="在新标签页查看页面"
+                      >
+                        <ExternalLink size={14} /> 查看
+                      </Link>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          </>
+        ) : contentTab ? (
+          <>
             {/* ---- 内容管理板块选择 ---- */}
             <div className="lj-admin-filters">
               <div className="lj-filter-group">
@@ -802,6 +855,8 @@ function Admin() {
           if (siteEditorSlug) {
             setSiteEditorContent(mergeSiteContent(SITE_DEFAULTS[siteEditorSlug] || {}, saved))
           }
+          // 如果在站点内容 tab，刷新信息以显示最新更新时间
+          if (siteTab) loadSiteInfo()
         }}
       />
     </section>
