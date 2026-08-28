@@ -1,0 +1,373 @@
+/* ============================================================
+   站点内容编辑弹窗 (SiteContentEditor) 样式
+   ============================================================ */
+
+.lj-sce-mask {
+  position: fixed;
+  inset: 0;
+  background: rgba(10, 15, 30, 0.72);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  animation: lj-sce-fade 0.18s ease-out;
+}
+
+@keyframes lj-sce-fade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.lj-sce-dialog {
+  width: 100%;
+  max-width: 900px;
+  max-height: 90vh;
+  background: var(--lj-surface, #0f1623);
+  border: 1px solid var(--lj-border, #1f2a44);
+  border-radius: 16px;
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.5);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  animation: lj-sce-pop 0.22s cubic-bezier(0.18, 0.89, 0.32, 1.28);
+}
+
+@keyframes lj-sce-pop {
+  from { opacity: 0; transform: translateY(12px) scale(0.98); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* ---- Header ---- */
+.lj-sce-head {
+  padding: 18px 24px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--lj-border, #1f2a44);
+  background: linear-gradient(180deg, rgba(74, 144, 217, 0.06), transparent);
+  gap: 16px;
+  flex-shrink: 0;
+}
+
+.lj-sce-sub {
+  font-size: 12px;
+  color: var(--lj-ink-3, #6b7280);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  margin-bottom: 4px;
+}
+
+.lj-sce-title {
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--lj-ink, #e5e7eb);
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.lj-sce-close {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  border: none;
+  background: transparent;
+  color: var(--lj-ink-2, #9ca3af);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s;
+  flex-shrink: 0;
+}
+.lj-sce-close:hover {
+  background: rgba(239, 68, 68, 0.12);
+  color: #f87171;
+}
+
+/* ---- Error ---- */
+.lj-sce-err {
+  margin: 12px 24px 0;
+  padding: 10px 14px;
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  border-radius: 10px;
+  color: #fca5a5;
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* ---- Body ---- */
+.lj-sce-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 22px 24px 16px;
+}
+
+.lj-sce-body::-webkit-scrollbar { width: 8px; }
+.lj-sce-body::-webkit-scrollbar-track { background: transparent; }
+.lj-sce-body::-webkit-scrollbar-thumb {
+  background: rgba(74, 144, 217, 0.25);
+  border-radius: 4px;
+}
+.lj-sce-body::-webkit-scrollbar-thumb:hover {
+  background: rgba(74, 144, 217, 0.4);
+}
+
+/* ---- Object field ---- */
+.lj-sce-object {
+  margin-bottom: 18px;
+}
+
+.lj-sce-obj-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--lj-brand-light, #6AADE8);
+  letter-spacing: 0.04em;
+  padding: 4px 10px;
+  background: rgba(74, 144, 217, 0.08);
+  border-left: 3px solid var(--lj-brand, #4A90D9);
+  border-radius: 4px;
+  margin-bottom: 12px;
+}
+
+.lj-sce-obj-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 14px 20px;
+}
+
+.lj-sce-obj-item {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.lj-sce-key {
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--lj-ink-2, #9ca3af);
+  padding-left: 2px;
+}
+
+/* ---- Array field ---- */
+.lj-sce-array {
+  margin-bottom: 20px;
+  padding: 14px;
+  background: rgba(15, 22, 35, 0.5);
+  border: 1px solid var(--lj-border, #1f2a44);
+  border-radius: 12px;
+}
+
+.lj-sce-array-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.lj-sce-array-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--lj-ink, #e5e7eb);
+}
+
+.lj-sce-array-count {
+  color: var(--lj-ink-3, #6b7280);
+  font-weight: 400;
+  font-size: 12.5px;
+}
+
+.lj-sce-empty-array {
+  padding: 24px;
+  text-align: center;
+  color: var(--lj-ink-3, #6b7280);
+  font-size: 13px;
+  border: 1px dashed var(--lj-border, #1f2a44);
+  border-radius: 10px;
+}
+
+.lj-sce-array-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.lj-sce-array-item {
+  background: var(--lj-surface-2, #141d30);
+  border: 1px solid var(--lj-border, #1f2a44);
+  border-radius: 10px;
+  padding: 12px 14px;
+  transition: border-color 0.15s;
+}
+.lj-sce-array-item:hover {
+  border-color: rgba(74, 144, 217, 0.35);
+}
+
+.lj-sce-array-item-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.lj-sce-array-item-index {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--lj-brand-light, #6AADE8);
+  padding: 3px 10px;
+  background: rgba(74, 144, 217, 0.1);
+  border-radius: 20px;
+}
+
+.lj-sce-array-item-actions {
+  display: flex;
+  gap: 4px;
+}
+
+.lj-sce-iconbtn {
+  width: 26px;
+  height: 26px;
+  border-radius: 7px;
+  border: 1px solid var(--lj-border, #1f2a44);
+  background: var(--lj-surface, #0f1623);
+  color: var(--lj-ink-2, #9ca3af);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  transition: all 0.12s;
+}
+.lj-sce-iconbtn:hover:not(:disabled) {
+  border-color: var(--lj-brand, #4A90D9);
+  color: var(--lj-brand-light, #6AADE8);
+}
+.lj-sce-iconbtn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+.lj-sce-iconbtn.lj-sce-del:hover:not(:disabled) {
+  border-color: #ef4444;
+  color: #f87171;
+  background: rgba(239, 68, 68, 0.08);
+}
+
+/* ---- Primitive field ---- */
+.lj-sce-input,
+.lj-sce-textarea {
+  width: 100%;
+  padding: 9px 13px;
+  background: var(--lj-surface, #0f1623);
+  border: 1px solid var(--lj-border, #1f2a44);
+  border-radius: 8px;
+  color: var(--lj-ink, #e5e7eb);
+  font-size: 13.5px;
+  font-family: inherit;
+  line-height: 1.5;
+  outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+  resize: vertical;
+  box-sizing: border-box;
+}
+.lj-sce-input:focus,
+.lj-sce-textarea:focus {
+  border-color: var(--lj-brand, #4A90D9);
+  box-shadow: 0 0 0 3px rgba(74, 144, 217, 0.15);
+}
+.lj-sce-input::placeholder,
+.lj-sce-textarea::placeholder {
+  color: var(--lj-ink-3, #4b5563);
+}
+.lj-sce-textarea {
+  min-height: 72px;
+}
+
+.lj-sce-check {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  padding: 8px 12px;
+  background: var(--lj-surface, #0f1623);
+  border: 1px solid var(--lj-border, #1f2a44);
+  border-radius: 8px;
+  font-size: 13px;
+  color: var(--lj-ink-2, #9ca3af);
+  user-select: none;
+  transition: border-color 0.15s;
+}
+.lj-sce-check:hover {
+  border-color: rgba(74, 144, 217, 0.4);
+}
+.lj-sce-check input[type="checkbox"] {
+  width: 15px;
+  height: 15px;
+  accent-color: var(--lj-brand, #4A90D9);
+  cursor: pointer;
+}
+
+/* ---- Footer ---- */
+.lj-sce-foot {
+  padding: 14px 24px 18px;
+  border-top: 1px solid var(--lj-border, #1f2a44);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+  background: rgba(15, 22, 35, 0.6);
+}
+
+/* ============================================================
+   页面编辑按钮 (admin only)
+   ============================================================ */
+
+.lj-edit-fab {
+  position: fixed;
+  right: 24px;
+  bottom: 24px;
+  z-index: 80;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 11px 18px;
+  background: linear-gradient(135deg, var(--lj-brand, #4A90D9), var(--lj-brand-light, #6AADE8));
+  color: #fff;
+  font-size: 14px;
+  font-weight: 500;
+  border: none;
+  border-radius: 999px;
+  cursor: pointer;
+  box-shadow: 0 8px 24px rgba(74, 144, 217, 0.35), 0 2px 6px rgba(0, 0, 0, 0.3);
+  transition: all 0.2s;
+  animation: lj-fab-in 0.35s cubic-bezier(0.18, 0.89, 0.32, 1.28);
+}
+.lj-edit-fab:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 32px rgba(74, 144, 217, 0.45), 0 4px 10px rgba(0, 0, 0, 0.35);
+}
+.lj-edit-fab:active {
+  transform: translateY(0);
+}
+
+@keyframes lj-fab-in {
+  from { opacity: 0; transform: translateY(14px) scale(0.95); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@media (max-width: 640px) {
+  .lj-sce-head { padding: 14px 16px; }
+  .lj-sce-body { padding: 16px; }
+  .lj-sce-foot { padding: 12px 16px 14px; flex-wrap: wrap; }
+  .lj-sce-foot .lj-btn-primary { width: 100%; order: -1; }
+  .lj-sce-obj-grid { grid-template-columns: 1fr; }
+  .lj-edit-fab { right: 14px; bottom: 14px; padding: 10px 14px; font-size: 13px; }
+}

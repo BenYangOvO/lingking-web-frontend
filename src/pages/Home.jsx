@@ -8,18 +8,18 @@ import {
   Camera,
   Monitor,
   Megaphone,
+  Edit3,
 } from 'lucide-react'
-import { api } from '../api'
+import { api, getSiteContent } from '../api'
+import { isAdmin } from '../auth'
 import PhotoDetail from '../components/PhotoDetail'
-
-const STATS = [
-  { value: '200+', label: '成员人数' },
-  { value: '30+', label: '年度活动' },
-  { value: '500+', label: '精选作品' },
-  { value: '2018', label: '成立年份' },
-]
-
-const DEPT_ICONS = { '摄影部': Camera, '技术部': Monitor, '宣传部': Megaphone }
+import SiteContentEditor from '../components/SiteContentEditor'
+import {
+  SITE_DEFAULTS,
+  DEPT_ICON_MAP,
+  mergeSiteContent,
+} from '../siteContentDefaults'
+import '../styles/components/site-content-editor.css'
 
 function cardBg(item) {
   if (item && item.image) {
@@ -40,23 +40,43 @@ function cardBg(item) {
 
 function Home() {
   const [photos, setPhotos] = useState([])
-  const [depts, setDepts] = useState([])
   const [loading, setLoading] = useState(true)
   const [detailIdx, setDetailIdx] = useState(null)
 
+  // 站点可编辑内容
+  const [homeContent, setHomeContent] = useState(SITE_DEFAULTS.home)
+  const [deptsContent, setDeptsContent] = useState(SITE_DEFAULTS.departments)
+  const [siteLoaded, setSiteLoaded] = useState(false)
+  const [editorOpen, setEditorOpen] = useState(false)
+  const isAdminUser = isAdmin()
+
   useEffect(() => {
-    Promise.all([api('/photos'), api('/departments')]).then(([p, d]) => {
+    Promise.all([
+      api('/photos'),
+      getSiteContent('home'),
+      getSiteContent('departments'),
+    ]).then(([p, homeRes, deptsRes]) => {
       setPhotos((p.photos || []).slice(0, 3))
-      setDepts(d.departments || [])
+      setHomeContent(mergeSiteContent(SITE_DEFAULTS.home, homeRes?.content))
+      setDeptsContent(mergeSiteContent(SITE_DEFAULTS.departments, deptsRes?.content))
       setLoading(false)
-    }).catch(() => setLoading(false))
+      setSiteLoaded(true)
+    }).catch(() => {
+      setLoading(false)
+      setSiteLoaded(true)
+    })
   }, [])
+
+  const depts = deptsContent?.departments || []
+  const stats = homeContent?.stats || []
+  const introParagraphs = homeContent?.intro_paragraphs || []
+
   return (
     <>
       {/* Hero */}
       <section className="lj-hero">
-        <h1 className="lj-hero-title">凌镜</h1>
-        <p className="lj-hero-subtitle">用镜头记录世界，用光影讲述故事</p>
+        <h1 className="lj-hero-title">{homeContent?.hero_title || '凌镜'}</h1>
+        <p className="lj-hero-subtitle">{homeContent?.hero_subtitle || '用镜头记录世界，用光影讲述故事'}</p>
         <div className="lj-hero-ctas">
           <Link to="/gallery" className="lj-btn-primary" style={{ padding: '12px 28px', fontSize: 15 }}>
             <Image style={{ width: 16, height: 16 }} />
@@ -77,7 +97,7 @@ function Home() {
       {/* Featured Works */}
       <section className="lj-section">
         <div className="lj-section-inner">
-          <h2 className="lj-section-title">精选作品</h2>
+          <h2 className="lj-section-title">{homeContent?.section_featured_title || '精选作品'}</h2>
           <div className="lj-featured-grid">
             {loading && <div style={{ gridColumn: '1/-1', textAlign: 'center', padding: 40, color: '#6b7280' }}>加载中...</div>}
             {!loading && photos.map((w, idx) => (
@@ -118,23 +138,19 @@ function Home() {
           <div className="lj-intro-grid">
             <div>
               <h2 className="lj-section-title" style={{ marginBottom: 24 }}>
-                关于凌镜
+                {homeContent?.section_about_title || '关于凌镜'}
               </h2>
               <div className="lj-intro-body">
-                <p style={{ marginBottom: 16 }}>
-                  凌镜摄影社团成立于2018年，是一个由热爱摄影的同学自发组织的校园社团。我们相信每一张照片都承载着独特的故事，每一次按下快门都是对美好瞬间的致敬。
-                </p>
-                <p style={{ marginBottom: 16 }}>
-                  社团汇聚了来自不同专业、不同背景的摄影爱好者，从初学者到资深摄影师，在这里共同学习、创作与成长。我们定期举办摄影讲座、外拍活动、作品展览和主题沙龙，为每一位成员提供展示才华的舞台。
-                </p>
-                <p>
-                  无论你使用的是专业相机还是手机，只要你对光影有热情，凌镜都欢迎你的加入。让我们一起，用镜头记录生活中的每一个精彩瞬间。
-                </p>
+                {introParagraphs.map((p, i) => (
+                  <p key={i} style={{ marginBottom: i === introParagraphs.length - 1 ? 0 : 16 }}>
+                    {p}
+                  </p>
+                ))}
               </div>
             </div>
             <div>
               <div className="lj-stats-grid">
-                {STATS.map((s) => (
+                {stats.map((s) => (
                   <div className="lj-stat-card" key={s.label}>
                     <div className="lj-stat-number">{s.value}</div>
                     <div className="lj-stat-label">{s.label}</div>
@@ -151,13 +167,13 @@ function Home() {
       {/* Departments Preview */}
       <section className="lj-section">
         <div className="lj-section-inner">
-          <h2 className="lj-section-title">部门一览</h2>
+          <h2 className="lj-section-title">{homeContent?.section_depts_title || '部门一览'}</h2>
           <div className="lj-dept-grid">
-            {loading && <div style={{ gridColumn: '1/-1', textAlign: 'center', padding: 40, color: '#6b7280' }}>加载中...</div>}
-            {!loading && depts.map((d) => {
-              const IconComp = DEPT_ICONS[d.name] || Camera
+            {!siteLoaded && <div style={{ gridColumn: '1/-1', textAlign: 'center', padding: 40, color: '#6b7280' }}>加载中...</div>}
+            {siteLoaded && depts.map((d) => {
+              const IconComp = DEPT_ICON_MAP[d.name] || Camera
               return (
-                <div className="lj-dept-card" key={d.id || d.name}>
+                <div className="lj-dept-card" key={d.name}>
                   <div className="lj-dept-icon">
                     <IconComp style={{ width: 22, height: 22 }} />
                   </div>
@@ -185,6 +201,27 @@ function Home() {
         onClose={() => setDetailIdx(null)}
         onPrev={() => setDetailIdx((i) => (i === null || i <= 0 ? 0 : i - 1))}
         onNext={() => setDetailIdx((i) => (i === null ? 0 : Math.min(photos.length - 1, i + 1)))}
+      />
+
+      {/* 管理员：编辑悬浮按钮 + 编辑弹窗 */}
+      {isAdminUser && (
+        <button
+          className="lj-edit-fab"
+          onClick={() => setEditorOpen(true)}
+          title="编辑首页内容"
+        >
+          <Edit3 size={16} /> 编辑本页
+        </button>
+      )}
+
+      <SiteContentEditor
+        slug="home"
+        open={editorOpen}
+        initialContent={homeContent}
+        onClose={() => setEditorOpen(false)}
+        onSaved={(saved) => {
+          setHomeContent(mergeSiteContent(SITE_DEFAULTS.home, saved))
+        }}
       />
     </>
   )

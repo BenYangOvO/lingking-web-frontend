@@ -20,67 +20,68 @@ import {
   Route,
   MessageCircle,
   MapPin,
+  Edit3,
 } from 'lucide-react'
-import { api } from '../api'
+import { api, getSiteContent } from '../api'
+import { isAdmin } from '../auth'
+import SiteContentEditor from '../components/SiteContentEditor'
+import {
+  SITE_DEFAULTS,
+  mergeSiteContent,
+  STUDIO_FEATURE_ICONS,
+  STUDIO_ORG_ICONS,
+  STUDIO_REQ_ICONS,
+  STUDIO_CONTACT_ICONS,
+} from '../siteContentDefaults'
 import '../styles/pages/studio.css'
-
-const FEATURES = [
-  { icon: Camera, title: '专业影棚空间', desc: '配备全套灯光系统、无缝背景与拍摄道具，满足人像、产品、静物等多类型创作需求。' },
-  { icon: Monitor, title: '后期工作区', desc: '提供色彩校准显示器与高性能工作站，搭配完整 Adobe 创意套件，打造专业后期环境。' },
-  { icon: Package, title: '器材共享库', desc: '共享镜头、机身、滤镜、稳定器等器材设备，成员按需借用，降低个人创作门槛。' },
-  { icon: Calendar, title: '定期线下活动', desc: '每月组织主题外拍、创作分享会与技术讲座，保持成员间的创作活力与紧密联系。' },
-]
-
-const ORG = [
-  { icon: Settings, name: '运营组', desc: '负责工作室日常运营、活动策划与品牌推广，是工作室运转的核心驱动力。', roles: ['运营主管', '活动策划', '品牌推广'] },
-  { icon: Palette, name: '创作组', desc: '专注于摄影创作与艺术探索，组织主题拍摄项目与作品评审，推动成员创作力提升。', roles: ['创作总监', '项目负责人', '视觉指导'] },
-  { icon: Cpu, name: '技术组', desc: '维护影棚设备与器材管理，提供后期技术支持，探索影像技术新方向。', roles: ['技术主管', '器材管理', '后期支持'] },
-]
-
-const REQUIREMENTS = [
-  { icon: Heart, text: '热爱摄影，对影像创作有持续的热情' },
-  { icon: Award, text: '具备一定的摄影基础和作品积累' },
-  { icon: Users, text: '认同凌镜的理念，愿意参与协作与交流' },
-  { icon: Clock, text: '能够保证一定的参与时间与活跃度' },
-]
-
-const STEPS = [
-  { num: 1, title: '提交申请', desc: '填写工作室申请表，附上个人摄影作品集与简要自我介绍，发送至工作室邮箱。' },
-  { num: 2, title: '作品评审', desc: '工作室创作组对提交的作品进行评审，综合评估技术能力、审美水平与创作风格。' },
-  { num: 3, title: '面试交流', desc: '通过评审后，安排线上或线下交流，了解你的创作方向与加入意愿，双向选择。' },
-  { num: 4, title: '正式加入', desc: '完成所有流程后，正式成为工作室成员，获得工作室资源使用权与活动参与资格。' },
-]
-
-const CONTACTS = [
-  { icon: Mail, label: '电子邮箱', value: 'lingjing.studio@example.com' },
-  { icon: MessageCircle, label: '微信公众号', value: 'LingJingStudio' },
-  { icon: MapPin, label: '工作室地址', value: '创意园区B栋302' },
-]
+import '../styles/components/site-content-editor.css'
 
 function Studio() {
   const [equipment, setEquipment] = useState([])
-  const [loading, setLoading] = useState(true)
+  const [equipLoading, setEquipLoading] = useState(true)
+  const [pageContent, setPageContent] = useState(SITE_DEFAULTS.studio)
+  const [siteLoading, setSiteLoading] = useState(true)
+  const [editorOpen, setEditorOpen] = useState(false)
+  const isAdminUser = isAdmin()
 
   useEffect(() => {
-    api('/studio/equipment').then((data) => {
-      setEquipment(data.equipment || [])
-      setLoading(false)
-    }).catch(() => setLoading(false))
+    Promise.all([
+      api('/studio/equipment'),
+      getSiteContent('studio'),
+    ]).then(([eqRes, siteRes]) => {
+      setEquipment(eqRes.equipment || [])
+      setEquipLoading(false)
+      setPageContent(mergeSiteContent(SITE_DEFAULTS.studio, siteRes?.content))
+      setSiteLoading(false)
+    }).catch(() => {
+      setEquipLoading(false)
+      setSiteLoading(false)
+    })
   }, [])
+
+  const features = pageContent?.features || []
+  const orgGroups = pageContent?.org_groups || []
+  const requirements = pageContent?.requirements || []
+  const joinSteps = pageContent?.join_steps || []
+  const contacts = pageContent?.contacts || []
+  const aboutParagraphs = pageContent?.about_paragraphs || []
 
   return (
     <>
       <section className="lj-hero-studio">
         <div className="lj-section-label">
           <Sparkles style={{ width: 14, height: 14 }} />
-          LingJing Studio
+          {pageContent?.hero_section_label || 'LingJing Studio'}
         </div>
         <h1 className="lj-hero-studio-title">
-          凌镜<span>工作室</span>
+          {pageContent?.hero_title || '凌镜'}
+          <span>{pageContent?.hero_title_highlight || '工作室'}</span>
         </h1>
-        <p className="lj-hero-studio-tagline">因为热爱，校外再聚</p>
+        <p className="lj-hero-studio-tagline">
+          {pageContent?.hero_tagline || '因为热爱，校外再聚'}
+        </p>
         <p className="lj-hero-studio-desc">
-          毕业不是终点，而是新的起点。凌镜工作室是社团校友在校外延续摄影热爱的平台，一个让热爱摄影的人永远有归处的地方。
+          {pageContent?.hero_desc || '毕业不是终点，而是新的起点。凌镜工作室是社团校友在校外延续摄影热爱的平台，一个让热爱摄影的人永远有归处的地方。'}
         </p>
         <div className="lj-hero-ctas">
           <a href="#join" className="lj-btn-primary" style={{ padding: '12px 28px', fontSize: 15 }}>
@@ -106,36 +107,35 @@ function Studio() {
             <div>
               <div className="lj-section-label">
                 <Info style={{ width: 14, height: 14 }} />
-                关于工作室
+                {pageContent?.section_about_label || '关于工作室'}
               </div>
               <h2 className="lj-section-title" style={{ marginBottom: 24 }}>
-                热爱不止，步履不停
+                {pageContent?.about_title || '热爱不止，步履不停'}
               </h2>
               <div className="lj-intro-left-body">
-                <p>
-                  凌镜工作室诞生于一个朴素的愿望：让那些在社团里结下深厚摄影情谊的朋友们，在毕业后依然有一个共同的家。校园时光或许有终点，但对光影的热爱没有边界。
-                </p>
-                <p>
-                  作为凌镜摄影社团的校外延伸，工作室汇聚了已毕业的社团成员以及认同凌镜理念的摄影师们。这里不再受限于校园的围墙，而是面向更广阔的创作天地 —— 从商业拍摄到艺术创作，从独立项目到协作探索。
-                </p>
-                <p>
-                  工作室配备了专业影棚、后期设备和丰富的器材资源，定期举办线下创作活动和行业交流，致力于为每一位成员提供一个可以持续精进、自由创作的空间。因为热爱，我们校外再聚。
-                </p>
+                {aboutParagraphs.map((p, i) => (
+                  <p key={i} style={{ marginBottom: i === aboutParagraphs.length - 1 ? 0 : '1em' }}>
+                    {p}
+                  </p>
+                ))}
               </div>
             </div>
             <div>
               <div className="lj-feature-list">
-                {FEATURES.map((f) => (
-                  <div className="lj-feature-item" key={f.title}>
-                    <div className="lj-feature-icon">
-                      <f.icon style={{ width: 20, height: 20 }} />
+                {features.map((f, idx) => {
+                  const IconComp = STUDIO_FEATURE_ICONS[idx % STUDIO_FEATURE_ICONS.length]
+                  return (
+                    <div className="lj-feature-item" key={f.title + '-' + idx}>
+                      <div className="lj-feature-icon">
+                        <IconComp style={{ width: 20, height: 20 }} />
+                      </div>
+                      <div className="lj-feature-text">
+                        <h4>{f.title}</h4>
+                        <p>{f.desc}</p>
+                      </div>
                     </div>
-                    <div className="lj-feature-text">
-                      <h4>{f.title}</h4>
-                      <p>{f.desc}</p>
-                    </div>
-                  </div>
-                ))}
+                  )
+                })}
               </div>
             </div>
           </div>
@@ -146,13 +146,13 @@ function Studio() {
       <section className="lj-section">
         <div className="lj-section-inner">
           <h2 className="lj-section-title" style={{ textAlign: 'center' }}>
-            工作室设备清单
+            {pageContent?.section_equip_title || '工作室设备清单'}
           </h2>
           <p style={{ textAlign: 'center', color: 'var(--lj-ink-2)', marginBottom: 40 }}>
-            共享器材，按需借用
+            {pageContent?.section_equip_subtitle || '共享器材，按需借用'}
           </p>
-          {loading && <div style={{ textAlign: 'center', padding: 40, color: '#6b7280' }}>加载设备中...</div>}
-          {!loading && (
+          {equipLoading && <div style={{ textAlign: 'center', padding: 40, color: '#6b7280' }}>加载设备中...</div>}
+          {!equipLoading && (
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 16 }}>
               {equipment.map((eq, i) => (
                 <div key={i} style={{
@@ -190,7 +190,7 @@ function Studio() {
       <section className="lj-section">
         <div className="lj-section-inner">
           <h2 className="lj-section-title" style={{ textAlign: 'center' }}>
-            工作室运营结构
+            {pageContent?.section_org_title || '工作室运营结构'}
           </h2>
           <div className="lj-org-wrapper">
             <div className="lj-org-root">
@@ -200,23 +200,26 @@ function Studio() {
             <div className="lj-org-connector-v" />
             <div className="lj-org-connector-h-wrapper" />
             <div className="lj-org-groups-row">
-              {ORG.map((g) => (
-                <div className="lj-org-group-col" key={g.name}>
-                  <div className="lj-org-drop-line" />
-                  <div className="lj-org-group-card">
-                    <div className="lj-org-group-icon">
-                      <g.icon style={{ width: 20, height: 20 }} />
-                    </div>
-                    <h3 className="lj-org-group-name">{g.name}</h3>
-                    <p className="lj-org-group-desc">{g.desc}</p>
-                    <div className="lj-org-roles">
-                      {g.roles.map((r) => (
-                        <span className="lj-org-role-tag" key={r}>{r}</span>
-                      ))}
+              {orgGroups.map((g, idx) => {
+                const IconComp = STUDIO_ORG_ICONS[idx % STUDIO_ORG_ICONS.length]
+                return (
+                  <div className="lj-org-group-col" key={g.name + '-' + idx}>
+                    <div className="lj-org-drop-line" />
+                    <div className="lj-org-group-card">
+                      <div className="lj-org-group-icon">
+                        <IconComp style={{ width: 20, height: 20 }} />
+                      </div>
+                      <h3 className="lj-org-group-name">{g.name}</h3>
+                      <p className="lj-org-group-desc">{g.desc}</p>
+                      <div className="lj-org-roles">
+                        {(g.roles || []).map((r) => (
+                          <span className="lj-org-role-tag" key={r}>{r}</span>
+                        ))}
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                )
+              })}
             </div>
           </div>
         </div>
@@ -226,7 +229,7 @@ function Studio() {
       <section className="lj-section" id="join">
         <div className="lj-section-inner">
           <h2 className="lj-section-title" style={{ textAlign: 'center' }}>
-            如何成为工作室的一员
+            {pageContent?.section_join_title || '如何成为工作室的一员'}
           </h2>
           <div className="lj-join-grid">
             <div>
@@ -241,17 +244,21 @@ function Studio() {
                     color: 'var(--lj-brand)',
                   }}
                 />
-                基本要求
+                {pageContent?.section_join_req_title || '基本要求'}
               </h3>
               <div className="lj-join-req-list">
-                {REQUIREMENTS.map((r) => (
-                  <div className="lj-join-req-item" key={r.text}>
-                    <div className="lj-join-req-icon">
-                      <r.icon style={{ width: 14, height: 14 }} />
+                {requirements.map((r, idx) => {
+                  const IconComp = STUDIO_REQ_ICONS[idx % STUDIO_REQ_ICONS.length]
+                  const text = r.text || r.label || r
+                  return (
+                    <div className="lj-join-req-item" key={text + '-' + idx}>
+                      <div className="lj-join-req-icon">
+                        <IconComp style={{ width: 14, height: 14 }} />
+                      </div>
+                      <span>{text}</span>
                     </div>
-                    <span>{r.text}</span>
-                  </div>
-                ))}
+                  )
+                })}
               </div>
             </div>
             <div>
@@ -266,11 +273,11 @@ function Studio() {
                     color: 'var(--lj-brand)',
                   }}
                 />
-                申请流程
+                {pageContent?.section_join_steps_title || '申请流程'}
               </h3>
               <div className="lj-steps-list">
-                {STEPS.map((s) => (
-                  <div className="lj-step-card" key={s.num}>
+                {joinSteps.map((s, idx) => (
+                  <div className="lj-step-card" key={(s.num || idx) + '-' + idx}>
                     <div className="lj-step-number">{s.num}</div>
                     <div className="lj-step-content">
                       <h4>{s.title}</h4>
@@ -288,27 +295,55 @@ function Studio() {
       <section className="lj-section" id="contact">
         <div className="lj-section-inner">
           <h2 className="lj-section-title" style={{ textAlign: 'center' }}>
-            与我们取得联系
+            {pageContent?.section_contact_title || '与我们取得联系'}
           </h2>
           <div className="lj-contact-card">
-            <h3 className="lj-contact-title">凌镜工作室</h3>
-            <p className="lj-contact-subtitle">如果你对工作室感兴趣，或有任何合作与咨询需求，欢迎通过以下方式联系我们。</p>
+            <h3 className="lj-contact-title">
+              {pageContent?.contact_card_title || '凌镜工作室'}
+            </h3>
+            <p className="lj-contact-subtitle">
+              {pageContent?.contact_card_subtitle || '如果你对工作室感兴趣，或有任何合作与咨询需求，欢迎通过以下方式联系我们。'}
+            </p>
             <div className="lj-contact-items">
-              {CONTACTS.map((c) => (
-                <div className="lj-contact-item" key={c.label}>
-                  <div className="lj-contact-item-icon">
-                    <c.icon style={{ width: 18, height: 18 }} />
+              {contacts.map((c, idx) => {
+                const IconComp = STUDIO_CONTACT_ICONS[idx % STUDIO_CONTACT_ICONS.length]
+                return (
+                  <div className="lj-contact-item" key={c.label + '-' + idx}>
+                    <div className="lj-contact-item-icon">
+                      <IconComp style={{ width: 18, height: 18 }} />
+                    </div>
+                    <div>
+                      <div className="lj-contact-item-label">{c.label}</div>
+                      <div className="lj-contact-item-value">{c.value}</div>
+                    </div>
                   </div>
-                  <div>
-                    <div className="lj-contact-item-label">{c.label}</div>
-                    <div className="lj-contact-item-value">{c.value}</div>
-                  </div>
-                </div>
-              ))}
+                )
+              })}
             </div>
           </div>
         </div>
       </section>
+
+      {/* 管理员：编辑悬浮按钮 + 编辑弹窗 */}
+      {isAdminUser && (
+        <button
+          className="lj-edit-fab"
+          onClick={() => setEditorOpen(true)}
+          title="编辑工作室内容"
+        >
+          <Edit3 size={16} /> 编辑本页
+        </button>
+      )}
+
+      <SiteContentEditor
+        slug="studio"
+        open={editorOpen}
+        initialContent={pageContent}
+        onClose={() => setEditorOpen(false)}
+        onSaved={(saved) => {
+          setPageContent(mergeSiteContent(SITE_DEFAULTS.studio, saved))
+        }}
+      />
     </>
   )
 }

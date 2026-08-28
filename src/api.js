@@ -91,6 +91,19 @@ export function setUserRole(uid, role) {
   return api(`/admin/users/${uid}/role`, { method: 'POST', auth: true, body: { role } })
 }
 
+export function deleteUser(uid) {
+  return api(`/admin/users/${uid}`, { method: 'DELETE', auth: true })
+}
+
+// 站点固定内容：公共读，管理员写（PUT）
+export function getSiteContent(slug) {
+  return api(`/site/${slug}`)
+}
+
+export function updateSiteContent(slug, content) {
+  return api(`/site/${slug}`, { method: 'PUT', auth: true, body: { content } })
+}
+
 // ---------- 用户资料 ---------- //
 
 export function getMyProfile() {

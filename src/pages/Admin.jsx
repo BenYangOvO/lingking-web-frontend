@@ -20,6 +20,13 @@ import {
   Crown,
   Search,
   Layers,
+  Edit3,
+  Home,
+  History,
+  Building2,
+  Info,
+  Video,
+  ExternalLink,
 } from 'lucide-react'
 import {
   getAdminStats,
@@ -30,9 +37,14 @@ import {
   listAdminContent,
   deleteContent,
   setUserRole,
+  deleteUser,
+  getSiteContent,
 } from '../api'
 import { isAdmin as authIsAdmin, logout } from '../auth'
+import SiteContentEditor from '../components/SiteContentEditor'
+import { SITE_DEFAULTS, SITE_SLUG_LABEL, mergeSiteContent } from '../siteContentDefaults'
 import '../styles/pages/admin.css'
+import '../styles/components/site-content-editor.css'
 
 const STATUSES = [
   { key: '', label: '全部', icon: Filter },
@@ -166,6 +178,16 @@ const CONTENT_TYPES = [
   { key: 'diary', label: '日记本', icon: BookOpen },
 ]
 
+// 固定板块（站点内容）快速编辑入口
+const SITE_EDIT_QUICK = [
+  { slug: 'home',        label: '首页',         icon: Home,      path: '/' },
+  { slug: 'history',     label: '凌镜历史',     icon: History,   path: '/history' },
+  { slug: 'departments', label: '部门介绍',     icon: Building2, path: '/departments' },
+  { slug: 'about',       label: '关于凌镜',     icon: Info,      path: '/about' },
+  { slug: 'studio',      label: '工作室',       icon: Video,     path: '/studio' },
+]
+
+
 function Admin() {
   const navigate = useNavigate()
   const [error, setError] = useState('')
@@ -185,6 +207,22 @@ function Admin() {
   const [contentType, setContentType] = useState('photo')
   const [contentList, setContentList] = useState([])
   const [contentLoading, setContentLoading] = useState(false)
+
+  // 固定板块（SiteContent）编辑弹窗状态
+  const [siteEditorSlug, setSiteEditorSlug] = useState(null)
+  const [siteEditorContent, setSiteEditorContent] = useState(null)
+  const [siteEditorOpen, setSiteEditorOpen] = useState(false)
+
+  async function openSiteQuickEditor(slug) {
+    let content = SITE_DEFAULTS[slug]
+    try {
+      const res = await getSiteContent(slug)
+      content = mergeSiteContent(SITE_DEFAULTS[slug] || {}, res?.content)
+    } catch (_) { /* 失败时使用默认值 */ }
+    setSiteEditorSlug(slug)
+    setSiteEditorContent(content)
+    setSiteEditorOpen(true)
+  }
 
   const isAdminUser = authIsAdmin()
 
@@ -280,6 +318,29 @@ function Admin() {
       await loadAll()
     } catch (err) {
       setError(err.message || '操作失败')
+    }
+  }
+
+  async function handleDeleteUser(u) {
+    if (!u) return
+    if (u.role === 'admin' && !window.confirm(`管理员"${u.username || u.id}"有较高权限，确定要删除该账号吗？（会同时删除其所有投稿）`)) {
+      if (u.role !== 'admin') return
+      return
+    }
+    if (u.role !== 'admin') {
+      const ok = window.confirm(
+        `确定要删除成员账号 "${u.username || u.nickname || u.id}" 吗？\n该操作会同时删除其全部投稿，且不可恢复。`
+      )
+      if (!ok) return
+    }
+    setActing(`user-${u.id}`)
+    try {
+      await deleteUser(u.id)
+      await loadAll()
+    } catch (err) {
+      setError(err.message || '删除失败')
+    } finally {
+      setActing(null)
     }
   }
 
@@ -398,7 +459,7 @@ function Admin() {
           </button>
           <button
             className={`lj-admin-tab${usersTab ? ' active' : ''}`}
-            onClick={() => { setUsersTab(false); setContentTab(false) }}
+            onClick={() => { setUsersTab(true); setContentTab(false) }}
           >
             <UserCog size={16} /> 用户管理
           </button>
@@ -406,6 +467,126 @@ function Admin() {
 
         {contentTab ? (
           <>
+            {/* ---- 固定板块快速编辑 ---- */}
+            <div style={{
+              marginBottom: 28,
+              padding: 20,
+              background: 'rgba(74, 144, 217, 0.05)',
+              border: '1px solid rgba(74, 144, 217, 0.18)',
+              borderRadius: 14,
+            }}>
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                marginBottom: 14,
+                flexWrap: 'wrap',
+                gap: 8,
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <span style={{
+                    fontSize: 12,
+                    letterSpacing: '0.1em',
+                    textTransform: 'uppercase',
+                    color: 'var(--lj-brand-light)',
+                    fontWeight: 600,
+                  }}>STATIC PAGES</span>
+                  <span style={{ fontSize: 15, fontWeight: 600, color: 'var(--lj-ink)' }}>
+                    固定板块快速编辑
+                  </span>
+                </div>
+                <span style={{ fontSize: 12, color: 'var(--lj-ink-3)' }}>
+                  直接在后台编辑即可，保存后立即生效
+                </span>
+              </div>
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fill, minmax(210px, 1fr))',
+                gap: 12,
+              }}>
+                {SITE_EDIT_QUICK.map((item) => {
+                  const IconComp = item.icon
+                  return (
+                    <div
+                      key={item.slug}
+                      style={{
+                        background: 'var(--lj-surface)',
+                        border: '1px solid var(--lj-border)',
+                        borderRadius: 12,
+                        padding: 14,
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: 10,
+                        transition: 'all 0.18s',
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.borderColor = 'rgba(74, 144, 217, 0.5)'
+                        e.currentTarget.style.transform = 'translateY(-2px)'
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.borderColor = ''
+                        e.currentTarget.style.transform = ''
+                      }}
+                    >
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                        <div style={{
+                          width: 34, height: 34,
+                          borderRadius: 10,
+                          background: 'linear-gradient(135deg, rgba(74,144,217,0.18), rgba(106,173,232,0.08))',
+                          color: 'var(--lj-brand-light)',
+                          display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        }}>
+                          <IconComp size={17} />
+                        </div>
+                        <div style={{ fontWeight: 600, color: 'var(--lj-ink)', fontSize: 14.5 }}>
+                          {item.label}
+                        </div>
+                      </div>
+                      <div style={{
+                        fontSize: 12,
+                        color: 'var(--lj-ink-3)',
+                        marginBottom: 2,
+                        fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace',
+                      }}>
+                        /{item.slug === 'home' ? '' : item.slug}
+                      </div>
+                      <div style={{ display: 'flex', gap: 8, marginTop: 'auto' }}>
+                        <button
+                          className="lj-btn-primary"
+                          style={{
+                            padding: '7px 12px',
+                            fontSize: 12.5,
+                            flex: 1,
+                            justifyContent: 'center',
+                          }}
+                          onClick={() => openSiteQuickEditor(item.slug)}
+                        >
+                          <Edit3 size={13} /> 编辑
+                        </button>
+                        <Link
+                          to={item.path}
+                          className="lj-btn-secondary"
+                          style={{
+                            padding: '7px 10px',
+                            fontSize: 12.5,
+                            textDecoration: 'none',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: 4,
+                          }}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          title="在新标签页查看页面"
+                        >
+                          <ExternalLink size={13} />
+                        </Link>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+
             {/* ---- 内容管理板块选择 ---- */}
             <div className="lj-admin-filters">
               <div className="lj-filter-group">
@@ -527,18 +708,42 @@ function Admin() {
             <table className="lj-user-table">
               <thead>
                 <tr>
+                  <th style={{ width: 60 }}>头像</th>
                   <th>ID</th>
                   <th>用户名</th>
                   <th>邮箱</th>
                   <th>昵称</th>
                   <th>角色</th>
                   <th>注册时间</th>
-                  <th>操作</th>
+                  <th style={{ width: 120 }}>操作</th>
                 </tr>
               </thead>
               <tbody>
                 {users.map((u) => (
                   <tr key={u.id}>
+                    <td>
+                      <div
+                        className="lj-user-avatar-sm"
+                        style={{
+                          width: 40,
+                          height: 40,
+                          borderRadius: '50%',
+                          background: u.avatar
+                            ? `center/cover no-repeat url(${u.avatar})`
+                            : 'linear-gradient(135deg,#4A90D9,#6AADE8)',
+                          color: '#fff',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          fontSize: 15,
+                          fontWeight: 600,
+                          border: '1px solid rgba(255,255,255,0.1)',
+                          flexShrink: 0,
+                        }}
+                      >
+                        {!u.avatar && (u.nickname || u.username || '?').slice(0, 1).toUpperCase()}
+                      </div>
+                    </td>
                     <td>{u.id}</td>
                     <td>{u.username}</td>
                     <td>{u.email}</td>
@@ -553,13 +758,22 @@ function Admin() {
                     <td>{fmtTime(u.created_at)}</td>
                     <td>
                       <div className="lj-dropdown">
-                        <button className="lj-btn-ghost">
-                          <ChevronDown size={14} /> 操作
+                        <button className="lj-btn-ghost" disabled={acting === `user-${u.id}`}>
+                          {acting === `user-${u.id}` ? '处理中…' : (
+                            <><ChevronDown size={14} /> 操作</>
+                          )}
                         </button>
                         <div className="lj-dropdown-menu">
                           <button onClick={() => handleRole(u.id, u.role === 'admin' ? 'member' : 'admin')}>
                             <UserCog size={14} />
                             {u.role === 'admin' ? '降为成员' : '设为管理员'}
+                          </button>
+                          <button
+                            onClick={() => handleDeleteUser(u)}
+                            style={{ color: '#f87171' }}
+                          >
+                            <XCircle size={14} />
+                            删除账号
                           </button>
                         </div>
                       </div>
@@ -573,6 +787,23 @@ function Admin() {
       </div>
 
       {preview && <SubmissionPreview s={preview} onClose={() => setPreview(null)} />}
+
+      {/* 固定板块内容编辑弹窗 */}
+      <SiteContentEditor
+        slug={siteEditorSlug || 'home'}
+        open={siteEditorOpen && !!siteEditorSlug}
+        initialContent={siteEditorContent}
+        onClose={() => {
+          setSiteEditorOpen(false)
+          setSiteEditorSlug(null)
+        }}
+        onSaved={(saved) => {
+          // 保存后更新本地缓存，避免重复打开时读取旧缓存
+          if (siteEditorSlug) {
+            setSiteEditorContent(mergeSiteContent(SITE_DEFAULTS[siteEditorSlug] || {}, saved))
+          }
+        }}
+      />
     </section>
   )
 }
