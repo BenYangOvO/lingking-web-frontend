@@ -23,11 +23,34 @@ function Gallery() {
 
   const filtered = filter === '全部' ? photos : photos.filter((p) => p.cat === filter)
 
+  const buildBackground = (photo) => {
+    // 1. 优先使用用户上传的真实图片（投稿通过 /uploads/xxx 路径，静态作品也可能带 http 外链）
+    if (photo.image) {
+      const src = String(photo.image).trim()
+      if (src.startsWith('/') || src.startsWith('http://') || src.startsWith('https://') || src.startsWith('data:')) {
+        return {
+          backgroundImage: `url(${src})`,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          backgroundRepeat: 'no-repeat',
+        }
+      }
+    }
+    // 2. 回退渐变：静态 grad 是颜色列表 "#A,#B,#C"；投稿 grad 是完整 "linear-gradient(135deg, ...)"
+    const g = String(photo.grad || '').trim()
+    const gradCss = g.startsWith('linear-gradient') ? g : `linear-gradient(135deg, ${g || '#2D5F8A,#4A90D9,#6AADE8'})`
+    return {
+      background: gradCss,
+      backgroundSize: 'cover',
+      backgroundPosition: 'center',
+    }
+  }
+
   const getStyle = (photo, idx) => {
     const aspect = PHOTO_ASPECTS[idx % PHOTO_ASPECTS.length]
     return {
       aspectRatio: aspect,
-      background: `linear-gradient(135deg, ${photo.grad})`,
+      ...buildBackground(photo),
     }
   }
 

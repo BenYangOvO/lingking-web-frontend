@@ -20,6 +20,23 @@ const STATS = [
 
 const DEPT_ICONS = { '摄影部': Camera, '技术部': Monitor, '宣传部': Megaphone }
 
+function cardBg(item) {
+  if (item && item.image) {
+    const src = String(item.image).trim()
+    if (src.startsWith('/') || src.startsWith('http://') || src.startsWith('https://') || src.startsWith('data:')) {
+      return {
+        backgroundImage: `url(${src})`,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundRepeat: 'no-repeat',
+      }
+    }
+  }
+  const g = String(item?.grad || '').trim()
+  const grad = g.startsWith('linear-gradient') ? g : `linear-gradient(135deg, ${g || '#2D5F8A,#4A90D9,#6AADE8'})`
+  return { background: grad, backgroundSize: 'cover', backgroundPosition: 'center' }
+}
+
 function Home() {
   const [photos, setPhotos] = useState([])
   const [depts, setDepts] = useState([])
@@ -63,7 +80,7 @@ function Home() {
             {loading && <div style={{ gridColumn: '1/-1', textAlign: 'center', padding: 40, color: '#6b7280' }}>加载中...</div>}
             {!loading && photos.map((w) => (
               <div className="lj-featured-card" key={w.id || w.title}>
-                <div className="lj-featured-card-img" style={{ background: `linear-gradient(135deg, ${w.grad})` }} />
+                <div className="lj-featured-card-img" style={cardBg(w)} />
                 <div className="lj-featured-card-body">
                   <h3 className="lj-featured-card-title">{w.title}</h3>
                   <div className="lj-featured-card-meta">
