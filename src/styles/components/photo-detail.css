@@ -1,0 +1,302 @@
+/* ============================================================
+ * 作品详情 Lightbox / PhotoDetail
+ * 深色主题 + 毛玻璃遮罩 + 两栏布局，移动端自适应单列
+ * ============================================================ */
+
+.lj-pd-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: rgba(5, 10, 20, 0.88);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  animation: lj-pd-fadeIn 0.2s ease-out;
+}
+
+@keyframes lj-pd-fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* ========== 外层容器 ========== */
+.lj-pd-container {
+  position: relative;
+  width: 100%;
+  max-width: 1120px;
+  max-height: calc(100vh - 48px);
+  background: var(--lj-card-bg, #0f172a);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255,255,255,0.04) inset;
+  overflow: hidden;
+  animation: lj-pd-popIn 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes lj-pd-popIn {
+  from { opacity: 0; transform: scale(0.96) translateY(8px); }
+  to   { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+/* ========== 两栏布局 ========== */
+.lj-pd-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.6fr) minmax(0, 360px);
+  height: calc(100vh - 48px);
+  max-height: 760px;
+}
+
+/* ========== 左侧：图片/渐变区 ========== */
+.lj-pd-media-wrap {
+  position: relative;
+  background: #05080f;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.lj-pd-image {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+.lj-pd-image-fallback {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-size: cover !important;
+  background-position: center !important;
+}
+
+.lj-pd-fallback-hint {
+  text-align: center;
+  padding: 24px;
+}
+
+.lj-pd-counter {
+  position: absolute;
+  bottom: 14px;
+  left: 14px;
+  padding: 4px 12px;
+  background: rgba(0, 0, 0, 0.55);
+  color: #e2e8f0;
+  font-size: 13px;
+  border-radius: 999px;
+  letter-spacing: 0.3px;
+  border: 1px solid rgba(255,255,255,0.08);
+  backdrop-filter: blur(4px);
+}
+
+/* ========== 右侧：详情信息 ========== */
+.lj-pd-info {
+  padding: 28px 26px 24px;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  background: linear-gradient(180deg, rgba(255,255,255,0.02), transparent 60%);
+}
+
+.lj-pd-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px;
+  border-radius: 999px;
+  font-size: 13px;
+  color: var(--lj-brand-light, #93c5fd);
+  background: rgba(74, 144, 217, 0.12);
+  border: 1px solid rgba(74, 144, 217, 0.25);
+  width: fit-content;
+  margin-bottom: 16px;
+}
+
+.lj-pd-title {
+  font-size: 26px;
+  line-height: 1.25;
+  margin: 0 0 16px;
+  color: #f8fafc;
+  font-weight: 600;
+  letter-spacing: 0.2px;
+}
+
+.lj-pd-author-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.lj-pd-author {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: #cbd5e1;
+  font-size: 14.5px;
+}
+
+.lj-pd-likes {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: #fca5a5;
+  font-size: 14px;
+  padding: 4px 10px;
+  background: rgba(252, 165, 165, 0.08);
+  border-radius: 999px;
+  border: 1px solid rgba(252, 165, 165, 0.15);
+}
+.lj-pd-likes svg { color: #f87171; }
+
+.lj-pd-divider {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.12), transparent);
+  margin: 4px 0 20px;
+}
+
+.lj-pd-section-label {
+  font-size: 12.5px;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  margin-bottom: 12px;
+  font-weight: 600;
+}
+
+.lj-pd-desc {
+  color: #cbd5e1;
+  font-size: 14.5px;
+  line-height: 1.75;
+  flex: 1;
+}
+.lj-pd-desc p { margin: 0; }
+
+.lj-pd-empty {
+  color: #64748b;
+  font-style: italic;
+}
+
+/* ========== 移动端切换按钮 ========== */
+.lj-pd-mobile-nav {
+  display: none;
+  margin-top: 24px;
+  padding-top: 20px;
+  border-top: 1px solid rgba(255,255,255,0.08);
+  gap: 10px;
+}
+.lj-pd-mobile-nav .lj-btn-secondary {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-size: 14px;
+  padding: 10px 14px;
+}
+
+/* ========== 关闭按钮 ========== */
+.lj-pd-close {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  z-index: 10;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  border: 1px solid rgba(255,255,255,0.1);
+  background: rgba(15, 23, 42, 0.75);
+  color: #e2e8f0;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.18s ease;
+  backdrop-filter: blur(6px);
+}
+.lj-pd-close:hover {
+  background: rgba(255, 100, 100, 0.9);
+  color: #fff;
+  border-color: rgba(255,100,100,0.9);
+  transform: rotate(90deg);
+}
+
+/* ========== 左右切换（悬浮于遮罩） ========== */
+.lj-pd-nav {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 10000;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  border: 1px solid rgba(255,255,255,0.12);
+  background: rgba(15, 23, 42, 0.7);
+  color: #e2e8f0;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.18s ease;
+  backdrop-filter: blur(8px);
+}
+.lj-pd-nav:hover {
+  background: var(--lj-brand, #4A90D9);
+  color: #fff;
+  border-color: var(--lj-brand, #4A90D9);
+  transform: translateY(-50%) scale(1.08);
+}
+.lj-pd-nav-prev { left: calc(50% - 600px); }
+.lj-pd-nav-next { right: calc(50% - 600px); }
+
+/* ============================================================
+ * 响应式：小屏改为单列
+ * ============================================================ */
+@media (max-width: 1200px) {
+  .lj-pd-nav-prev { left: 8px; }
+  .lj-pd-nav-next { right: 8px; }
+}
+
+@media (max-width: 900px) {
+  .lj-pd-layout {
+    grid-template-columns: 1fr;
+    grid-template-rows: minmax(0, 55vh) minmax(0, auto);
+    height: auto;
+    max-height: calc(100vh - 48px);
+  }
+  .lj-pd-media-wrap { min-height: 40vh; }
+  .lj-pd-info {
+    max-height: 42vh;
+    padding: 22px 20px 20px;
+  }
+  .lj-pd-title { font-size: 22px; }
+  .lj-pd-mobile-nav { display: flex; }
+  .lj-pd-nav {
+    /* 桌面的悬浮左右按钮在小屏隐藏，改用信息面板底部按钮 */
+    display: none;
+  }
+}
+
+@media (max-width: 640px) {
+  .lj-pd-overlay { padding: 0; }
+  .lj-pd-container {
+    border-radius: 0;
+    max-height: 100vh;
+    height: 100vh;
+    width: 100vw;
+  }
+  .lj-pd-layout {
+    grid-template-rows: minmax(0, 50vh) minmax(0, auto);
+    max-height: 100vh;
+    height: 100vh;
+  }
+  .lj-pd-title { font-size: 20px; }
+  .lj-pd-author-row { flex-direction: column; align-items: flex-start; gap: 8px; }
+  .lj-pd-close { top: 10px; right: 10px; width: 36px; height: 36px; }
+}

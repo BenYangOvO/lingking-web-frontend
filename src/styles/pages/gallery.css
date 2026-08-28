@@ -507,6 +507,35 @@ body {
       font-size: 12px;
       color: rgba(255,255,255,0.7);
     }
+    .lj-photo-view-icon {
+      position: absolute;
+      top: 14px;
+      right: 14px;
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      background: rgba(15, 23, 42, 0.55);
+      border: 1px solid rgba(255,255,255,0.15);
+      backdrop-filter: blur(4px);
+      opacity: 0;
+      transform: translateY(-4px);
+      transition: opacity 240ms ease, transform 240ms ease, background 200ms ease;
+      pointer-events: none;
+      z-index: 2;
+    }
+    .lj-photo-card:hover .lj-photo-view-icon,
+    .lj-photo-card:focus-within .lj-photo-view-icon {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    .lj-photo-card:hover .lj-photo-view-icon {
+      background: var(--lj-brand, #4A90D9);
+      border-color: var(--lj-brand, #4A90D9);
+    }
 
     /* Load More */
     .lj-load-more-wrap {

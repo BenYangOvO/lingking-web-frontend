@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import { Heart, ChevronDown } from 'lucide-react'
+import { Heart, ChevronDown, ZoomIn } from 'lucide-react'
 import { api } from '../api'
+import PhotoDetail from '../components/PhotoDetail'
 import '../styles/pages/gallery.css'
 
 const FILTERS = ['全部', '风光', '人像', '街拍', '纪实', '创意', '建筑']
@@ -13,6 +14,7 @@ function Gallery() {
   const [filter, setFilter] = useState('全部')
   const [visible, setVisible] = useState(9)
   const [loading, setLoading] = useState(true)
+  const [detailIdx, setDetailIdx] = useState(null) // 当前打开的作品在 filtered 数组中的索引；null 表示关闭
 
   useEffect(() => {
     api('/photos').then((data) => {
@@ -22,6 +24,13 @@ function Gallery() {
   }, [])
 
   const filtered = filter === '全部' ? photos : photos.filter((p) => p.cat === filter)
+
+  // 切换分类时关闭详情弹窗，避免索引错位
+  const switchFilter = (f) => {
+    setFilter(f)
+    setVisible(9)
+    setDetailIdx(null)
+  }
 
   const buildBackground = (photo) => {
     // 1. 优先使用用户上传的真实图片（投稿通过 /uploads/xxx 路径，静态作品也可能带 http 外链）
@@ -73,10 +82,7 @@ function Gallery() {
           <button
             key={f}
             className={`lj-filter-btn${filter === f ? ' active' : ''}`}
-            onClick={() => {
-              setFilter(f)
-              setVisible(9)
-            }}
+            onClick={() => switchFilter(f)}
           >
             {f}
           </button>
@@ -87,8 +93,19 @@ function Gallery() {
         {loading && <div style={{ gridColumn: '1/-1', textAlign: 'center', padding: 40, color: '#6b7280' }}>加载作品中...</div>}
         {!loading && filtered.length === 0 && <div style={{ gridColumn: '1/-1', textAlign: 'center', padding: 40, color: '#6b7280' }}>暂无作品</div>}
         {!loading && filtered.slice(0, visible).map((p, idx) => (
-          <div className="lj-photo-card" key={p.id || p.title}>
+          <div
+            className="lj-photo-card"
+            key={p.id || p.title}
+            onClick={() => setDetailIdx(idx)}
+            role="button"
+            tabIndex={0}
+            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setDetailIdx(idx) } }}
+            title="点击查看作品详情"
+          >
             <div className="lj-photo-card-img" style={getStyle(p, idx)}>
+              <div className="lj-photo-view-icon">
+                <ZoomIn style={{ width: 20, height: 20 }} />
+              </div>
               <div className="lj-photo-card-overlay">
                 <div className="lj-photo-card-title">{p.title}</div>
                 <div className="lj-photo-card-meta">
@@ -111,6 +128,16 @@ function Gallery() {
           </button>
         </div>
       )}
+
+      <PhotoDetail
+        open={detailIdx !== null}
+        photo={detailIdx !== null ? filtered[detailIdx] : null}
+        list={filtered}
+        currentIndex={detailIdx ?? 0}
+        onClose={() => setDetailIdx(null)}
+        onPrev={() => setDetailIdx((i) => (i === null || i <= 0 ? 0 : i - 1))}
+        onNext={() => setDetailIdx((i) => (i === null ? 0 : Math.min(filtered.length - 1, i + 1)))}
+      />
     </>
   )
 }

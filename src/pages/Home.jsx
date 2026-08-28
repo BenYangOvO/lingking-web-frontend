@@ -10,6 +10,7 @@ import {
   Megaphone,
 } from 'lucide-react'
 import { api } from '../api'
+import PhotoDetail from '../components/PhotoDetail'
 
 const STATS = [
   { value: '200+', label: '成员人数' },
@@ -41,6 +42,7 @@ function Home() {
   const [photos, setPhotos] = useState([])
   const [depts, setDepts] = useState([])
   const [loading, setLoading] = useState(true)
+  const [detailIdx, setDetailIdx] = useState(null)
 
   useEffect(() => {
     Promise.all([api('/photos'), api('/departments')]).then(([p, d]) => {
@@ -78,8 +80,16 @@ function Home() {
           <h2 className="lj-section-title">精选作品</h2>
           <div className="lj-featured-grid">
             {loading && <div style={{ gridColumn: '1/-1', textAlign: 'center', padding: 40, color: '#6b7280' }}>加载中...</div>}
-            {!loading && photos.map((w) => (
-              <div className="lj-featured-card" key={w.id || w.title}>
+            {!loading && photos.map((w, idx) => (
+              <div
+                className="lj-featured-card"
+                key={w.id || w.title}
+                onClick={() => setDetailIdx(idx)}
+                role="button"
+                tabIndex={0}
+                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setDetailIdx(idx) } }}
+                title="点击查看作品详情"
+              >
                 <div className="lj-featured-card-img" style={cardBg(w)} />
                 <div className="lj-featured-card-body">
                   <h3 className="lj-featured-card-title">{w.title}</h3>
@@ -166,6 +176,16 @@ function Home() {
           </div>
         </div>
       </section>
+
+      <PhotoDetail
+        open={detailIdx !== null}
+        photo={detailIdx !== null ? photos[detailIdx] : null}
+        list={photos}
+        currentIndex={detailIdx ?? 0}
+        onClose={() => setDetailIdx(null)}
+        onPrev={() => setDetailIdx((i) => (i === null || i <= 0 ? 0 : i - 1))}
+        onNext={() => setDetailIdx((i) => (i === null ? 0 : Math.min(photos.length - 1, i + 1)))}
+      />
     </>
   )
 }

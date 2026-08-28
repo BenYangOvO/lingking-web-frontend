@@ -480,18 +480,32 @@ body {
       border: 1px solid var(--lj-line);
       border-radius: var(--radius-lg);
       overflow: hidden;
+      cursor: pointer;
       transition: transform 240ms cubic-bezier(0.2, 0.8, 0.2, 1),
-                  box-shadow 240ms cubic-bezier(0.2, 0.8, 0.2, 1);
+                  box-shadow 240ms cubic-bezier(0.2, 0.8, 0.2, 1),
+                  border-color 200ms ease;
     }
     .lj-featured-card:hover {
-      transform: translateY(-2px);
+      transform: translateY(-4px);
       box-shadow: var(--shadow-2);
+      border-color: var(--lj-brand);
     }
     .lj-featured-card-img {
       width: 100%;
       height: 220px;
       background: linear-gradient(135deg, var(--lj-brand-dark), var(--lj-brand), var(--lj-brand-light));
       position: relative;
+    }
+    .lj-featured-card-img::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse at top left, rgba(74,144,217,0) 30%, rgba(0,0,0,0.25) 100%);
+      opacity: 0;
+      transition: opacity 240ms ease;
+    }
+    .lj-featured-card:hover .lj-featured-card-img::after {
+      opacity: 1;
     }
     .lj-featured-card-body {
       padding: 20px;
