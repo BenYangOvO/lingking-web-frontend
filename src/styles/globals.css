@@ -868,6 +868,10 @@ body {
       .lj-nav-actions .lj-btn-primary {
         display: none;
       }
+      /* 主题/粒子切换按钮在窄屏下保留 */
+      .lj-nav-actions .lj-nav-toggle {
+        display: inline-flex;
+      }
     }
 
     
@@ -901,4 +905,38 @@ body {
       max-width: 120px;
       overflow: hidden;
       text-overflow: ellipsis;
+    }
+
+    /* ===== 右上角功能切换按钮（主题 / 鼠标粒子） ===== */
+    .lj-nav-toggle {
+      padding: 8px;
+      line-height: 0;
+      flex-shrink: 0;
+    }
+    /* 粒子开启状态：品牌色高亮 */
+    .lj-nav-toggle.lj-nav-toggle-on {
+      color: var(--lj-brand);
+      border-color: rgba(74, 144, 217, 0.45);
+      background: var(--lj-brand-muted-2);
+    }
+    .lj-nav-toggle.lj-nav-toggle-on:hover {
+      background: var(--lj-brand-muted);
+      border-color: var(--lj-brand);
+    }
+
+    /* ===== 白色简约版（html.light）硬编码深色覆盖 ===== */
+    html.light body {
+      background-color: #F5F7FA !important;
+    }
+    html.light .lj-nav {
+      background: rgba(255, 255, 255, 0.88);
+    }
+    html.light .lj-nav-links.open {
+      background: #FFFFFF;
+    }
+    /* 简约版微调：卡片阴影更柔和 */
+    html.light .lj-featured-card:hover,
+    html.light .lj-card,
+    html.light .lj-timeline-card {
+      box-shadow: 0 8px 24px -10px rgba(15, 23, 42, 0.12);
     }

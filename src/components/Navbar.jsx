@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react'
 import { Link, NavLink, useNavigate } from 'react-router-dom'
-import { Menu, LogIn, UserPlus, LogOut, PenLine, Shield, Crown, UserCircle2 } from 'lucide-react'
+import { Menu, LogIn, UserPlus, LogOut, PenLine, Shield, Crown, UserCircle2, Sun, Moon, Sparkles } from 'lucide-react'
 import { isLoggedIn, getUsername, logout, onAuthChange, isAdmin } from '../auth'
+import { getTheme, toggleTheme, getParticlesEnabled, toggleParticles, onPrefsChange } from '../prefs'
 
 const NAV_LINKS = [
   { to: '/', label: '首页', domId: 'nav-home' },
@@ -18,12 +19,30 @@ const NAV_LINKS = [
 function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false)
   const [userInfo, setUserInfo] = useState({ loggedIn: false, username: null, role: 'member' })
+  const [theme, setThemeState] = useState(getTheme())
+  const [particlesOn, setParticlesOn] = useState(getParticlesEnabled())
   const navigate = useNavigate()
 
   useEffect(() => {
     const sync = (info) => setUserInfo(info || { loggedIn: isLoggedIn(), username: getUsername(), role: isAdmin() ? 'admin' : 'member' })
-    return onAuthChange(sync)
+    const unsubAuth = onAuthChange(sync)
+    // 订阅主题/粒子开关变化（Navbar 内切换后同步按钮图标状态）
+    const unsubPrefs = onPrefsChange(() => {
+      setThemeState(getTheme())
+      setParticlesOn(getParticlesEnabled())
+    })
+    return () => { unsubAuth(); unsubPrefs() }
   }, [])
+
+  const handleToggleTheme = () => {
+    toggleTheme()
+    setThemeState(getTheme())
+  }
+
+  const handleToggleParticles = () => {
+    toggleParticles()
+    setParticlesOn(getParticlesEnabled())
+  }
 
   const handleLogout = () => {
     logout()
@@ -55,6 +74,24 @@ function Navbar() {
         </ul>
 
         <div className="lj-nav-actions">
+          {/* 主题切换：白色简约版 / 深色原版 */}
+          <button
+            className="lj-btn-secondary lj-nav-toggle"
+            onClick={handleToggleTheme}
+            title={theme === 'light' ? '切换回深色原版' : '切换白色简约版'}
+            aria-label="切换主题"
+          >
+            {theme === 'light' ? <Moon size={16} /> : <Sun size={16} />}
+          </button>
+          {/* 鼠标粒子拖曳效果开关 */}
+          <button
+            className={`lj-btn-secondary lj-nav-toggle${particlesOn ? ' lj-nav-toggle-on' : ''}`}
+            onClick={handleToggleParticles}
+            title={particlesOn ? '关闭鼠标粒子拖曳效果' : '开启鼠标粒子拖曳效果'}
+            aria-label="切换鼠标粒子效果"
+          >
+            <Sparkles size={16} />
+          </button>
           {loggedIn ? (
             <>
               <span className="lj-nav-user" title={username}>

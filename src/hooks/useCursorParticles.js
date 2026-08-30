@@ -5,6 +5,7 @@ import { useEffect, useRef } from 'react'
  * 粒子带重力、阻力、透明度/大小衰减，不影响页面交互（pointer-events: none）
  */
 export default function useCursorParticles({
+  enabled = true,
   color = '#6AADE8',
   gravity = 0.08,
   friction = 0.96,
@@ -20,6 +21,11 @@ export default function useCursorParticles({
     const canvas = canvasRef.current
     if (!canvas) return
     const ctx = canvas.getContext('2d')
+    // 开关关闭时不启动动画与监听
+    if (!enabled) {
+      ctx.clearRect(0, 0, canvas.width, canvas.height)
+      return
+    }
     let particles = []
     let rafId
     let running = true
@@ -142,7 +148,7 @@ export default function useCursorParticles({
       window.removeEventListener('touchmove', onTouchMove)
       if (stopTimer) clearTimeout(stopTimer)
     }
-  }, [color, gravity, friction, life, density, maxPerFrame, sizeMin, sizeMax])
+  }, [enabled, color, gravity, friction, life, density, maxPerFrame, sizeMin, sizeMax])
 
   return canvasRef
 }
