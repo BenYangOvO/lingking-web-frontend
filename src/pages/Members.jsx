@@ -3,6 +3,11 @@ import { Link } from 'react-router-dom'
 import { api } from '../api'
 import '../styles/pages/members.css'
 
+// 仅当头像字段是合法图片地址时才按图片渲染（历史数据中可能存了渐变文字等非 URL 值）
+function validAvatarSrc(v) {
+  return typeof v === 'string' && /^(https?:|data:image|\/uploads\/)/i.test(v.trim()) ? v.trim() : ''
+}
+
 function ChibiFace({ happy, smile }) {
   return (
     <div className="lj-chibi-face">
@@ -52,11 +57,13 @@ function Members() {
               还没有注册成员。注册账号并在个人资料中完善信息后，就会出现在这里。
             </div>
           )}
-          {!loading && members.map((m) => (
+          {!loading && members.map((m) => {
+            const avatarSrc = validAvatarSrc(m.avatar)
+            return (
             <div className="lj-member-card" key={m.id || m.name}>
-              <div className="lj-chibi-avatar lj-member-avatar" style={m.avatar ? { background: 'var(--lj-surface-2)' } : undefined}>
-                {m.avatar ? (
-                  <img className="lj-member-avatar-img" src={m.avatar} alt={m.name} loading="lazy"
+              <div className="lj-chibi-avatar lj-member-avatar" style={avatarSrc ? { background: 'var(--lj-surface-2)' } : undefined}>
+                {avatarSrc ? (
+                  <img className="lj-member-avatar-img" src={avatarSrc} alt={m.name} loading="lazy"
                     onError={(e) => { e.currentTarget.style.display = 'none' }} />
                 ) : (
                   <ChibiFace />
@@ -71,7 +78,8 @@ function Members() {
               </span>
               <div className="lj-member-bio">{m.bio || '这位成员还没有留下自我介绍'}</div>
             </div>
-          ))}
+            )
+          })}
         </div>
       </section>
     </>
