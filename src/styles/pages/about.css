@@ -802,3 +802,20 @@ body {
     grid-template-columns: repeat(3, 1fr) !important;
   }
 }
+
+
+/* ===== 联系卡片统一尺寸兜底（强制撑满网格单元格 — 解决抖音/小红书宽度比其他小一圈） ===== */
+.lj-contact-grid .lj-contact-card {
+  /* 强制宽度100% = 撑满网格列单元格，消除内容收缩包裹导致的宽度差 */
+  width: 100% !important;
+  /* 盒模型：padding+border不溢出 */
+  box-sizing: border-box !important;
+  /* 网格项双向拉伸，完全填满单元格 */
+  justify-self: stretch !important;
+  align-self: stretch !important;
+  /* 统一最小高度，保证不同视口不同内容下卡片高度一致 */
+  min-height: 180px !important;
+  /* 内部统一纵向Flex布局，对齐基准一致 */
+  display: flex !important;
+  flex-direction: column !important;
+}
