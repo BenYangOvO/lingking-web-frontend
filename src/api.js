@@ -153,3 +153,41 @@ export function uploadImage(file, { onProgress } = {}) {
     reader.readAsDataURL(file)
   })
 }
+
+// 文档上传（doc/docx/pdf）：File -> base64 -> POST /api/upload -> { url, size, ext }
+export function uploadFile(file, { onProgress } = {}) {
+  return new Promise((resolve, reject) => {
+    if (!(file instanceof File || file instanceof Blob)) {
+      reject(new Error('参数必须是文件对象'))
+      return
+    }
+    const maxMB = 20
+    if (file.size > maxMB * 1024 * 1024) {
+      reject(new Error(`文档大小不能超过 ${maxMB}MB`))
+      return
+    }
+    const name = file.name || ''
+    const ext = name.includes('.') ? name.split('.').pop().toLowerCase() : ''
+    if (!['doc', 'docx', 'pdf'].includes(ext)) {
+      reject(new Error('仅支持 doc / docx / pdf 格式文档'))
+      return
+    }
+    const reader = new FileReader()
+    reader.onprogress = (e) => {
+      if (onProgress && e.lengthComputable) onProgress(Math.round((e.loaded / e.total) * 100))
+    }
+    reader.onerror = () => reject(new Error('读取文档失败，文件可能损坏'))
+    reader.onload = async () => {
+      try {
+        if (onProgress) onProgress(95)
+        const image_b64 = String(reader.result || '')
+        const res = await api('/upload', { method: 'POST', auth: true, body: { image_b64, ext } })
+        if (onProgress) onProgress(100)
+        resolve(res)
+      } catch (err) {
+        reject(err)
+      }
+    }
+    reader.readAsDataURL(file)
+  })
+}

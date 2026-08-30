@@ -551,10 +551,41 @@ body {
       background: rgba(251, 191, 36, 0.12);
       color: #FBBF24;
     }
+    /* 角色标签（真实账号） */
+    .lj-member-dept-tag.admin {
+      background: linear-gradient(135deg, rgba(74, 144, 217, 0.2), rgba(106, 173, 232, 0.1));
+      color: var(--lj-brand-light);
+      border: 1px solid rgba(74, 144, 217, 0.35);
+    }
+    .lj-member-dept-tag.member {
+      background: rgba(148, 163, 184, 0.12);
+      color: var(--lj-ink-2);
+    }
     .lj-member-bio {
       font-size: 14px;
       color: var(--lj-ink-2);
       line-height: 1.5;
+    }
+
+    /* 真实头像（账号头像） */
+    .lj-member-avatar .lj-member-avatar-img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      border-radius: 50%;
+      display: block;
+    }
+
+    /* 空状态 */
+    .lj-members-empty {
+      grid-column: 1 / -1;
+      text-align: center;
+      padding: 60px 24px;
+      color: var(--lj-ink-3);
+      font-size: 14.5px;
+      background: rgba(148, 163, 184, 0.04);
+      border: 1px dashed rgba(148, 163, 184, 0.2);
+      border-radius: 14px;
     }
 
     /* Stats Section */

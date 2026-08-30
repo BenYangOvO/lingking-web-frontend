@@ -1003,3 +1003,174 @@ body {
       -webkit-text-fill-color: transparent;
       background-clip: text;
     }
+
+    /* ===== 完整历史讲述入口 ===== */
+    .lj-fullhistory-card {
+      display: flex;
+      align-items: center;
+      gap: 18px;
+      padding: 24px 28px;
+      background: var(--color-surface-2, #1E2335);
+      border: 1px solid rgba(74, 144, 217, 0.22);
+      border-radius: 1rem;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      flex-wrap: wrap;
+    }
+    .lj-fullhistory-card:hover {
+      border-color: var(--color-brand, #4A90D9);
+      background: var(--color-surface-hover, #252A3D);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 28px rgba(74, 144, 217, 0.12);
+    }
+    .lj-fullhistory-icon {
+      width: 56px;
+      height: 56px;
+      border-radius: 14px;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--color-brand-light, #6AADE8);
+      background: linear-gradient(135deg, rgba(74, 144, 217, 0.22), rgba(74, 144, 217, 0.06));
+    }
+    .lj-fullhistory-text {
+      flex: 1;
+      min-width: 200px;
+    }
+    .lj-fullhistory-text h3 {
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: var(--color-ink, #E5E7EB);
+      margin: 0 0 6px;
+    }
+    .lj-fullhistory-text p {
+      font-size: 0.875rem;
+      color: var(--color-ink-2, #9CA3AF);
+      margin: 0;
+    }
+    .lj-fullhistory-actions {
+      display: flex;
+      gap: 10px;
+      flex-shrink: 0;
+    }
+    .lj-fullhistory-actions a,
+    .lj-fullhistory-actions button {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      text-decoration: none;
+      font-size: 13px;
+    }
+
+    /* ===== Word 文档在线阅读弹窗 ===== */
+    .lj-docviewer-mask {
+      position: fixed;
+      inset: 0;
+      background: rgba(6, 8, 14, 0.82);
+      backdrop-filter: blur(6px);
+      z-index: 2000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      animation: lj-docviewer-fade 0.2s ease;
+    }
+    @keyframes lj-docviewer-fade {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+    .lj-docviewer-dialog {
+      width: min(860px, 100%);
+      max-height: 86vh;
+      display: flex;
+      flex-direction: column;
+      background: var(--color-surface, #171B28);
+      border: 1px solid rgba(74, 144, 217, 0.25);
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: 0 24px 60px rgba(0, 0, 0, 0.5);
+    }
+    .lj-docviewer-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 20px;
+      border-bottom: 1px solid rgba(74, 144, 217, 0.18);
+      background: rgba(74, 144, 217, 0.05);
+    }
+    .lj-docviewer-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 600;
+      color: var(--color-ink, #E5E7EB);
+      font-size: 15px;
+    }
+    .lj-docviewer-title svg {
+      color: var(--color-brand-light, #6AADE8);
+    }
+    .lj-docviewer-close {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 32px;
+      height: 32px;
+      border: none;
+      border-radius: 8px;
+      background: transparent;
+      color: var(--color-ink-2, #9CA3AF);
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .lj-docviewer-close:hover {
+      background: rgba(239, 68, 68, 0.12);
+      color: #f87171;
+    }
+    .lj-docviewer-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 24px 28px;
+    }
+    .lj-docviewer-state {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+      padding: 60px 20px;
+      color: var(--color-ink-2, #9CA3AF);
+      font-size: 14px;
+    }
+    .lj-docviewer-content {
+      color: var(--color-ink, #E5E7EB);
+      font-size: 14.5px;
+      line-height: 1.8;
+    }
+    .lj-docviewer-content img {
+      max-width: 100%;
+      height: auto;
+      border-radius: 8px;
+      margin: 0.6em 0;
+    }
+
+    @media (max-width: 640px) {
+      .lj-fullhistory-card {
+        padding: 18px 20px;
+        gap: 14px;
+      }
+      .lj-fullhistory-icon {
+        width: 44px;
+        height: 44px;
+      }
+      .lj-fullhistory-actions {
+        width: 100%;
+      }
+      .lj-fullhistory-actions a,
+      .lj-fullhistory-actions button {
+        flex: 1;
+        justify-content: center;
+      }
+      .lj-docviewer-body {
+        padding: 16px 18px;
+      }
+    }

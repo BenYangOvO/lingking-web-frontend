@@ -38,13 +38,15 @@ export const DEFAULT_HISTORY = {
   hero_subtitle: '凌镜的起源与发展历程',
   timeline_title: '时间轴',
   timeline_subtitle: '从萌芽到绽放，每一步都是热爱的印记',
+  full_history_title: '完整历史讲述',
+  full_history_file: '',
   events: [
-    { year: '2018', title: '凌镜摄影社团成立', desc: '由一群热爱摄影的同学自发组织，从最初的 15 人发展至今。' },
-    { year: '2019', title: '首届校园摄影展', desc: '在学校图书馆举办首届摄影展，展出作品 80 余幅，参观人数超过 2000 人次。' },
-    { year: '2020', title: '线上转型与疫情应对', desc: '面对疫情挑战，社团迅速转型线上运营，开展线上讲座、云展览等创新活动。' },
-    { year: '2021', title: '工作室正式开放', desc: '学校批准社团使用一间办公室作为工作室，配备灯光、背景布等专业设备。' },
-    { year: '2023', title: '校企合作项目', desc: '与本地多家摄影工作室建立合作，为成员提供实习和作品展示机会。' },
-    { year: '2025', title: '社团影响力扩大', desc: '成员突破 200 人，年度活动 30+ 场，成为学校最具影响力的艺术社团之一。' },
+    { year: '2018', title: '凌镜摄影社团成立', desc: '由一群热爱摄影的同学自发组织，从最初的 15 人发展至今。', image: '' },
+    { year: '2019', title: '首届校园摄影展', desc: '在学校图书馆举办首届摄影展，展出作品 80 余幅，参观人数超过 2000 人次。', image: '' },
+    { year: '2020', title: '线上转型与疫情应对', desc: '面对疫情挑战，社团迅速转型线上运营，开展线上讲座、云展览等创新活动。', image: '' },
+    { year: '2021', title: '工作室正式开放', desc: '学校批准社团使用一间办公室作为工作室，配备灯光、背景布等专业设备。', image: '' },
+    { year: '2023', title: '校企合作项目', desc: '与本地多家摄影工作室建立合作，为成员提供实习和作品展示机会。', image: '' },
+    { year: '2025', title: '社团影响力扩大', desc: '成员突破 200 人，年度活动 30+ 场，成为学校最具影响力的艺术社团之一。', image: '' },
   ],
 }
 
@@ -260,8 +262,18 @@ export function mergeSiteContent(def, userVal) {
   const isArrDef = Array.isArray(def)
   const isArrUsr = Array.isArray(userVal)
   if (isArrDef || isArrUsr) {
-    // 数组：完全使用用户版本，因为用户可能增删了项
-    return isArrUsr ? userVal.map((x) => (x && typeof x === 'object' && !Array.isArray(x) ? mergeSiteContent({}, x) : x)) : def
+    // 数组：以用户版本为基础（用户可能增删了项），
+    // 但对象项会按索引与默认项合并，补全默认结构中新增的字段（向前兼容）
+    if (!isArrUsr) return def
+    return userVal.map((x, i) => {
+      const dv = Array.isArray(def) && i < def.length && def[i] && typeof def[i] === 'object' && !Array.isArray(def[i])
+        ? def[i]
+        : null
+      if (x && typeof x === 'object' && !Array.isArray(x) && dv) {
+        return mergeSiteContent(dv, x)
+      }
+      return x
+    })
   }
   const out = {}
   for (const k of Object.keys(def)) {

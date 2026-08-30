@@ -1,6 +1,6 @@
 import { useEffect, useState, useMemo, useRef } from 'react'
-import { X, Save, RotateCcw, Loader2, AlertTriangle, Plus, Minus, Edit3 } from 'lucide-react'
-import { updateSiteContent } from '../api'
+import { X, Save, RotateCcw, Loader2, AlertTriangle, Plus, Minus, Edit3, Image as ImageIcon, FileText, Upload, Trash2 } from 'lucide-react'
+import { updateSiteContent, uploadImage, uploadFile } from '../api'
 import { SITE_DEFAULTS } from '../siteContentDefaults'
 import MarkdownEditor from './MarkdownEditor'
 import '../styles/components/site-content-editor.css'
@@ -249,6 +249,17 @@ function ArrayField({ path, value, onChange }) {
 }
 
 function PrimitiveField({ path, value, onChange }) {
+  const lastKey = path.length ? String(path[path.length - 1]) : ''
+
+  // 配图字段（如历史节点 image）：图片上传控件
+  if (typeof value === 'string' && lastKey === 'image') {
+    return <ImageUploadField value={value} onChange={onChange} />
+  }
+  // 文档字段（如 full_history_file）：Word/PDF 上传控件
+  if (typeof value === 'string' && /_file$/.test(lastKey)) {
+    return <FileUploadField value={value} onChange={onChange} />
+  }
+
   // 多行文本：检测到包含换行或长度>80的字符串
   const isLong = typeof value === 'string' && (value.includes('\n') || value.length > 80)
   const placeholder = typeof value === 'number' ? '请输入数字' : `请输入 ${path[path.length - 1] || '内容'}`
@@ -304,6 +315,113 @@ function PrimitiveField({ path, value, onChange }) {
   )
 }
 
+// ================= 上传控件（图片 / 文档） =================
+
+// 图片上传字段：用于配图（如历史节点 image）
+function ImageUploadField({ value, onChange }) {
+  const [busy, setBusy] = useState(false)
+  const [pct, setPct] = useState(0)
+  const [err, setErr] = useState('')
+  const inputRef = useRef(null)
+
+  const pick = async (e) => {
+    const f = e.target.files?.[0]
+    e.target.value = ''
+    if (!f) return
+    setBusy(true); setErr(''); setPct(0)
+    try {
+      const res = await uploadImage(f, { onProgress: setPct })
+      onChange(res.url)
+    } catch (er) {
+      setErr(er.message || '图片上传失败')
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  return (
+    <div className="lj-sce-upload">
+      {value ? (
+        <div className="lj-sce-upload-preview">
+          <div className="lj-sce-upload-thumb">
+            <img src={value} alt="配图预览" onError={(e) => { e.target.style.opacity = 0.2 }} />
+          </div>
+          <div className="lj-sce-upload-actions">
+            <button type="button" className="lj-btn-ghost" onClick={() => inputRef.current?.click()} disabled={busy}>
+              <ImageIcon size={13} /> 更换图片
+            </button>
+            <button type="button" className="lj-btn-ghost lj-sce-del-text" onClick={() => onChange('')} disabled={busy}>
+              <Trash2 size={13} /> 移除
+            </button>
+          </div>
+        </div>
+      ) : (
+        <button type="button" className="lj-sce-upload-btn" onClick={() => inputRef.current?.click()} disabled={busy}>
+          <ImageIcon size={15} />
+          {busy ? `上传中 ${pct}%` : '上传配图（jpg/png/webp/gif，≤10MB）'}
+        </button>
+      )}
+      <input ref={inputRef} type="file" accept="image/jpeg,image/png,image/webp,image/gif" hidden onChange={pick} />
+      {err && <div className="lj-sce-err" style={{ marginTop: 6 }}><AlertTriangle size={14} /> {err}</div>}
+    </div>
+  )
+}
+
+// 文档上传字段：用于 Word/PDF（如 full_history_file）
+function FileUploadField({ value, onChange }) {
+  const [busy, setBusy] = useState(false)
+  const [pct, setPct] = useState(0)
+  const [err, setErr] = useState('')
+  const inputRef = useRef(null)
+
+  const pick = async (e) => {
+    const f = e.target.files?.[0]
+    e.target.value = ''
+    if (!f) return
+    setBusy(true); setErr(''); setPct(0)
+    try {
+      const res = await uploadFile(f, { onProgress: setPct })
+      onChange(res.url)
+    } catch (er) {
+      setErr(er.message || '文档上传失败')
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  const fileName = (url) => {
+    try { return decodeURIComponent(String(url).split('/').pop()) } catch { return String(url) }
+  }
+
+  return (
+    <div className="lj-sce-upload">
+      {value ? (
+        <div className="lj-sce-upload-preview">
+          <div className="lj-sce-file-chip">
+            <FileText size={15} />
+            <a href={value} target="_blank" rel="noreferrer" title="点击查看已上传文档">{fileName(value)}</a>
+          </div>
+          <div className="lj-sce-upload-actions">
+            <button type="button" className="lj-btn-ghost" onClick={() => inputRef.current?.click()} disabled={busy}>
+              <Upload size={13} /> 更换文档
+            </button>
+            <button type="button" className="lj-btn-ghost lj-sce-del-text" onClick={() => onChange('')} disabled={busy}>
+              <Trash2 size={13} /> 移除
+            </button>
+          </div>
+        </div>
+      ) : (
+        <button type="button" className="lj-sce-upload-btn" onClick={() => inputRef.current?.click()} disabled={busy}>
+          <FileText size={15} />
+          {busy ? `上传中 ${pct}%` : '上传文档（doc/docx/pdf，≤20MB）'}
+        </button>
+      )}
+      <input ref={inputRef} type="file" accept=".doc,.docx,.pdf" hidden onChange={pick} />
+      {err && <div className="lj-sce-err" style={{ marginTop: 6 }}><AlertTriangle size={14} /> {err}</div>}
+    </div>
+  )
+}
+
 // ================= 工具函数 =================
 
 function deepClone(v) {
@@ -324,8 +442,14 @@ function mergeDefault(def, userVal) {
   if (!isPlainObject(userVal)) return base
   for (const k of Object.keys(userVal)) {
     if (Array.isArray(userVal[k])) {
-      // 数组：完全使用用户版本（因为可能用户增删了项）
-      base[k] = deepClone(userVal[k])
+      // 数组：以用户版本为基础（可能增删了项），
+      // 对象项按索引与默认项合并，补全默认结构新增的字段（如历史节点新增的 image）
+      const defArr = Array.isArray(base[k]) ? base[k] : []
+      base[k] = userVal[k].map((x, i) => {
+        const dv = defArr[i] || defArr[defArr.length - 1]
+        if (isPlainObject(x) && isPlainObject(dv)) return mergeDefault(dv, x)
+        return deepClone(x)
+      })
     } else if (isPlainObject(userVal[k]) && isPlainObject(base[k])) {
       base[k] = mergeDefault(base[k], userVal[k])
     } else {
@@ -353,8 +477,22 @@ function makePrototypeFor(proto) {
 }
 
 // 将 camelCase / snake_case 字段名转成人类可读标签（仅作参考，不影响数据）
+const LABEL_OVERRIDES = {
+  image: '配图（上传图片）',
+  full_history_file: '完整历史文档（上传 Word/PDF）',
+  full_history_title: '完整历史入口标题',
+  year: '年份',
+  title: '标题',
+  desc: '描述（支持 Markdown）',
+  name: '名称',
+  value: '数值',
+  label: '标签',
+  num: '序号',
+}
+
 function camelToLabel(str) {
   if (typeof str !== 'string' || !str) return str
+  if (LABEL_OVERRIDES[str]) return LABEL_OVERRIDES[str]
   const s = str.replace(/[_-]+/g, ' ')
   const out = s.replace(/([a-z])([A-Z])/g, '$1 $2')
   return out.charAt(0).toUpperCase() + out.slice(1)
