@@ -383,8 +383,10 @@ body {
       font-size: clamp(15px, 1.8vw, 18px);
       color: var(--lj-ink-2);
       line-height: 1.6;
+      text-align: center;
       max-width: 480px;
       margin: 0 auto;
+      width: 100%;
     }
 
     /* Breadcrumb */
@@ -417,7 +419,7 @@ body {
     }
     .lj-search-input {
       width: 100%;
-      padding: 14px 20px 14px 48px;
+      padding: 14px 20px 14px 56px;
       font-size: 15px;
       font-family: var(--font-body);
       color: var(--lj-ink);
@@ -436,7 +438,7 @@ body {
     }
     .lj-search-icon {
       position: absolute;
-      left: 16px;
+      left: 20px;
       top: 50%;
       transform: translateY(-50%);
       color: var(--lj-ink-3);
@@ -450,6 +452,8 @@ body {
       gap: 20px;
     }
     .lj-contact-card {
+      position: relative;
+      overflow: hidden;
       background: var(--lj-surface);
       border: 1px solid var(--lj-line);
       border-radius: var(--radius-lg);
@@ -457,6 +461,15 @@ body {
       transition: transform 240ms cubic-bezier(0.2, 0.8, 0.2, 1),
                   box-shadow 240ms cubic-bezier(0.2, 0.8, 0.2, 1),
                   border-color 200ms;
+    }
+    .lj-contact-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, var(--lj-brand-dark), var(--lj-brand), var(--lj-brand-light));
     }
     .lj-contact-card:hover {
       transform: translateY(-2px);
@@ -690,7 +703,7 @@ body {
 
     /* Responsive: 768px+ */
     @media (min-width: 768px) {
-      .lj-contact-grid { grid-template-columns: repeat(3, 1fr); }
+      .lj-contact-grid { grid-template-columns: repeat(2, 1fr); }
       .lj-values-grid { grid-template-columns: repeat(4, 1fr); }
       .lj-sponsor-cards { grid-template-columns: repeat(2, 1fr); }
       .lj-footer-grid { grid-template-columns: 1.2fr 1fr 1fr; }
@@ -738,3 +751,45 @@ body {
       pointer-events: none;
       z-index: 9999;
     }
+
+/* ===== 高优先级兜底修复（防止被其他样式覆盖） ===== */
+
+/* 关于凌镜副标题居中 —— 显式设置水平居中，使用带祖先的高优先级选择器 */
+.lj-page-header .lj-page-header-inner .lj-page-subtitle {
+  text-align: center !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+  width: 100% !important;
+  max-width: 560px !important;
+  display: block !important;
+}
+
+/* 搜索栏 —— 加大图标与文字间距，防止被覆盖 */
+.lj-search-section .lj-search-wrap .lj-search-icon {
+  left: 28px !important;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.lj-search-section .lj-search-wrap .lj-search-input {
+  padding-left: 76px !important;
+  text-indent: 0;
+}
+
+/* 联系卡片顶部渐变条一致性兜底 */
+.lj-contact-grid .lj-contact-card {
+  position: relative !important;
+  overflow: hidden !important;
+}
+.lj-contact-grid .lj-contact-card::before {
+  content: '' !important;
+  position: absolute !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  height: 3px !important;
+  background: linear-gradient(90deg, var(--lj-brand-dark), var(--lj-brand), var(--lj-brand-light)) !important;
+  display: block !important;
+}
