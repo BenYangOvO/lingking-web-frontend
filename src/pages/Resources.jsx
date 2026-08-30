@@ -40,16 +40,18 @@ function Resources() {
       </section>
 
       <div className="lj-search-bar">
-        <div className="lj-search-icon">
-          <Search style={{ width: 18, height: 18 }} />
+        <div className="lj-search-wrap">
+          <div className="lj-search-icon">
+            <Search style={{ width: 18, height: 18 }} />
+          </div>
+          <input
+            type="text"
+            className="lj-search-input"
+            placeholder="搜索资源：教程、技巧、器材评测..."
+            value={keyword}
+            onChange={(e) => setKeyword(e.target.value)}
+          />
         </div>
-        <input
-          type="text"
-          className="lj-search-input"
-          placeholder="搜索资源：教程、技巧、器材评测..."
-          value={keyword}
-          onChange={(e) => setKeyword(e.target.value)}
-        />
       </div>
 
       <div className="lj-category-tabs">

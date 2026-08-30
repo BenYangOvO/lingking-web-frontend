@@ -829,3 +829,39 @@ body {
       pointer-events: none;
       z-index: 9999;
     }
+
+/* ===== RESOURCES_SEARCH_FIX_V2：凌镜资源库搜索栏放大镜图标不超出边框 ===== */
+/* 视觉输入框本身带relative定位，图标基于此定位 — 彻底避免父容器padding导致的坐标错位 */
+.lj-search-bar .lj-search-wrap {
+  position: relative;
+  width: 100%;
+  max-width: 640px;
+  margin: 0 auto;
+}
+.lj-search-bar .lj-search-wrap .lj-search-input {
+  width: 100% !important;
+  padding: 14px 20px 14px 56px !important;
+  /* 视觉边框和圆角由input承载，去掉lj-search-bar的padding影响（输入框自身就是完整形状） */
+  box-sizing: border-box !important;
+  background: var(--lj-surface) !important;
+  border: 1px solid var(--lj-line) !important;
+  border-radius: var(--radius-lg) !important;
+}
+.lj-search-bar .lj-search-wrap .lj-search-icon {
+  /* 在wrap内 16px + 图标宽 距离左边线，保证图标完全在圆角边框内 */
+  left: 20px !important;
+  top: 50% !important;
+  transform: translateY(-50%) !important;
+  position: absolute !important;
+  width: 18px !important;
+  height: 18px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  color: var(--lj-ink-3) !important;
+  pointer-events: none !important;
+}
+/* 外层lj-search-bar的padding和max-width不再影响内层坐标（外层仍保留水平居中max-width，但padding改为0避免双重偏移） */
+.lj-search-bar {
+  padding: 0 24px !important;
+}

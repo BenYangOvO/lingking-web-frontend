@@ -1,4 +1,4 @@
-@tailwind base;
+﻿@tailwind base;
 @tailwind components;
 @tailwind utilities;
 
@@ -940,3 +940,51 @@ body {
     html.light .lj-timeline-card {
       box-shadow: 0 8px 24px -10px rgba(15, 23, 42, 0.12);
     }
+
+/* ===== 简约版/黑暗版主题切换 — 丝滑转场过渡 ===== */
+
+/* 全局颜色属性过渡：CSS变量驱动的所有主要颜色都在 420ms ease-in-out 内平滑插值 */
+:root,
+html,
+body,
+.lj-nav,
+.lj-surface,
+.lj-btn-primary,
+.lj-btn-secondary,
+.lj-btn-ghost,
+.lj-admin-tab,
+.lj-member-card,
+.lj-contact-card,
+.lj-resource-card,
+.lj-card,
+.lj-search-input,
+.lj-glow-line,
+.lj-admin-tabs,
+.lj-page-header,
+.lj-footer,
+input, select, textarea, button,
+a,
+h1, h2, h3, h4, h5, h6,
+p, span, li {
+  transition:
+    background-color 420ms cubic-bezier(0.4, 0, 0.2, 1),
+    color 420ms cubic-bezier(0.4, 0, 0.2, 1),
+    border-color 420ms cubic-bezier(0.4, 0, 0.2, 1),
+    box-shadow 420ms cubic-bezier(0.4, 0, 0.2, 1),
+    fill 420ms cubic-bezier(0.4, 0, 0.2, 1),
+    stroke 420ms cubic-bezier(0.4, 0, 0.2, 1),
+    opacity 260ms ease,
+    filter 420ms ease;
+  will-change: background-color, color, border-color;
+}
+
+/* 瞬时粒子/Canvas 不参与过渡，避免卡顿 */
+.lj-cursor-trail-canvas, canvas, svg { transition: none !important; }
+
+/* 首次加载不触发过渡，避免闪烁（JS加载后由main.jsx移除no-lj-theme-transition标记） */
+html.no-lj-theme-transition,
+html.no-lj-theme-transition *,
+html.no-lj-theme-transition body,
+html.no-lj-theme-transition body * {
+  transition: none !important;
+}
