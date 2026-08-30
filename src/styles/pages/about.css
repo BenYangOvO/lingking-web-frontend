@@ -703,7 +703,7 @@ body {
 
     /* Responsive: 768px+ */
     @media (min-width: 768px) {
-      .lj-contact-grid { grid-template-columns: repeat(2, 1fr); }
+      .lj-contact-grid { grid-template-columns: repeat(3, 1fr); }
       .lj-values-grid { grid-template-columns: repeat(4, 1fr); }
       .lj-sponsor-cards { grid-template-columns: repeat(2, 1fr); }
       .lj-footer-grid { grid-template-columns: 1.2fr 1fr 1fr; }
@@ -792,4 +792,13 @@ body {
   height: 3px !important;
   background: linear-gradient(90deg, var(--lj-brand-dark), var(--lj-brand), var(--lj-brand-light)) !important;
   display: block !important;
+}
+
+/* ===== 3列2排联系卡片网格 兜底（桌面端≥768px） ===== */
+@media (min-width: 768px) {
+  body .lj-page-wrap section.lj-contact .lj-contact-grid,
+  main.lj-page-main .lj-contact-section .lj-contact-grid,
+  body .lj-contact-grid {
+    grid-template-columns: repeat(3, 1fr) !important;
+  }
 }
