@@ -8,6 +8,7 @@ import {
 import { getSiteContent } from '../api'
 import { isAdmin } from '../auth'
 import SiteContentEditor from '../components/SiteContentEditor'
+import MarkdownText from '../components/MarkdownText'
 import {
   SITE_DEFAULTS,
   mergeSiteContent,
@@ -96,7 +97,7 @@ function About() {
             {pageContent?.section_about_title || '关于凌镜'}
           </h2>
           <div className="lj-mission">
-            <p className="lj-mission-text">{pageContent?.mission || '凌镜——以镜头为镜，映照世间万象'}</p>
+            <MarkdownText className="lj-mission-text">{pageContent?.mission || '凌镜——以镜头为镜，映照世间万象'}</MarkdownText>
           </div>
           <div className="lj-values-grid">
             {values.map((v, idx) => {
@@ -114,7 +115,7 @@ function About() {
           </div>
           {pageContent?.history_summary && (
             <div className="lj-history-summary">
-              <p>{pageContent.history_summary}</p>
+              <MarkdownText>{pageContent.history_summary}</MarkdownText>
             </div>
           )}
         </div>
@@ -130,7 +131,7 @@ function About() {
           </h2>
           <div className="lj-sponsor-body">
             {pageContent?.section_sponsor_desc && (
-              <p className="lj-sponsor-desc">{pageContent.section_sponsor_desc}</p>
+              <MarkdownText className="lj-sponsor-desc">{pageContent.section_sponsor_desc}</MarkdownText>
             )}
             <div className="lj-sponsor-cards">
               {sponsors.map((s, idx) => {

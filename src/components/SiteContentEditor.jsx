@@ -2,6 +2,7 @@ import { useEffect, useState, useMemo, useRef } from 'react'
 import { X, Save, RotateCcw, Loader2, AlertTriangle, Plus, Minus, Edit3 } from 'lucide-react'
 import { updateSiteContent } from '../api'
 import { SITE_DEFAULTS } from '../siteContentDefaults'
+import MarkdownEditor from './MarkdownEditor'
 import '../styles/components/site-content-editor.css'
 
 /**
@@ -284,12 +285,10 @@ function PrimitiveField({ path, value, onChange }) {
 
   if (isLong) {
     return (
-      <textarea
-        className="lj-sce-textarea"
-        rows={Math.max(3, Math.min(10, value.split('\n').length + 1))}
+      <MarkdownEditor
         value={value == null ? '' : String(value)}
         placeholder={placeholder}
-        onChange={(e) => onChange(e.target.value)}
+        onChange={(v) => onChange(v)}
       />
     )
   }

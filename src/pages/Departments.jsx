@@ -21,6 +21,7 @@ import {
 import { getSiteContent } from '../api'
 import { isAdmin } from '../auth'
 import SiteContentEditor from '../components/SiteContentEditor'
+import MarkdownText from '../components/MarkdownText'
 import {
   SITE_DEFAULTS,
   DEPT_ICON_MAP,
@@ -87,7 +88,7 @@ function Departments() {
                     {d.name}
                     <span className="lj-dept-count-tag">{d.count}+ 成员</span>
                   </div>
-                  <p className="lj-dept-desc">{d.desc}</p>
+                  <MarkdownText className="lj-dept-desc">{d.desc}</MarkdownText>
                 </div>
               </div>
               {responsibilities.length > 0 && (
@@ -121,9 +122,9 @@ function Departments() {
       <div className="lj-join-section">
         <div className="lj-join-card">
           <h2 className="lj-join-title">{pageContent?.section_join_title || '想加入我们？'}</h2>
-          <p className="lj-join-desc">
+          <MarkdownText className="lj-join-desc">
             {pageContent?.section_join_desc || '无论你是摄影新手还是技术达人，凌镜都有属于你的位置。我们每学期初开放招新，欢迎关注我们的公众号获取最新招募信息。加入凌镜，和志同道合的伙伴一起成长。'}
-          </p>
+          </MarkdownText>
           <div className="lj-join-actions">
             <Link to="/about" className="lj-btn-primary" style={{ padding: '12px 28px', fontSize: 15 }}>
               了解招新详情

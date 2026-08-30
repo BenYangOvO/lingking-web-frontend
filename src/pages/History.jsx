@@ -3,6 +3,7 @@ import { Image, Edit3 } from 'lucide-react'
 import { getSiteContent } from '../api'
 import { isAdmin } from '../auth'
 import SiteContentEditor from '../components/SiteContentEditor'
+import MarkdownText from '../components/MarkdownText'
 import { SITE_DEFAULTS, mergeSiteContent } from '../siteContentDefaults'
 import '../styles/pages/history.css'
 import '../styles/components/site-content-editor.css'
@@ -77,7 +78,7 @@ function History() {
                 <div className="lj-timeline-card">
                   <span className="lj-year-badge">{e.year}</span>
                   <h3 className="mt-3">{e.title}</h3>
-                  <p>{e.desc}</p>
+                  <MarkdownText>{e.desc}</MarkdownText>
                   <div className="lj-timeline-img">
                     <Image
                       className="w-8 h-8"

@@ -1,0 +1,122 @@
+/* ===== Markdown 富文本编辑器 ===== */
+
+.lj-md-editor {
+  border: 1px solid var(--lj-border);
+  border-radius: 10px;
+  overflow: hidden;
+  background: var(--lj-surface);
+}
+
+.lj-md-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 6px 8px;
+  background: rgba(74, 144, 217, 0.04);
+  border-bottom: 1px solid var(--lj-border);
+  flex-wrap: wrap;
+}
+
+.lj-md-tools {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  flex-wrap: wrap;
+}
+
+.lj-md-tool {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 30px;
+  height: 30px;
+  padding: 0 6px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--lj-ink-2);
+  cursor: pointer;
+  transition: all 0.15s;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.lj-md-tool:hover {
+  background: rgba(74, 144, 217, 0.12);
+  color: var(--lj-brand);
+}
+
+.lj-md-tool:active {
+  transform: scale(0.94);
+}
+
+.lj-md-tool-text {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.lj-md-mode {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 5px 12px;
+  border: 1px solid var(--lj-border);
+  border-radius: 6px;
+  background: var(--lj-surface);
+  color: var(--lj-ink-2);
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 500;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+
+.lj-md-mode:hover {
+  border-color: var(--lj-brand);
+  color: var(--lj-brand);
+}
+
+.lj-md-mode.active {
+  background: var(--lj-brand);
+  color: #fff;
+  border-color: var(--lj-brand);
+}
+
+.lj-md-textarea {
+  width: 100%;
+  border: none;
+  border-radius: 0;
+  padding: 12px 14px;
+  font-family: 'SF Mono', 'Fira Code', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--lj-ink);
+  background: var(--lj-surface);
+  resize: vertical;
+  outline: none;
+  min-height: 80px;
+}
+
+.lj-md-textarea:focus {
+  background: rgba(74, 144, 217, 0.02);
+}
+
+.lj-md-preview {
+  padding: 12px 14px;
+  min-height: 80px;
+  max-height: 320px;
+  overflow-y: auto;
+  font-size: 14px;
+  line-height: 1.7;
+  color: var(--lj-ink);
+}
+
+.lj-md-preview > *:first-child {
+  margin-top: 0;
+}
+
+.lj-md-preview > *:last-child {
+  margin-bottom: 0;
+}

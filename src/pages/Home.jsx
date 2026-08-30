@@ -13,6 +13,7 @@ import {
 import { api, getSiteContent } from '../api'
 import { isAdmin } from '../auth'
 import PhotoDetail from '../components/PhotoDetail'
+import MarkdownText from '../components/MarkdownText'
 import SiteContentEditor from '../components/SiteContentEditor'
 import {
   SITE_DEFAULTS,
@@ -142,9 +143,9 @@ function Home() {
               </h2>
               <div className="lj-intro-body">
                 {introParagraphs.map((p, i) => (
-                  <p key={i} style={{ marginBottom: i === introParagraphs.length - 1 ? 0 : 16 }}>
+                  <MarkdownText key={i} style={{ marginBottom: i === introParagraphs.length - 1 ? 0 : 16 }}>
                     {p}
-                  </p>
+                  </MarkdownText>
                 ))}
               </div>
             </div>

@@ -25,6 +25,7 @@ import {
 import { api, getSiteContent } from '../api'
 import { isAdmin } from '../auth'
 import SiteContentEditor from '../components/SiteContentEditor'
+import MarkdownText from '../components/MarkdownText'
 import {
   SITE_DEFAULTS,
   mergeSiteContent,
@@ -80,9 +81,9 @@ function Studio() {
         <p className="lj-hero-studio-tagline">
           {pageContent?.hero_tagline || '因为热爱，校外再聚'}
         </p>
-        <p className="lj-hero-studio-desc">
+        <MarkdownText className="lj-hero-studio-desc">
           {pageContent?.hero_desc || '毕业不是终点，而是新的起点。凌镜工作室是社团校友在校外延续摄影热爱的平台，一个让热爱摄影的人永远有归处的地方。'}
-        </p>
+        </MarkdownText>
         <div className="lj-hero-ctas">
           <a href="#join" className="lj-btn-primary" style={{ padding: '12px 28px', fontSize: 15 }}>
             <UserPlus style={{ width: 16, height: 16 }} />
@@ -114,9 +115,9 @@ function Studio() {
               </h2>
               <div className="lj-intro-left-body">
                 {aboutParagraphs.map((p, i) => (
-                  <p key={i} style={{ marginBottom: i === aboutParagraphs.length - 1 ? 0 : '1em' }}>
+                  <MarkdownText key={i} style={{ marginBottom: i === aboutParagraphs.length - 1 ? 0 : '1em' }}>
                     {p}
-                  </p>
+                  </MarkdownText>
                 ))}
               </div>
             </div>
