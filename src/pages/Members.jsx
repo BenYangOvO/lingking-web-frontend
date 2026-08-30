@@ -1,26 +1,8 @@
-import { useState, useEffect } from 'react'
+﻿import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { api } from '../api'
+import { AvatarDisplay } from './Profile'
 import '../styles/pages/members.css'
-
-// 仅当头像字段是合法图片地址时才按图片渲染（历史数据中可能存了渐变文字等非 URL 值）
-function validAvatarSrc(v) {
-  return typeof v === 'string' && /^(https?:|data:image|\/uploads\/)/i.test(v.trim()) ? v.trim() : ''
-}
-
-function ChibiFace({ happy, smile }) {
-  return (
-    <div className="lj-chibi-face">
-      <div className="lj-chibi-eyes">
-        <span className={`lj-chibi-eye${happy ? ' happy' : ''}`} />
-        <span className={`lj-chibi-eye${happy ? ' happy' : ''}`} />
-      </div>
-      <div className={`lj-chibi-mouth ${smile ? 'smile' : 'grin'}`} />
-      <div className="lj-chibi-blush left" />
-      <div className="lj-chibi-blush right" />
-    </div>
-  )
-}
 
 function Members() {
   const [members, setMembers] = useState([])
@@ -58,16 +40,14 @@ function Members() {
             </div>
           )}
           {!loading && members.map((m) => {
-            const avatarSrc = validAvatarSrc(m.avatar)
             return (
             <div className="lj-member-card" key={m.id || m.name}>
-              <div className="lj-chibi-avatar lj-member-avatar" style={avatarSrc ? { background: 'var(--lj-surface-2)' } : undefined}>
-                {avatarSrc ? (
-                  <img className="lj-member-avatar-img" src={avatarSrc} alt={m.name} loading="lazy"
-                    onError={(e) => { e.currentTarget.style.display = 'none' }} />
-                ) : (
-                  <ChibiFace />
-                )}
+              <div className="lj-member-avatar-wrap" style={{ display: 'flex', justifyContent: 'center', marginBottom: 16 }}>
+                <AvatarDisplay
+                  avatar={m.avatar}
+                  initial={(m.nickname || m.username || m.name || '?').charAt(0).toUpperCase()}
+                  size={96}
+                />
               </div>
               <div className="lj-member-name">{m.name}</div>
               {m.nickname && m.nickname !== m.name && (
