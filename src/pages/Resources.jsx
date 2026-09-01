@@ -182,11 +182,11 @@ function Resources() {
         <div className="lj-resource-grid">
           {loading && <div style={{ gridColumn: '1/-1', textAlign: 'center', padding: 40, color: '#6b7280' }}>加载资源中...</div>}
           {!loading && filtered.map((r) => (
-            <div
+            <Link
+              to={`/resources/${r.uuid || r.id}`}
               className="lj-resource-card"
               key={r.uuid || r.id || r.title}
-              style={{ cursor: 'pointer' }}
-              onClick={() => navigate(`/resources/${r.uuid || r.id}`)}
+              style={{ display: 'flex', flexDirection: 'column', textDecoration: 'none', color: 'inherit' }}
             >
               <div className="lj-resource-card-icon" style={{ background: r.coverGrad || r.bg }} />
               <div className="lj-resource-card-body">
@@ -205,7 +205,7 @@ function Resources() {
                   </div>
                 </div>
               </div>
-            </div>
+            </Link>
           ))}
         </div>
       </div>

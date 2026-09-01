@@ -102,14 +102,12 @@ function Home() {
           <div className="lj-featured-grid">
             {loading && <div style={{ gridColumn: '1/-1', textAlign: 'center', padding: 40, color: '#6b7280' }}>加载中...</div>}
             {!loading && photos.map((w, idx) => (
-              <div
+              <Link
+                to={`/gallery/${w.uuid || w.id}`}
                 className="lj-featured-card"
-                key={w.id || w.title}
-                onClick={() => setDetailIdx(idx)}
-                role="button"
-                tabIndex={0}
-                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setDetailIdx(idx) } }}
+                key={w.uuid || w.id || w.title}
                 title="点击查看作品详情"
+                style={{ display: 'block', textDecoration: 'none', color: 'inherit' }}
               >
                 <div className="lj-featured-card-img" style={cardBg(w)} />
                 <div className="lj-featured-card-body">
@@ -119,7 +117,7 @@ function Home() {
                     <span className="lj-tag">{w.cat}</span>
                   </div>
                 </div>
-              </div>
+              </Link>
             ))}
           </div>
           <div style={{ textAlign: 'center', marginTop: 48 }}>

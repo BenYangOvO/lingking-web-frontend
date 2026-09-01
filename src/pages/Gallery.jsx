@@ -116,14 +116,12 @@ function Gallery() {
         {loading && <div style={{ gridColumn: '1/-1', textAlign: 'center', padding: 40, color: '#6b7280' }}>加载作品中...</div>}
         {!loading && filtered.length === 0 && <div style={{ gridColumn: '1/-1', textAlign: 'center', padding: 40, color: '#6b7280' }}>暂无作品</div>}
         {!loading && filtered.slice(0, visible).map((p, idx) => (
-          <div
+          <Link
+            to={`/gallery/${p.uuid || p.id}`}
             className="lj-photo-card"
             key={p.uuid || p.id || p.title}
-            onClick={() => navigate(`/gallery/${p.uuid || p.id}`)}
-            role="button"
-            tabIndex={0}
-            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); navigate(`/gallery/${p.uuid || p.id}`) } }}
             title="点击查看作品详情"
+            style={{ display: 'block', textDecoration: 'none', color: 'inherit' }}
           >
             <div className="lj-photo-card-img" style={getStyle(p, idx)}>
               <div className="lj-photo-view-icon">
@@ -139,7 +137,7 @@ function Gallery() {
                 </div>
               </div>
             </div>
-          </div>
+          </Link>
         ))}
       </div>
 

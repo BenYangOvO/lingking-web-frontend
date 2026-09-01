@@ -168,10 +168,10 @@ function Diary() {
 
       {!loading && featured && (
         <div className="lj-diary-featured">
-          <div
+          <Link
+            to={`/diary/${featured.uuid || featured.id}`}
             className="lj-diary-featured-card"
-            style={{ cursor: 'pointer' }}
-            onClick={() => navigate(`/diary/${featured.uuid || featured.id}`)}
+            style={{ display: 'block', textDecoration: 'none', color: 'inherit' }}
           >
             <div className="lj-diary-featured-cover" style={{ background: featured.bg }} />
             <div className="lj-diary-featured-body">
@@ -200,18 +200,18 @@ function Diary() {
                 <DiaryStats likes={featured.likes} comments={featured.comments} />
               </div>
             </div>
-          </div>
+          </Link>
         </div>
       )}
 
       {!loading && (
         <div className="lj-diary-grid">
           {rest.map((e) => (
-            <div
+            <Link
+              to={`/diary/${e.uuid || e.id}`}
               className="lj-diary-card"
               key={e.uuid || e.id || e.title}
-              style={{ cursor: 'pointer' }}
-              onClick={() => navigate(`/diary/${e.uuid || e.id}`)}
+              style={{ display: 'block', textDecoration: 'none', color: 'inherit' }}
             >
               <div className="lj-diary-card-cover" style={{ background: e.bg }} />
               <div className="lj-diary-card-body">
@@ -239,7 +239,7 @@ function Diary() {
                   <DiaryStats likes={e.likes} comments={e.comments} />
                 </div>
               </div>
-            </div>
+            </Link>
           ))}
         </div>
       )}
