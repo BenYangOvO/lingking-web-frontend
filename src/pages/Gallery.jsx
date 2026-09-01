@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useParams, useNavigate } from 'react-router-dom'
 import { Heart, ChevronDown, ZoomIn } from 'lucide-react'
 import { api } from '../api'
 import PhotoDetail from '../components/PhotoDetail'
@@ -10,6 +10,8 @@ const FILTERS = ['全部', '风光', '人像', '街拍', '纪实', '创意', '�
 const PHOTO_ASPECTS = ['3/4', '1/1', '4/5', '3/2', '2/3', '1/1', '4/3', '3/4', '1/1', '3/5', '16/9', '4/5']
 
 function Gallery() {
+  const { id } = useParams()
+  const navigate = useNavigate()
   const [photos, setPhotos] = useState([])
   const [filter, setFilter] = useState('全部')
   const [visible, setVisible] = useState(9)
@@ -25,11 +27,32 @@ function Gallery() {
 
   const filtered = filter === '全部' ? photos : photos.filter((p) => p.cat === filter)
 
-  // 切换分类时关闭详情弹窗，避免索引错位
+  // 当 URL 中带有 :id 时，自动在列表中匹配并打开详情；无 :id 时关闭
+  useEffect(() => {
+    if (!id) {
+      setDetailIdx(null)
+      return
+    }
+    if (photos.length > 0) {
+      const idx = filtered.findIndex((p) => String(p.uuid) === String(id) || String(p.id) === String(id) || String(p.submission_id) === String(id))
+      if (idx !== -1) {
+        setDetailIdx(idx)
+      } else {
+        const allIdx = photos.findIndex((p) => String(p.uuid) === String(id) || String(p.id) === String(id) || String(p.submission_id) === String(id))
+        if (allIdx !== -1) {
+          setFilter('全部')
+          setDetailIdx(allIdx)
+        }
+      }
+    }
+  }, [id, photos, filter])
+
+  // 切换分类
   const switchFilter = (f) => {
     setFilter(f)
     setVisible(9)
-    setDetailIdx(null)
+    if (id) navigate('/gallery')
+    else setDetailIdx(null)
   }
 
   const buildBackground = (photo) => {
@@ -95,11 +118,11 @@ function Gallery() {
         {!loading && filtered.slice(0, visible).map((p, idx) => (
           <div
             className="lj-photo-card"
-            key={p.id || p.title}
-            onClick={() => setDetailIdx(idx)}
+            key={p.uuid || p.id || p.title}
+            onClick={() => navigate(`/gallery/${p.uuid || p.id}`)}
             role="button"
             tabIndex={0}
-            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setDetailIdx(idx) } }}
+            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); navigate(`/gallery/${p.uuid || p.id}`) } }}
             title="点击查看作品详情"
           >
             <div className="lj-photo-card-img" style={getStyle(p, idx)}>
@@ -130,26 +153,26 @@ function Gallery() {
       )}
 
       <PhotoDetail
-        open={detailIdx !== null}
+        open={detailIdx !== null && detailIdx >= 0 && detailIdx < filtered.length}
         photo={detailIdx !== null ? filtered[detailIdx] : null}
         list={filtered}
         currentIndex={detailIdx ?? 0}
-        onClose={() => setDetailIdx(null)}
-        onPrev={() => setDetailIdx((i) => (i === null || i <= 0 ? 0 : i - 1))}
-        onNext={() => setDetailIdx((i) => (i === null ? 0 : Math.min(filtered.length - 1, i + 1)))}
+        onClose={() => navigate('/gallery')}
+        onPrev={() => {
+          if (detailIdx !== null && detailIdx > 0) {
+            const prevItem = filtered[detailIdx - 1]
+            navigate(`/gallery/${prevItem.uuid || prevItem.id}`)
+          }
+        }}
+        onNext={() => {
+          if (detailIdx !== null && detailIdx < filtered.length - 1) {
+            const nextItem = filtered[detailIdx + 1]
+            navigate(`/gallery/${nextItem.uuid || nextItem.id}`)
+          }
+        }}
       />
     </>
   )
-}
-
-function parseStyle(str) {
-  const obj = {}
-  for (const part of str.split(';')) {
-    if (!part.trim()) continue
-    const idx = part.indexOf(':')
-    if (idx > -1) obj[part.slice(0, idx).trim()] = part.slice(idx + 1).trim()
-  }
-  return obj
 }
 
 export default Gallery

@@ -49,12 +49,21 @@ function History() {
     }
     setDocView({ open: true, loading: true, html: '', err: '' })
     try {
-      const [mod, resp] = await Promise.all([
-        import('mammoth/mammoth.browser.min'),
+      const getMammoth = () => {
+        if (window.mammoth) return Promise.resolve(window.mammoth)
+        return new Promise((resolve, reject) => {
+          const s = document.createElement('script')
+          s.src = 'https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.8.0/mammoth.browser.min.js'
+          s.onload = () => resolve(window.mammoth)
+          s.onerror = () => reject(new Error('文档解析器加载失败，请直接下载文档查看'))
+          document.head.appendChild(s)
+        })
+      }
+      const [mammoth, resp] = await Promise.all([
+        getMammoth(),
         fetch(url),
       ])
       if (!resp.ok) throw new Error(`文档加载失败（HTTP ${resp.status}）`)
-      const mammoth = mod.default || mod
       const arrayBuffer = await resp.arrayBuffer()
       const result = await mammoth.convertToHtml({ arrayBuffer })
       setDocView({ open: true, loading: false, html: result.value || '<p>（文档内容为空）</p>', err: '' })
