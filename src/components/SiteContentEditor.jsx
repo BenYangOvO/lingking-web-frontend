@@ -1,4 +1,5 @@
 import { useEffect, useState, useMemo, useRef } from 'react'
+import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, Button, Input, Switch } from '@heroui/react'
 import { X, Save, RotateCcw, Loader2, AlertTriangle, Plus, Minus, Edit3, Image as ImageIcon, FileText, Upload, Trash2 } from 'lucide-react'
 import { updateSiteContent, uploadImage, uploadFile } from '../api'
 import { SITE_DEFAULTS } from '../siteContentDefaults'
@@ -6,13 +7,7 @@ import MarkdownEditor from './MarkdownEditor'
 import '../styles/components/site-content-editor.css'
 
 /**
- * 通用站点内容编辑弹窗
- *  props:
- *    slug: 'home' | 'history' | 'departments' | 'about' | 'studio'
- *    open: bool
- *    initialContent: object|null (通常是页面 GET /api/site/:slug 拿到的 content)
- *    onClose: () => void
- *    onSaved?: (savedContent) => void   // 保存成功后父页面刷新数据
+ * 通用站点内容编辑弹窗 (HeroUI 升级版)
  */
 export default function SiteContentEditor({
   slug,
@@ -27,34 +22,15 @@ export default function SiteContentEditor({
   const [error, setError] = useState('')
   const dirtyRef = useRef(false)
 
-  // 每次打开时，把 initialContent（若有）作为初始值；否则用 defaults
   useEffect(() => {
     if (!open) return
     const base = isPlainObject(initialContent) && Object.keys(initialContent).length > 0
-      ? mergeDefault(defaults, initialContent)   // 补全新字段，避免旧版本缺 key
+      ? mergeDefault(defaults, initialContent)
       : deepClone(defaults)
     setForm(base)
     dirtyRef.current = false
     setError('')
   }, [open, initialContent, defaults])
-
-  // ESC 关闭
-  useEffect(() => {
-    if (!open) return
-    const onKey = (e) => {
-      if (e.key === 'Escape') {
-        if (dirtyRef.current && !window.confirm('有未保存的修改，确定关闭吗？')) return
-        onClose?.()
-      }
-    }
-    window.addEventListener('keydown', onKey)
-    const prev = document.body.style.overflow
-    document.body.style.overflow = 'hidden'
-    return () => {
-      document.body.style.overflow = prev
-      window.removeEventListener('keydown', onKey)
-    }
-  }, [open, onClose])
 
   const handleReset = () => {
     if (!window.confirm('确定要恢复该板块为默认内容吗？所有自定义修改将丢失。')) return
@@ -77,76 +53,90 @@ export default function SiteContentEditor({
     }
   }
 
+  const handleCloseAttempt = () => {
+    if (dirtyRef.current && !window.confirm('有未保存的修改，确定关闭吗？')) return
+    onClose?.()
+  }
+
   if (!open) return null
 
   return (
-    <div className="lj-sce-mask" onClick={() => {
-      if (dirtyRef.current && !window.confirm('有未保存的修改，确定关闭吗？')) return
-      onClose?.()
-    }}>
-      <div className="lj-sce-dialog" role="dialog" aria-modal="true" onClick={(e) => e.stopPropagation()}>
-        <header className="lj-sce-head">
-          <div>
-            <div className="lj-sce-sub">{slug}</div>
-            <h2 className="lj-sce-title">
-              <Edit3 size={18} />
-              编辑：{SLUG_LABEL[slug] || slug}
-            </h2>
-          </div>
-          <button type="button" className="lj-sce-close" onClick={() => {
-            if (dirtyRef.current && !window.confirm('有未保存的修改，确定关闭吗？')) return
-            onClose?.()
-          }} aria-label="关闭">
-            <X size={18} />
-          </button>
-        </header>
+    <Modal
+      isOpen={open}
+      onClose={handleCloseAttempt}
+      size="4xl"
+      scrollBehavior="inside"
+      backdrop="blur"
+      classNames={{
+        base: 'bg-[var(--lj-surface)] text-[var(--lj-ink)] border border-[var(--lj-surface-2)] shadow-2xl rounded-2xl max-h-[88vh]',
+        header: 'border-b border-[var(--lj-surface-2)] py-3 px-5',
+        footer: 'border-t border-[var(--lj-surface-2)] py-3 px-5',
+        backdrop: 'bg-black/60 backdrop-blur-md',
+      }}
+    >
+      <ModalContent>
+        {() => (
+          <>
+            <ModalHeader className="flex flex-col gap-0.5">
+              <span className="text-xs uppercase tracking-wider text-[var(--lj-brand)] font-semibold">{slug}</span>
+              <div className="flex items-center gap-2 text-lg font-bold">
+                <Edit3 size={18} className="text-[var(--lj-brand)]" />
+                <span>编辑：{SLUG_LABEL[slug] || slug}</span>
+              </div>
+            </ModalHeader>
 
-        {error && (
-          <div className="lj-sce-err">
-            <AlertTriangle size={16} /> {error}
-          </div>
+            <ModalBody className="p-5">
+              {error && (
+                <div className="p-3 mb-4 text-sm rounded-lg bg-rose-500/10 border border-rose-500/20 text-rose-500 flex items-center gap-2">
+                  <AlertTriangle size={16} />
+                  <span>{error}</span>
+                </div>
+              )}
+
+              <FieldRenderer
+                path={[]}
+                value={form}
+                onChange={(next) => { setForm(next); dirtyRef.current = true }}
+              />
+            </ModalBody>
+
+            <ModalFooter className="flex items-center justify-between">
+              <Button
+                variant="flat"
+                color="warning"
+                size="sm"
+                isDisabled={saving}
+                onClick={handleReset}
+                startContent={<RotateCcw size={14} />}
+              >
+                恢复默认
+              </Button>
+
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="flat"
+                  size="sm"
+                  isDisabled={saving}
+                  onClick={handleCloseAttempt}
+                >
+                  取消
+                </Button>
+                <Button
+                  color="primary"
+                  size="sm"
+                  isLoading={saving}
+                  onClick={handleSave}
+                  startContent={!saving && <Save size={14} />}
+                  className="px-5 font-medium"
+                >
+                  {saving ? '保存中…' : '保存修改'}
+                </Button>
+              </div>
+            </ModalFooter>
+          </>
         )}
-
-        <div className="lj-sce-body">
-          <FieldRenderer
-            path={[]}
-            value={form}
-            onChange={(next) => { setForm(next); dirtyRef.current = true }}
-          />
-        </div>
-
-        <footer className="lj-sce-foot">
-          <button type="button" className="lj-btn-ghost" onClick={handleReset} disabled={saving}>
-            <RotateCcw size={14} /> 恢复默认
-          </button>
-          <div style={{ flex: 1 }} />
-          <button
-            type="button"
-            className="lj-btn-secondary"
-            disabled={saving}
-            onClick={() => {
-              if (dirtyRef.current && !window.confirm('有未保存的修改，确定取消吗？')) return
-              onClose?.()
-            }}
-          >
-            取消
-          </button>
-          <button
-            type="button"
-            className="lj-btn-primary"
-            disabled={saving}
-            onClick={handleSave}
-            style={{ minWidth: 110 }}
-          >
-            {saving ? (
-              <><Loader2 size={14} style={{ animation: 'spin 0.8s linear infinite' }} /> 保存中…</>
-            ) : (
-              <><Save size={14} /> 保存修改</>
-            )}
-          </button>
-        </footer>
-      </div>
-    </div>
+      </ModalContent>
+    </Modal>
   )
 }
 
@@ -218,11 +208,11 @@ function ArrayField({ path, value, onChange }) {
   const arrayLabel = path.length === 0 ? '数组' : path.join(' › ')
   return (
     <div className="lj-sce-array">
-      <div className="lj-sce-array-head">
+      <div className="lj-sce-array-head flex items-center justify-between">
         <div className="lj-sce-array-title">📋 {arrayLabel} <span className="lj-sce-array-count">（共 {value.length} 项）</span></div>
-        <button type="button" className="lj-btn-ghost" onClick={addItem} style={{ fontSize: 13 }}>
-          <Plus size={14} /> 新增一项
-        </button>
+        <Button size="sm" variant="flat" color="primary" onClick={addItem} startContent={<Plus size={14} />}>
+          新增一项
+        </Button>
       </div>
       <div className="lj-sce-array-list">
         {value.length === 0 && (
@@ -232,12 +222,12 @@ function ArrayField({ path, value, onChange }) {
           <div className="lj-sce-array-item" key={i}>
             <div className="lj-sce-array-item-head">
               <span className="lj-sce-array-item-index">第 {i + 1} 项</span>
-              <div className="lj-sce-array-item-actions">
-                <button type="button" className="lj-sce-iconbtn" onClick={() => move(i, -1)} disabled={i === 0} title="上移">↑</button>
-                <button type="button" className="lj-sce-iconbtn" onClick={() => move(i, 1)} disabled={i === value.length - 1} title="下移">↓</button>
-                <button type="button" className="lj-sce-iconbtn lj-sce-del" onClick={() => removeAt(i)} title="删除">
+              <div className="lj-sce-array-item-actions flex items-center gap-1">
+                <Button size="sm" isIconOnly variant="flat" onClick={() => move(i, -1)} isDisabled={i === 0} title="上移">↑</Button>
+                <Button size="sm" isIconOnly variant="flat" onClick={() => move(i, 1)} isDisabled={i === value.length - 1} title="下移">↓</Button>
+                <Button size="sm" isIconOnly variant="flat" color="danger" onClick={() => removeAt(i)} title="删除">
                   <Minus size={12} />
-                </button>
+                </Button>
               </div>
             </div>
             <FieldRenderer path={[...path, i]} value={item} onChange={(nv) => updateAt(i, nv)} />
@@ -251,41 +241,40 @@ function ArrayField({ path, value, onChange }) {
 function PrimitiveField({ path, value, onChange }) {
   const lastKey = path.length ? String(path[path.length - 1]) : ''
 
-  // 配图字段（如历史节点 image）：图片上传控件
   if (typeof value === 'string' && lastKey === 'image') {
     return <ImageUploadField value={value} onChange={onChange} />
   }
-  // 文档字段（如 full_history_file）：Word/PDF 上传控件
   if (typeof value === 'string' && /_file$/.test(lastKey)) {
     return <FileUploadField value={value} onChange={onChange} />
   }
 
-  // 多行文本：检测到包含换行或长度>80的字符串
   const isLong = typeof value === 'string' && (value.includes('\n') || value.length > 80)
   const placeholder = typeof value === 'number' ? '请输入数字' : `请输入 ${path[path.length - 1] || '内容'}`
 
   if (typeof value === 'boolean') {
     return (
-      <label className="lj-sce-check">
-        <input
-          type="checkbox"
-          checked={!!value}
-          onChange={(e) => onChange(e.target.checked)}
-        />
-        <span>{value ? '是' : '否'}（点击切换）</span>
-      </label>
+      <div className="py-1">
+        <Switch
+          size="sm"
+          color="primary"
+          isSelected={!!value}
+          onValueChange={(val) => onChange(val)}
+        >
+          <span className="text-xs">{value ? '是' : '否'}</span>
+        </Switch>
+      </div>
     )
   }
 
   if (typeof value === 'number') {
     return (
-      <input
+      <Input
+        size="sm"
         type="number"
-        className="lj-sce-input"
-        value={value}
+        variant="bordered"
+        value={String(value)}
         placeholder={placeholder}
-        onChange={(e) => {
-          const raw = e.target.value
+        onValueChange={(raw) => {
           if (raw === '' || raw === '-') return onChange(raw)
           const v = Number(raw)
           onChange(Number.isFinite(v) ? v : 0)
@@ -305,19 +294,18 @@ function PrimitiveField({ path, value, onChange }) {
   }
 
   return (
-    <input
-      type="text"
-      className="lj-sce-input"
+    <Input
+      size="sm"
+      variant="bordered"
       value={value == null ? '' : String(value)}
       placeholder={placeholder}
-      onChange={(e) => onChange(e.target.value)}
+      onValueChange={(val) => onChange(val)}
     />
   )
 }
 
 // ================= 上传控件（图片 / 文档） =================
 
-// 图片上传字段：用于配图（如历史节点 image）
 function ImageUploadField({ value, onChange }) {
   const [busy, setBusy] = useState(false)
   const [pct, setPct] = useState(0)
@@ -342,32 +330,30 @@ function ImageUploadField({ value, onChange }) {
   return (
     <div className="lj-sce-upload">
       {value ? (
-        <div className="lj-sce-upload-preview">
+        <div className="lj-sce-upload-preview flex items-center gap-3">
           <div className="lj-sce-upload-thumb">
             <img src={value} alt="配图预览" onError={(e) => { e.target.style.opacity = 0.2 }} />
           </div>
-          <div className="lj-sce-upload-actions">
-            <button type="button" className="lj-btn-ghost" onClick={() => inputRef.current?.click()} disabled={busy}>
-              <ImageIcon size={13} /> 更换图片
-            </button>
-            <button type="button" className="lj-btn-ghost lj-sce-del-text" onClick={() => onChange('')} disabled={busy}>
-              <Trash2 size={13} /> 移除
-            </button>
+          <div className="lj-sce-upload-actions flex items-center gap-2">
+            <Button size="sm" variant="flat" onClick={() => inputRef.current?.click()} isDisabled={busy} startContent={<ImageIcon size={13} />}>
+              更换图片
+            </Button>
+            <Button size="sm" variant="flat" color="danger" onClick={() => onChange('')} isDisabled={busy} startContent={<Trash2 size={13} />}>
+              移除
+            </Button>
           </div>
         </div>
       ) : (
-        <button type="button" className="lj-sce-upload-btn" onClick={() => inputRef.current?.click()} disabled={busy}>
-          <ImageIcon size={15} />
+        <Button size="sm" variant="flat" color="primary" onClick={() => inputRef.current?.click()} isDisabled={busy} startContent={<ImageIcon size={15} />}>
           {busy ? `上传中 ${pct}%` : '上传配图（jpg/png/webp/gif，≤10MB）'}
-        </button>
+        </Button>
       )}
       <input ref={inputRef} type="file" accept="image/jpeg,image/png,image/webp,image/gif" hidden onChange={pick} />
-      {err && <div className="lj-sce-err" style={{ marginTop: 6 }}><AlertTriangle size={14} /> {err}</div>}
+      {err && <div className="text-xs text-rose-500 flex items-center gap-1 mt-1"><AlertTriangle size={14} /> {err}</div>}
     </div>
   )
 }
 
-// 文档上传字段：用于 Word/PDF（如 full_history_file）
 function FileUploadField({ value, onChange }) {
   const [busy, setBusy] = useState(false)
   const [pct, setPct] = useState(0)
@@ -396,33 +382,30 @@ function FileUploadField({ value, onChange }) {
   return (
     <div className="lj-sce-upload">
       {value ? (
-        <div className="lj-sce-upload-preview">
-          <div className="lj-sce-file-chip">
+        <div className="lj-sce-upload-preview flex items-center gap-3">
+          <div className="lj-sce-file-chip flex items-center gap-1">
             <FileText size={15} />
             <a href={value} target="_blank" rel="noreferrer" title="点击查看已上传文档">{fileName(value)}</a>
           </div>
-          <div className="lj-sce-upload-actions">
-            <button type="button" className="lj-btn-ghost" onClick={() => inputRef.current?.click()} disabled={busy}>
-              <Upload size={13} /> 更换文档
-            </button>
-            <button type="button" className="lj-btn-ghost lj-sce-del-text" onClick={() => onChange('')} disabled={busy}>
-              <Trash2 size={13} /> 移除
-            </button>
+          <div className="lj-sce-upload-actions flex items-center gap-2">
+            <Button size="sm" variant="flat" onClick={() => inputRef.current?.click()} isDisabled={busy} startContent={<Upload size={13} />}>
+              更换文档
+            </Button>
+            <Button size="sm" variant="flat" color="danger" onClick={() => onChange('')} isDisabled={busy} startContent={<Trash2 size={13} />}>
+              移除
+            </Button>
           </div>
         </div>
       ) : (
-        <button type="button" className="lj-sce-upload-btn" onClick={() => inputRef.current?.click()} disabled={busy}>
-          <FileText size={15} />
+        <Button size="sm" variant="flat" color="primary" onClick={() => inputRef.current?.click()} isDisabled={busy} startContent={<FileText size={15} />}>
           {busy ? `上传中 ${pct}%` : '上传文档（doc/docx/pdf，≤20MB）'}
-        </button>
+        </Button>
       )}
       <input ref={inputRef} type="file" accept=".doc,.docx,.pdf" hidden onChange={pick} />
-      {err && <div className="lj-sce-err" style={{ marginTop: 6 }}><AlertTriangle size={14} /> {err}</div>}
+      {err && <div className="text-xs text-rose-500 flex items-center gap-1 mt-1"><AlertTriangle size={14} /> {err}</div>}
     </div>
   )
 }
-
-// ================= 工具函数 =================
 
 function deepClone(v) {
   if (v === null || typeof v !== 'object') return v
@@ -436,14 +419,11 @@ function isPlainObject(v) {
   return !!v && typeof v === 'object' && !Array.isArray(v)
 }
 
-// 将用户保存的 content 与 defaults 合并：以 defaults 的所有 key 为基础，用户已有值覆盖；新增字段不再丢失
 function mergeDefault(def, userVal) {
   const base = deepClone(def)
   if (!isPlainObject(userVal)) return base
   for (const k of Object.keys(userVal)) {
     if (Array.isArray(userVal[k])) {
-      // 数组：以用户版本为基础（可能增删了项），
-      // 对象项按索引与默认项合并，补全默认结构新增的字段（如历史节点新增的 image）
       const defArr = Array.isArray(base[k]) ? base[k] : []
       base[k] = userVal[k].map((x, i) => {
         const dv = defArr[i] || defArr[defArr.length - 1]
@@ -459,7 +439,6 @@ function mergeDefault(def, userVal) {
   return base
 }
 
-// 给数组"新增一项"造一个原型：根据同数组现有第一项推断字段
 function makePrototypeFor(proto) {
   if (proto === undefined || proto === null) return ''
   if (typeof proto === 'string') return ''
@@ -476,7 +455,6 @@ function makePrototypeFor(proto) {
   return ''
 }
 
-// 将 camelCase / snake_case 字段名转成人类可读标签（仅作参考，不影响数据）
 const LABEL_OVERRIDES = {
   image: '配图（上传图片）',
   full_history_file: '完整历史文档（上传 Word/PDF）',

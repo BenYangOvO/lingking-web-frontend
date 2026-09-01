@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { User, Mail, Key, Save, Eye, EyeOff, Crown, Camera, Cake, Image as ImageIcon, FileImage, Pencil } from 'lucide-react'
+import { Card, CardBody, Tabs, Tab, Input, Textarea, Avatar, Button, Chip, Spinner } from '@heroui/react'
+import { User, Mail, Key, Save, Eye, EyeOff, Crown, Camera, Cake, Image as ImageIcon, FileImage, Pencil, CheckCircle, AlertCircle } from 'lucide-react'
 import { getMyProfile, updateProfile, changePassword } from '../api'
 import { updateLocalUser, isLoggedIn } from '../auth'
 
@@ -33,15 +34,14 @@ function pickInitial(name) {
 
 function Profile() {
   const navigate = useNavigate()
-  const containerRef = useRef(null)
   const [user, setUser] = useState(null)
   const [loading, setLoading] = useState(true)
   const [err, setErr] = useState('')
   const [success, setSuccess] = useState('')
-  const [tab, setTab] = useState('edit') // edit = 编辑资料 / password = 修改密码
+  const [tab, setTab] = useState('edit')
 
   const [editForm, setEditForm] = useState({ username: '', nickname: '', avatar: '', birthday: '', bio: '' })
-  const [avatarMode, setAvatarMode] = useState('gradient') // gradient | emoji | image
+  const [avatarMode, setAvatarMode] = useState('gradient')
   const [customImg, setCustomImg] = useState('')
   const [pwdForm, setPwdForm] = useState({ old: '', next: '', confirm: '' })
   const [showPwd, setShowPwd] = useState({ old: false, next: false, confirm: false })
@@ -74,19 +74,6 @@ function Profile() {
       .finally(() => setLoading(false))
   }, [])
 
-  // 修复 lj-fade-in 默认 opacity=0 的问题（与 History.jsx 相同逻辑）
-  useEffect(() => {
-    if (!loading && containerRef.current) {
-      const timer = setTimeout(() => {
-        const fadeEls = containerRef.current.querySelectorAll('.lj-fade-in')
-        fadeEls.forEach((el, i) => {
-          setTimeout(() => el.classList.add('visible'), i * 80)
-        })
-      }, 60)
-      return () => clearTimeout(timer)
-    }
-  }, [loading, tab])
-
   const onEdit = (k, v) => setEditForm((f) => ({ ...f, [k]: v }))
   const onPwd = (k, v) => setPwdForm((f) => ({ ...f, [k]: v }))
 
@@ -99,394 +86,273 @@ function Profile() {
       setUser(res.user)
       setSuccess('资料已更新')
     } catch (e) {
-      setErr(e.message || '保存失败')
-    } finally { setSaving(false) }
+      setErr(e.message || '更新失败')
+    } finally {
+      setSaving(false)
+    }
   }
 
-  async function handleChangePassword(e) {
+  async function handleChangePwd(e) {
     e.preventDefault()
     setErr(''); setSuccess('')
     if (pwdForm.next !== pwdForm.confirm) {
-      setErr('两次输入的新密码不一致')
+      setErr('新密码与确认密码不一致')
       return
     }
     setSaving(true)
     try {
-      await changePassword(pwdForm.old, pwdForm.next)
-      setSuccess('密码已修改')
+      await changePassword({ oldPassword: pwdForm.old, newPassword: pwdForm.next })
+      setSuccess('密码修改成功')
       setPwdForm({ old: '', next: '', confirm: '' })
     } catch (e) {
-      setErr(e.message || '修改失败')
-    } finally { setSaving(false) }
+      setErr(e.message || '密码修改失败')
+    } finally {
+      setSaving(false)
+    }
   }
 
   if (loading) {
     return (
-      <div ref={containerRef} style={{ padding: 60, textAlign: 'center', color: 'var(--lj-ink-3)' }}>
-        <div style={{ fontSize: 18 }}>加载中，请稍候...</div>
+      <div className="min-h-[70vh] flex flex-col items-center justify-center gap-3">
+        <Spinner color="primary" label="加载个人资料中..." size="lg" />
       </div>
     )
   }
 
+  const currentAvatar = editForm.avatar || pickInitial(user?.username)
+  const isEmoji = currentAvatar.startsWith('emoji:')
+  const emojiChar = isEmoji ? currentAvatar.slice(6) : ''
+  const isImg = currentAvatar.startsWith('http://') || currentAvatar.startsWith('https://') || currentAvatar.startsWith('data:')
+
   return (
-    <div ref={containerRef} style={{ minHeight: '100vh' }}>
-      <section className="lj-hero pt-16" style={{ minHeight: 'auto', padding: '80px 24px 40px', alignItems: 'center', display: 'flex', flexDirection: 'column' }}>
-        <div className="max-w-3xl w-full px-4 sm:px-6" style={{ textAlign: 'center', margin: '0 auto' }}>
-          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 20 }}>
-            <AvatarDisplay avatar={user?.avatar || pickInitial(editForm.username)} initial={(editForm.nickname || editForm.username || '?').charAt(0).toUpperCase()} size={108} />
-          </div>
-          <h1 className="font-serif text-3xl sm:text-4xl font-bold mb-2" style={{ textAlign: 'center' }}>
-            {user?.nickname || editForm.nickname || user?.username || editForm.username || '我的资料'}
-            {user?.role === 'admin' && (
-              <span style={{ marginLeft: 8, color: '#FBBF24', fontSize: 20 }}>
-                <Crown size={20} style={{ display: 'inline', verticalAlign: '-4px' }} />
-              </span>
+    <div className="max-w-4xl mx-auto px-4 py-8">
+      {/* 顶部 Header Card */}
+      <Card className="bg-[var(--lj-surface)] border border-[var(--lj-surface-2)] shadow-xl p-4 md:p-6 mb-8">
+        <CardBody className="flex flex-col sm:flex-row items-center gap-6">
+          <div className="relative">
+            {isImg ? (
+              <Avatar src={currentAvatar} className="w-24 h-24 text-large" />
+            ) : isEmoji ? (
+              <div className="w-24 h-24 rounded-full flex items-center justify-center text-4xl bg-default-100 border border-[var(--lj-surface-2)]">
+                {emojiChar}
+              </div>
+            ) : (
+              <div
+                className="w-24 h-24 rounded-full flex items-center justify-center text-3xl font-bold text-white shadow-md"
+                style={{ background: currentAvatar }}
+              >
+                {(user?.nickname || user?.username || '凌')[0].toUpperCase()}
+              </div>
             )}
-          </h1>
-          <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: 12, color: 'var(--lj-ink-3)', fontSize: 14, marginTop: 6 }}>
-            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}><Mail size={14} /> {user?.email}</span>
-            {user?.birthday && (
-              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}><Cake size={14} /> {user.birthday}</span>
-            )}
           </div>
-          {user?.bio && (
-            <p style={{ maxWidth: 560, margin: '20px auto 0', color: 'var(--lj-ink-2)', lineHeight: 1.8, fontSize: 15 }}>
-              {user.bio}
-            </p>
-          )}
-        </div>
-      </section>
 
-      <section className="pb-20">
-        <div className="max-w-2xl mx-auto px-4 sm:px-6 space-y-6">
-
-          {/* 醒目的 Tab 切换：编辑资料 / 修改密码 */}
-          <div className="lj-admin-tabs" style={{ justifyContent: 'center', marginTop: -10 }}>
-            <button
-              className={`lj-admin-tab${tab === 'edit' ? ' active' : ''}`}
-              onClick={() => setTab('edit')}
-              style={{ fontSize: 15, padding: '10px 20px', borderRadius: 10 }}
-            >
-              <Pencil size={16} /> 编辑个人资料
-            </button>
-            <button
-              className={`lj-admin-tab${tab === 'password' ? ' active' : ''}`}
-              onClick={() => setTab('password')}
-              style={{ fontSize: 15, padding: '10px 20px', borderRadius: 10 }}
-            >
-              <Key size={16} /> 修改密码
-            </button>
+          <div className="flex flex-col items-center sm:items-start text-center sm:text-left gap-1">
+            <div className="flex items-center gap-2">
+              <h1 className="text-2xl font-extrabold">{user?.nickname || user?.username}</h1>
+              {user?.role === 'admin' && (
+                <Chip size="sm" color="warning" variant="flat" startContent={<Crown size={12} className="text-amber-400" />}>
+                  管理员
+                </Chip>
+              )}
+            </div>
+            <p className="text-xs text-default-400">{user?.email}</p>
+            {user?.bio && <p className="text-sm mt-2 text-[var(--lj-ink-2)] italic max-w-md">{user.bio}</p>}
           </div>
+        </CardBody>
+      </Card>
+
+      {/* 功能 Tabs */}
+      <Card className="bg-[var(--lj-surface)] border border-[var(--lj-surface-2)] shadow-xl p-2 md:p-6">
+        <CardBody className="gap-6">
+          <Tabs
+            selectedKey={tab}
+            onSelectionChange={(k) => { setTab(String(k)); setErr(''); setSuccess('') }}
+            color="primary"
+            variant="solid"
+            size="lg"
+          >
+            <Tab
+              key="edit"
+              title={
+                <div className="flex items-center gap-2">
+                  <Pencil size={16} />
+                  <span>编辑资料</span>
+                </div>
+              }
+            />
+            <Tab
+              key="password"
+              title={
+                <div className="flex items-center gap-2">
+                  <Key size={16} />
+                  <span>修改密码</span>
+                </div>
+              }
+            />
+          </Tabs>
 
           {err && (
-            <div style={{
-              background: 'rgba(248,113,113,0.12)', color: '#F87171',
-              padding: '12px 16px', borderRadius: 8, border: '1px solid rgba(248,113,113,0.3)',
-            }}>{err}</div>
+            <div className="p-3 text-sm rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-500 flex items-center gap-2">
+              <AlertCircle size={16} />
+              <span>{err}</span>
+            </div>
           )}
+
           {success && (
-            <div style={{
-              background: 'rgba(52,211,153,0.12)', color: '#34D399',
-              padding: '12px 16px', borderRadius: 8, border: '1px solid rgba(52,211,153,0.3)',
-            }}>{success}</div>
+            <div className="p-3 text-sm rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-500 flex items-center gap-2">
+              <CheckCircle size={16} />
+              <span>{success}</span>
+            </div>
           )}
 
-          {/* 编辑资料 Tab */}
-          {tab === 'edit' && (
-            <div className="lj-surface" style={{ padding: 24 }}>
-            <h2 style={{ fontSize: 20, fontWeight: 600, marginBottom: 20, display: 'flex', alignItems: 'center', gap: 8 }}>
-              <User size={18} style={{ color: 'var(--lj-brand)' }} />
-              基本资料
-            </h2>
-            <form onSubmit={handleSaveProfile} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-              <label style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                <span style={{ fontSize: 13, color: 'var(--lj-ink-3)' }}>用户名（用于登录）</span>
-                <input
+          {tab === 'edit' ? (
+            <form onSubmit={handleSaveProfile} className="flex flex-col gap-5">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <Input
+                  label="用户名"
                   value={editForm.username}
-                  onChange={(e) => onEdit('username', e.target.value)}
-                  style={inputStyle}
-                  placeholder="2-20位字母/数字/中文"
+                  onValueChange={(v) => onEdit('username', v)}
+                  variant="bordered"
+                  isDisabled
+                  startContent={<User size={18} className="text-default-400" />}
                 />
-              </label>
-              <label style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                <span style={{ fontSize: 13, color: 'var(--lj-ink-3)' }}>昵称（对外展示）</span>
-                <input
+
+                <Input
+                  label="昵称"
+                  placeholder="个性化的称呼"
                   value={editForm.nickname}
-                  onChange={(e) => onEdit('nickname', e.target.value)}
-                  style={inputStyle}
-                  placeholder="给自己取个展示名称吧"
+                  onValueChange={(v) => onEdit('nickname', v)}
+                  variant="bordered"
                 />
-              </label>
-              <label style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                <span style={{ fontSize: 13, color: 'var(--lj-ink-3)', display: 'flex', alignItems: 'center', gap: 6 }}>
-                  <Cake size={14} /> 生日
-                </span>
-                <input
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <Input
+                  label="邮箱 (不可修改)"
+                  value={user?.email || ''}
+                  variant="bordered"
+                  isDisabled
+                  startContent={<Mail size={18} className="text-default-400" />}
+                />
+
+                <Input
                   type="date"
+                  label="生日"
                   value={editForm.birthday}
-                  onChange={(e) => onEdit('birthday', e.target.value)}
-                  style={inputStyle}
+                  onValueChange={(v) => onEdit('birthday', v)}
+                  variant="bordered"
                 />
-              </label>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                <span style={{ fontSize: 13, color: 'var(--lj-ink-3)', display: 'flex', alignItems: 'center', gap: 6 }}>
-                  <Camera size={14} /> 头像
-                </span>
-                <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-                  <button
-                    type="button"
-                    onClick={() => { setAvatarMode('gradient'); if (!AVATAR_GRADIENTS.includes(editForm.avatar)) onEdit('avatar', AVATAR_GRADIENTS[0]) }}
-                    className={`lj-admin-tab small${avatarMode === 'gradient' ? ' active' : ''}`}
-                    style={{ padding: '6px 12px', borderRadius: 999, marginBottom: 0, width: 'auto' }}
-                  >
-                    渐变配色
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => { setAvatarMode('emoji'); if (!editForm.avatar.startsWith('emoji:')) onEdit('avatar', 'emoji:' + AVATAR_EMOJI[0]) }}
-                    className={`lj-admin-tab small${avatarMode === 'emoji' ? ' active' : ''}`}
-                    style={{ padding: '6px 12px', borderRadius: 999, marginBottom: 0, width: 'auto' }}
-                  >
-                    表情符号
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => { setAvatarMode('image'); if (!customImg) { const g = 'https://picsum.photos/seed/' + Date.now() + '/160'; setCustomImg(g); onEdit('avatar', g) } }}
-                    className={`lj-admin-tab small${avatarMode === 'image' ? ' active' : ''}`}
-                    style={{ padding: '6px 12px', borderRadius: 999, marginBottom: 0, width: 'auto' }}
-                  >
-                    <FileImage size={14} style={{ marginRight: 4 }} /> 图片/链接
-                  </button>
+              </div>
+
+              <Textarea
+                label="个人简介"
+                placeholder="分享你的摄影理念、常用的相机与设备习惯..."
+                value={editForm.bio}
+                onValueChange={(v) => onEdit('bio', v)}
+                variant="bordered"
+                minRows={3}
+              />
+
+              {/* 头像预设选择器 */}
+              <div className="flex flex-col gap-2">
+                <label className="text-xs font-semibold text-default-600">选择个性头像风格</label>
+                <div className="flex flex-wrap gap-2">
+                  {AVATAR_GRADIENTS.map((g, i) => (
+                    <button
+                      key={i}
+                      type="button"
+                      onClick={() => onEdit('avatar', g)}
+                      className={`w-8 h-8 rounded-full border-2 transition-transform ${
+                        editForm.avatar === g ? 'border-[var(--lj-brand)] scale-110 shadow-md' : 'border-transparent hover:scale-105'
+                      }`}
+                      style={{ background: g }}
+                    />
+                  ))}
+                  {AVATAR_EMOJI.map((e, i) => (
+                    <button
+                      key={i}
+                      type="button"
+                      onClick={() => onEdit('avatar', `emoji:${e}`)}
+                      className={`w-8 h-8 rounded-full border-2 flex items-center justify-center text-sm bg-default-100 transition-transform ${
+                        editForm.avatar === `emoji:${e}` ? 'border-[var(--lj-brand)] scale-110 shadow-md' : 'border-transparent hover:scale-105'
+                      }`}
+                    >
+                      {e}
+                    </button>
+                  ))}
                 </div>
-
-                {avatarMode === 'gradient' && (
-                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-                    {AVATAR_GRADIENTS.map((g, i) => (
-                      <button
-                        type="button"
-                        key={i}
-                        onClick={() => onEdit('avatar', g)}
-                        style={{
-                          width: 48, height: 48, borderRadius: '50%',
-                          background: g,
-                          border: editForm.avatar === g ? '3px solid var(--lj-brand)' : '3px solid transparent',
-                          cursor: 'pointer', padding: 0, boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
-                        }}
-                        title={`渐变配色 ${i + 1}`}
-                      />
-                    ))}
-                  </div>
-                )}
-
-                {avatarMode === 'emoji' && (
-                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-                    {AVATAR_EMOJI.map((e, i) => {
-                      const val = 'emoji:' + e
-                      return (
-                        <button
-                          type="button"
-                          key={i}
-                          onClick={() => onEdit('avatar', val)}
-                          style={{
-                            width: 48, height: 48, borderRadius: '50%',
-                            background: 'var(--lj-bg-alt)',
-                            border: editForm.avatar === val ? '3px solid var(--lj-brand)' : '3px solid transparent',
-                            cursor: 'pointer', padding: 0, fontSize: 22, lineHeight: 1,
-                            display: 'flex', alignItems: 'center', justifyContent: 'center',
-                          }}
-                          title={e}
-                        >
-                          {e}
-                        </button>
-                      )
-                    })}
-                  </div>
-                )}
-
-                {avatarMode === 'image' && (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                    <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-                      <input
-                        type="text"
-                        value={customImg}
-                        onChange={(e) => { setCustomImg(e.target.value); onEdit('avatar', e.target.value) }}
-                        style={{ ...inputStyle, flex: 1 }}
-                        placeholder="输入图片 URL 或 data:image/..."
-                      />
-                      <button
-                        type="button"
-                        onClick={() => { const g = 'https://picsum.photos/seed/' + Date.now() + '/160'; setCustomImg(g); onEdit('avatar', g) }}
-                        className="lj-btn-ghost"
-                        style={{ padding: '10px 14px', whiteSpace: 'nowrap' }}
-                      >
-                        <ImageIcon size={14} /> 随机
-                      </button>
-                    </div>
-                    <div style={{ display: 'flex', gap: 8 }}>
-                      <AvatarDisplay avatar={editForm.avatar} initial="图" size={60} />
-                      <span style={{ color: 'var(--lj-ink-3)', fontSize: 12, alignSelf: 'center' }}>
-                        预览：{customImg ? '已设置' : '暂未设置，将使用渐变配色'}
-                      </span>
-                    </div>
-                  </div>
-                )}
               </div>
-              <label style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                <span style={{ fontSize: 13, color: 'var(--lj-ink-3)' }}>个人简介（自我介绍）</span>
-                <textarea
-                  value={editForm.bio}
-                  onChange={(e) => onEdit('bio', e.target.value)}
-                  style={{ ...inputStyle, minHeight: 120, resize: 'vertical', lineHeight: 1.7 }}
-                  placeholder="介绍一下自己吧，比如喜欢的摄影风格、常用器材、座右铭..."
-                  maxLength={1000}
-                />
-                <span style={{ fontSize: 12, color: 'var(--lj-ink-3)', textAlign: 'right' }}>
-                  {editForm.bio.length}/1000
-                </span>
-              </label>
-              <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-                <button type="submit" disabled={saving} className="lj-btn-primary" style={{ opacity: saving ? 0.6 : 1 }}>
-                  <Save size={16} />
-                  {saving ? '保存中...' : '保存修改'}
-                </button>
-              </div>
+
+              <Button
+                type="submit"
+                color="primary"
+                size="lg"
+                isLoading={saving}
+                startContent={!saving && <Save size={18} />}
+                className="w-full md:w-auto self-start font-bold shadow-md shadow-indigo-500/20 px-8 mt-2"
+              >
+                {saving ? '保存中…' : '保存修改'}
+              </Button>
             </form>
-          </div>
-          )}
-
-          {/* 修改密码 Tab */}
-          {tab === 'password' && (
-            <div className="lj-surface" style={{ padding: 24 }}>
-              <h2 style={{ fontSize: 20, fontWeight: 600, marginBottom: 20, display: 'flex', alignItems: 'center', gap: 8 }}>
-                <Key size={18} style={{ color: 'var(--lj-brand)' }} />
-                修改密码
-              </h2>
-              <form onSubmit={handleChangePassword} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-              <PwdInput
+          ) : (
+            <form onSubmit={handleChangePwd} className="flex flex-col gap-5 max-w-md">
+              <Input
                 label="当前密码"
+                type={showPwd.old ? 'text' : 'password'}
                 value={pwdForm.old}
-                onChange={(v) => onPwd('old', v)}
-                show={showPwd.old}
-                onToggle={() => setShowPwd((s) => ({ ...s, old: !s.old }))}
+                onValueChange={(v) => onPwd('old', v)}
+                variant="bordered"
+                isRequired
+                endContent={
+                  <button type="button" onClick={() => setShowPwd((s) => ({ ...s, old: !s.old }))}>
+                    {showPwd.old ? <EyeOff size={18} className="text-default-400" /> : <Eye size={18} className="text-default-400" />}
+                  </button>
+                }
               />
-              <PwdInput
-                label="新密码（至少6位）"
+
+              <Input
+                label="新密码"
+                type={showPwd.next ? 'text' : 'password'}
                 value={pwdForm.next}
-                onChange={(v) => onPwd('next', v)}
-                show={showPwd.next}
-                onToggle={() => setShowPwd((s) => ({ ...s, next: !s.next }))}
+                onValueChange={(v) => onPwd('next', v)}
+                variant="bordered"
+                isRequired
+                endContent={
+                  <button type="button" onClick={() => setShowPwd((s) => ({ ...s, next: !s.next }))}>
+                    {showPwd.next ? <EyeOff size={18} className="text-default-400" /> : <Eye size={18} className="text-default-400" />}
+                  </button>
+                }
               />
-              <PwdInput
+
+              <Input
                 label="确认新密码"
+                type={showPwd.confirm ? 'text' : 'password'}
                 value={pwdForm.confirm}
-                onChange={(v) => onPwd('confirm', v)}
-                show={showPwd.confirm}
-                onToggle={() => setShowPwd((s) => ({ ...s, confirm: !s.confirm }))}
+                onValueChange={(v) => onPwd('confirm', v)}
+                variant="bordered"
+                isRequired
+                endContent={
+                  <button type="button" onClick={() => setShowPwd((s) => ({ ...s, confirm: !s.confirm }))}>
+                    {showPwd.confirm ? <EyeOff size={18} className="text-default-400" /> : <Eye size={18} className="text-default-400" />}
+                  </button>
+                }
               />
-              <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-                <button type="submit" disabled={saving} className="lj-btn-primary" style={{ opacity: saving ? 0.6 : 1 }}>
-                  <Key size={16} />
-                  {saving ? '修改中...' : '修改密码'}
-                </button>
-              </div>
+
+              <Button
+                type="submit"
+                color="primary"
+                size="lg"
+                isLoading={saving}
+                className="w-full font-bold shadow-md shadow-indigo-500/20 mt-2"
+              >
+                {saving ? '修改中…' : '确认修改密码'}
+              </Button>
             </form>
-          </div>
           )}
-        </div>
-      </section>
+        </CardBody>
+      </Card>
     </div>
   )
 }
 
-const inputStyle = {
-  background: 'var(--lj-bg-alt)',
-  border: '1px solid var(--lj-line)',
-  borderRadius: 8,
-  padding: '10px 14px',
-  color: 'var(--lj-ink)',
-  fontSize: 14,
-  outline: 'none',
-  transition: 'border-color 160ms',
-}
-
-function PwdInput({ label, value, onChange, show, onToggle }) {
-  return (
-    <label style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-      <span style={{ fontSize: 13, color: 'var(--lj-ink-3)' }}>{label}</span>
-      <div style={{ position: 'relative' }}>
-        <input
-          type={show ? 'text' : 'password'}
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
-          style={{ ...inputStyle, width: '100%', paddingRight: 44 }}
-          placeholder={label}
-        />
-        <button
-          type="button"
-          onClick={onToggle}
-          style={{
-            position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)',
-            background: 'transparent', border: 'none', color: 'var(--lj-ink-3)', cursor: 'pointer',
-          }}
-        >
-          {show ? <EyeOff size={18} /> : <Eye size={18} />}
-        </button>
-      </div>
-    </label>
-  )
-}
-
-function AvatarDisplay({ avatar, initial = '?', size = 44, style = {} }) {
-  let bg = AVATAR_GRADIENTS[0]
-  let content = initial || '?'
-  let isImg = false
-  if (avatar) {
-    if (avatar.startsWith('emoji:')) {
-      content = avatar.slice(6)
-    } else if (avatar.startsWith('http://') || avatar.startsWith('https://') || avatar.startsWith('data:')) {
-      isImg = true
-      bg = avatar
-    } else if (avatar.startsWith('linear-gradient') || avatar.startsWith('radial-gradient') || avatar.startsWith('#') || avatar.startsWith('rgb')) {
-      bg = avatar
-    } else {
-      bg = avatar
-    }
-  }
-  const baseStyle = {
-    width: size, height: size, borderRadius: '50%',
-    display: 'flex', alignItems: 'center', justifyContent: 'center',
-    fontWeight: 700, boxShadow: '0 4px 16px rgba(0,0,0,0.25)',
-    flexShrink: 0,
-    ...style,
-  }
-  if (isImg) {
-    return (
-      <img
-        src={bg}
-        alt=""
-        style={{
-          ...baseStyle,
-          background: AVATAR_GRADIENTS[0],
-          objectFit: 'cover',
-          border: 'none',
-          fontSize: Math.floor(size * 0.45),
-          color: '#fff',
-        }}
-        onError={(e) => { e.currentTarget.style.display = 'none' }}
-      />
-    )
-  }
-  return (
-    <div style={{
-      ...baseStyle,
-      background: bg,
-      color: '#fff',
-      fontSize: avatar?.startsWith('emoji:') ? Math.floor(size * 0.55) : Math.floor(size * 0.42),
-    }}>
-      {content}
-    </div>
-  )
-}
-
-export { AvatarDisplay }
 export default Profile

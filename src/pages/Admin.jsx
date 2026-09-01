@@ -1,6 +1,29 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import {
+  Card,
+  CardBody,
+  Tabs,
+  Tab,
+  Button,
+  Input,
+  Select,
+  SelectItem,
+  Chip,
+  Modal,
+  ModalContent,
+  ModalHeader,
+  ModalBody,
+  ModalFooter,
+  Table,
+  TableHeader,
+  TableColumn,
+  TableBody,
+  TableRow,
+  TableCell,
+  Spinner,
+} from '@heroui/react'
+import {
   BarChart3,
   Users,
   Image,
@@ -47,16 +70,25 @@ import '../styles/pages/admin.css'
 import '../styles/components/site-content-editor.css'
 
 const STATUSES = [
-  { key: '', label: '全部', icon: Filter },
+  { key: 'all', label: '全部状态', icon: Filter },
   { key: 'pending', label: '待审核', icon: Clock },
   { key: 'approved', label: '已通过', icon: CheckCircle2 },
   { key: 'rejected', label: '未通过', icon: XCircle },
 ]
+
 const BOARDS = [
-  { key: '', label: '全部板块', icon: Filter },
+  { key: 'all', label: '全部板块', icon: Filter },
   { key: 'photo', label: '作品展示', icon: Image },
   { key: 'resource', label: '资源库', icon: FileText },
   { key: 'diary', label: '日记本', icon: BookOpen },
+]
+
+const SITE_EDIT_QUICK = [
+  { slug: 'home', label: '首页核心卡片/轮播', icon: Home, desc: '轮播图、社团金句、活动预告' },
+  { slug: 'history', label: '凌镜历史与大事记', icon: History, desc: '社团建立历史、发展历程与时间线' },
+  { slug: 'departments', label: '部门与组织架构', icon: Building2, desc: '暗房部、外拍部、数码部等说明' },
+  { slug: 'about', label: '关于凌镜 (社团简介)', icon: Info, desc: '社团理念、联系方式、入社须知' },
+  { slug: 'studio', label: '工作室与暗房设备', icon: Video, desc: '暗房设备、影棚器材、借用说明' },
 ]
 
 function fmtTime(ts) {
@@ -74,129 +106,118 @@ function SubmissionPreview({ s, onClose }) {
   const board = s.board
   const p = s.payload || {}
   const BoardIcon = board === 'photo' ? Image : board === 'resource' ? FileText : BookOpen
+
   return (
-    <div className="lj-modal-mask" onClick={onClose}>
-      <div className="lj-modal" onClick={(e) => e.stopPropagation()}>
-        <div className="lj-modal-head">
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <span className={`lj-status-chip lj-status-${s.status}`}>
-              {s.status === 'pending' && '⏳ 待审核'}
-              {s.status === 'approved' && '✅ 已通过'}
-              {s.status === 'rejected' && '❌ 未通过'}
-            </span>
-            <span className="lj-my-board">
-              <BoardIcon size={12} style={{ display: 'inline-block', marginRight: 4, verticalAlign: '-2px' }} />
-              {board === 'photo' ? '作品' : board === 'resource' ? '资源' : '日记'}
-            </span>
-          </div>
-          <button className="lj-btn-ghost" onClick={onClose}>关闭</button>
-        </div>
+    <Modal
+      isOpen={!!s}
+      onClose={onClose}
+      size="2xl"
+      backdrop="blur"
+      classNames={{
+        base: 'bg-[var(--lj-surface)] text-[var(--lj-ink)] border border-[var(--lj-surface-2)] shadow-2xl rounded-2xl',
+        header: 'border-b border-[var(--lj-surface-2)] py-3 px-5',
+        footer: 'border-t border-[var(--lj-surface-2)] py-3 px-5',
+      }}
+    >
+      <ModalContent>
+        {() => (
+          <>
+            <ModalHeader className="flex items-center justify-between gap-3">
+              <div className="flex items-center gap-2">
+                <Chip
+                  size="sm"
+                  variant="flat"
+                  color={s.status === 'approved' ? 'success' : s.status === 'rejected' ? 'danger' : 'warning'}
+                >
+                  {s.status === 'pending' && '⏳ 待审核'}
+                  {s.status === 'approved' && '✅ 已通过'}
+                  {s.status === 'rejected' && '❌ 未通过'}
+                </Chip>
+                <Chip size="sm" variant="flat" color="primary" startContent={<BoardIcon size={12} />}>
+                  {board === 'photo' ? '作品' : board === 'resource' ? '资源' : '日记'}
+                </Chip>
+              </div>
+            </ModalHeader>
 
-        <div className="lj-modal-body">
-          <div className="lj-meta-row">
-            <span><b>ID:</b> {s.id}</span>
-            <span><b>提交者:</b> {s.submitter_uname || s.submitter_name || `UID ${s.submitter_id}`}</span>
-            <span><b>时间:</b> {fmtTime(s.created_at)}</span>
-          </div>
+            <ModalBody className="p-5 flex flex-col gap-4 text-sm">
+              <div className="grid grid-cols-2 gap-2 text-xs text-default-400 bg-[var(--lj-surface-2)]/40 p-3 rounded-xl">
+                <div><b>ID:</b> {s.id}</div>
+                <div><b>提交者:</b> {s.submitter_uname || s.submitter_name || `UID ${s.submitter_id}`}</div>
+                <div><b>提交时间:</b> {fmtTime(s.created_at)}</div>
+              </div>
 
-          {board === 'photo' && (
-            <div className="lj-preview-photo">
-              {p.image ? (
-                <img src={p.image} alt={p.title} onError={(e) => (e.target.style.display = 'none')} />
-              ) : (
-                <div className="lj-preview-photo-placeholder" style={{ background: p.grad || GRAD_FALLBACK }}>
-                  <span>📷 无预览图</span>
+              <div className="flex flex-col gap-2">
+                <div className="text-xs text-default-400 font-semibold">标题</div>
+                <div className="text-lg font-bold">{p.title || '(无标题)'}</div>
+              </div>
+
+              {p.cat && (
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-default-400">分类:</span>
+                  <Chip size="sm" variant="flat">{p.cat}</Chip>
                 </div>
               )}
-              <div className="lj-preview-meta">
-                <h3>{p.title || '（无标题）'}</h3>
-                <p className="lj-preview-line"><b>分类：</b>{p.cat || '-'}</p>
-                <p className="lj-preview-line"><b>署名：</b>{p.author || '-'}</p>
-                {p.desc && <p className="lj-preview-desc">{p.desc}</p>}
-              </div>
-            </div>
-          )}
 
-          {board === 'resource' && (
-            <div className="lj-preview-resource">
-              <h3 style={{ marginTop: 0 }}>{p.title}</h3>
-              <p className="lj-preview-line"><b>分类：</b>{p.cat || '-'} &nbsp; <b>署名：</b>{p.author || '-'}</p>
+              {p.author && (
+                <div className="text-xs text-default-400">
+                  署名: <span className="text-[var(--lj-ink)] font-medium">{p.author}</span>
+                </div>
+              )}
+
+              {p.desc && (
+                <div className="flex flex-col gap-1">
+                  <span className="text-xs text-default-400 font-semibold">描述 / 简介</span>
+                  <div className="p-3 rounded-xl bg-[var(--lj-surface-2)]/30 text-xs whitespace-pre-wrap">{p.desc}</div>
+                </div>
+              )}
+
+              {p.image && (
+                <div className="flex flex-col gap-1">
+                  <span className="text-xs text-default-400 font-semibold">作品图片</span>
+                  <img src={p.image} alt="预览" className="max-h-64 object-contain rounded-xl border border-[var(--lj-surface-2)] bg-black/20" />
+                </div>
+              )}
+
               {p.summary && (
-                <div className="lj-preview-section">
-                  <h4>简介</h4>
-                  <p>{p.summary}</p>
+                <div className="flex flex-col gap-1">
+                  <span className="text-xs text-default-400 font-semibold">干货摘要</span>
+                  <div className="p-3 rounded-xl bg-[var(--lj-surface-2)]/30 text-xs">{p.summary}</div>
                 </div>
               )}
-              {(p.fullDesc || p.full_desc) && (
-                <div className="lj-preview-section">
-                  <h4>正文</h4>
-                  <pre className="lj-preview-code">{p.fullDesc || p.full_desc}</pre>
+
+              {p.fullContent && (
+                <div className="flex flex-col gap-1">
+                  <span className="text-xs text-default-400 font-semibold">正文预览</span>
+                  <div className="p-3 rounded-xl bg-[var(--lj-surface-2)]/30 text-xs max-h-48 overflow-y-auto whitespace-pre-wrap font-mono">{p.fullContent}</div>
                 </div>
               )}
-            </div>
-          )}
 
-          {board === 'diary' && (
-            <div className="lj-preview-diary">
-              <h3 style={{ marginTop: 0 }}>{p.title}</h3>
-              <p className="lj-preview-line">
-                <b>日期：</b>{p.date || '-'} &nbsp; <b>心情：</b>{p.mood || '-'} &nbsp; <b>署名：</b>{p.author || '-'}
-              </p>
-              <div className="lj-preview-section">
-                <h4>正文</h4>
-                <pre className="lj-preview-code">{p.content}</pre>
-              </div>
-            </div>
-          )}
-
-          {s.reviewed_at && (
-            <div className="lj-review-history">
-              <h4>审核记录</h4>
-              <p style={{ margin: 0 }}>
-                <b>审核时间：</b>{fmtTime(s.reviewed_at)} &nbsp; <b>状态：</b>
-                {s.status === 'approved' ? '✅ 通过' : '❌ 拒绝'}
-              </p>
-              {s.review_note && (
-                <p style={{ margin: '4px 0 0', color: 'var(--lj-ink-2)' }}>
-                  <b>备注：</b>
-                  {typeof s.review_note === 'string' ? s.review_note : s.review_note.note || ''}
-                </p>
+              {p.content && (
+                <div className="flex flex-col gap-1">
+                  <span className="text-xs text-default-400 font-semibold">日记正文</span>
+                  <div className="p-3 rounded-xl bg-[var(--lj-surface-2)]/30 text-xs max-h-48 overflow-y-auto whitespace-pre-wrap">{p.content}</div>
+                </div>
               )}
-            </div>
-          )}
-        </div>
-      </div>
-    </div>
+            </ModalBody>
+
+            <ModalFooter>
+              <Button size="sm" variant="flat" onClick={onClose}>关闭</Button>
+            </ModalFooter>
+          </>
+        )}
+      </ModalContent>
+    </Modal>
   )
 }
 
-const GRAD_FALLBACK = 'linear-gradient(135deg,#2D5F8A,#4A90D9,#6AADE8)'
-
-const CONTENT_TYPES = [
-  { key: 'photo', label: '作品展示', icon: Image },
-  { key: 'resource', label: '资源库', icon: FileText },
-  { key: 'diary', label: '日记本', icon: BookOpen },
-]
-
-// 固定板块（站点内容）快速编辑入口
-const SITE_EDIT_QUICK = [
-  { slug: 'home',        label: '首页',         icon: Home,      path: '/' },
-  { slug: 'history',     label: '凌镜历史',     icon: History,   path: '/history' },
-  { slug: 'departments', label: '部门介绍',     icon: Building2, path: '/departments' },
-  { slug: 'about',       label: '关于凌镜',     icon: Info,      path: '/about' },
-  { slug: 'studio',      label: '工作室',       icon: Video,     path: '/studio' },
-]
-
-
 function Admin() {
   const navigate = useNavigate()
-  const [error, setError] = useState('')
+  const [activeTab, setActiveTab] = useState('submissions') // submissions | content | users | site
   const [stats, setStats] = useState(null)
   const [subs, setSubs] = useState([])
   const [users, setUsers] = useState([])
-  const [usersTab, setUsersTab] = useState(false)
-  const [contentTab, setContentTab] = useState(false)
-  const [filterBoard, setFilterBoard] = useState('')
+  const [error, setError] = useState('')
+  const [filterBoard, setFilterBoard] = useState('all')
   const [filterStatus, setFilterStatus] = useState('pending')
   const [search, setSearch] = useState('')
   const [preview, setPreview] = useState(null)
@@ -208,13 +229,10 @@ function Admin() {
   const [contentList, setContentList] = useState([])
   const [contentLoading, setContentLoading] = useState(false)
 
-  // 固定板块（SiteContent）编辑弹窗状态
+  // 固定板块编辑弹窗状态
   const [siteEditorSlug, setSiteEditorSlug] = useState(null)
   const [siteEditorContent, setSiteEditorContent] = useState(null)
   const [siteEditorOpen, setSiteEditorOpen] = useState(false)
-
-  // 站点内容管理 tab 状态
-  const [siteTab, setSiteTab] = useState(false)
   const [siteInfo, setSiteInfo] = useState({})
   const [siteInfoLoading, setSiteInfoLoading] = useState(false)
 
@@ -223,7 +241,7 @@ function Admin() {
     try {
       const res = await getSiteContent(slug)
       content = mergeSiteContent(SITE_DEFAULTS[slug] || {}, res?.content)
-    } catch (_) { /* 失败时使用默认值 */ }
+    } catch (_) { /* 降级 */ }
     setSiteEditorSlug(slug)
     setSiteEditorContent(content)
     setSiteEditorOpen(true)
@@ -239,7 +257,7 @@ function Admin() {
       slugs.forEach((slug, i) => { info[slug] = results[i] })
       setSiteInfo(info)
     } catch (err) {
-      setError(err.message || '加载站点内容信息失败')
+      setError(err.message || '加载站点内容失败')
     } finally {
       setSiteInfoLoading(false)
     }
@@ -250,16 +268,18 @@ function Admin() {
   async function loadAll() {
     setError('')
     try {
+      const bParam = filterBoard === 'all' ? '' : filterBoard
+      const sParam = filterStatus === 'all' ? '' : filterStatus
       const [s, list, u] = await Promise.all([
         getAdminStats(),
-        listAdminSubmissions({ board: filterBoard, status: filterStatus }),
+        listAdminSubmissions({ board: bParam, status: sParam }),
         listAdminUsers(),
       ])
       setStats(s)
       setSubs(list.submissions || [])
       setUsers(u.users || [])
     } catch (err) {
-      setError(err.message || '加载失败，请确认已以管理员身份登录')
+      setError(err.message || '加载失败，请确认以管理员身份登录')
     }
   }
 
@@ -278,61 +298,61 @@ function Admin() {
   }
 
   useEffect(() => {
-    if (isAdminUser && !contentTab && !siteTab) loadAll()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filterBoard, filterStatus, isAdminUser])
+    if (isAdminUser && activeTab === 'submissions') loadAll()
+  }, [filterBoard, filterStatus, isAdminUser, activeTab])
 
   useEffect(() => {
-    if (isAdminUser && contentTab) loadContent()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [contentType, contentTab, isAdminUser])
+    if (isAdminUser && activeTab === 'content') loadContent()
+  }, [contentType, activeTab, isAdminUser])
 
   useEffect(() => {
-    if (isAdminUser && siteTab) loadSiteInfo()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [siteTab, isAdminUser])
+    if (isAdminUser && activeTab === 'site') loadSiteInfo()
+  }, [activeTab, isAdminUser])
 
   const filteredList = useMemo(() => {
     if (!search) return subs
     const q = search.toLowerCase()
     return subs.filter((s) => {
       const p = s.payload || {}
-      const hay = [
-        p.title,
-        p.author,
-        p.summary,
-        s.submitter_uname || s.submitter_name,
-        s.board,
-        String(s.id),
-      ]
-        .join(' ')
-        .toLowerCase()
+      const hay = [s.id, s.submitter_name, s.submitter_uname, p.title, p.author, p.cat].filter(Boolean).join(' ').toLowerCase()
       return hay.includes(q)
     })
   }, [subs, search])
 
-  async function handleReview(id, status) {
-    const note = status === 'rejected' ? (window.prompt('请输入拒绝原因（可选）：') || '') : ''
+  async function handleReview(id, status, reason = '') {
     setActing(id)
     try {
-      await reviewSubmission(id, status, note)
-      await loadAll()
+      await reviewSubmission(id, status, reason)
+      loadAll()
     } catch (err) {
-      setError(err.message || '操作失败')
+      alert(err.message || '操作失败')
     } finally {
       setActing(null)
     }
   }
 
-  async function handleDelete(id) {
-    if (!window.confirm('确定要删除这条投稿吗？删除后不可恢复。')) return
+  async function handleDeleteSub(id) {
+    if (!window.confirm(`确定要彻底删除投稿 ID ${id} 吗？`)) return
     setActing(id)
     try {
       await deleteSubmission(id)
-      setPreview(null)
-      await loadAll()
+      loadAll()
     } catch (err) {
-      setError(err.message || '删除失败')
+      alert(err.message || '删除失败')
+    } finally {
+      setActing(null)
+    }
+  }
+
+  async function handleDeleteContentItem(type, id) {
+    if (!window.confirm(`确定要永久彻底删除该条正式内容 (ID ${id}) 吗？`)) return
+    setActing(id)
+    try {
+      await deleteContent(type, id)
+      loadContent()
+      getAdminStats().then(setStats).catch(() => {})
+    } catch (err) {
+      alert(err.message || '删除失败')
     } finally {
       setActing(null)
     }
@@ -341,693 +361,470 @@ function Admin() {
   async function handleRole(uid, role) {
     try {
       await setUserRole(uid, role)
-      await loadAll()
+      loadAll()
     } catch (err) {
-      setError(err.message || '操作失败')
+      alert(err.message || '修改角色失败')
     }
   }
 
-  async function handleDeleteUser(u) {
-    if (!u) return
-    if (u.role === 'admin' && !window.confirm(`管理员"${u.username || u.id}"有较高权限，确定要删除该账号吗？（会同时删除其所有投稿）`)) {
-      if (u.role !== 'admin') return
-      return
-    }
-    if (u.role !== 'admin') {
-      const ok = window.confirm(
-        `确定要删除成员账号 "${u.username || u.nickname || u.id}" 吗？\n该操作会同时删除其全部投稿，且不可恢复。`
-      )
-      if (!ok) return
-    }
-    setActing(`user-${u.id}`)
+  async function handleDeleteUser(uid, uname) {
+    if (!window.confirm(`确认删除用户 "${uname}" (UID: ${uid}) 吗？`)) return
     try {
-      await deleteUser(u.id)
-      await loadAll()
+      await deleteUser(uid)
+      loadAll()
     } catch (err) {
-      setError(err.message || '删除失败')
-    } finally {
-      setActing(null)
-    }
-  }
-
-  async function handleDeleteContent(id) {
-    const label = id >= 10000 ? '此投稿内容' : '此静态内容'
-    if (!window.confirm(`确定要从公开页面移除${label}吗？`)) return
-    setActing(id)
-    try {
-      await deleteContent(contentType, id)
-      await loadContent()
-    } catch (err) {
-      setError(err.message || '删除失败')
-    } finally {
-      setActing(null)
+      alert(err.message || '删除用户失败')
     }
   }
 
   if (!isAdminUser) {
     return (
-      <section className="lj-admin-page">
-        <div className="lj-admin-noauth">
-          <ShieldAlert size={56} style={{ color: '#FBBF24' }} />
-          <h2>管理员入口</h2>
-          <p>你需要以管理员身份登录才能访问审核后台。</p>
-          <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', justifyContent: 'center' }}>
-            <Link to="/auth" className="lj-btn-primary" style={{ display: 'inline-flex', gap: 6, alignItems: 'center' }}>
-              <LogIn size={16} />
-              前往登录
-            </Link>
-            <button
-              className="lj-btn-ghost"
-              onClick={() => {
-                logout()
-                navigate('/auth')
-              }}
-            >
-              切换账号
-            </button>
-          </div>
-          <p style={{ fontSize: 13, marginTop: 20, color: 'var(--lj-ink-3)' }}>
-            默认管理员账号：用户名 <code style={{ color: 'var(--lj-brand-light)' }}>admin</code> / 密码 <code style={{ color: 'var(--lj-brand-light)' }}>admin123</code>
-          </p>
-        </div>
-      </section>
+      <div className="min-h-[70vh] flex flex-col items-center justify-center p-4">
+        <Card className="max-w-md w-full p-6 text-center bg-[var(--lj-surface)] border border-[var(--lj-surface-2)]">
+          <CardBody className="items-center gap-4">
+            <ShieldAlert size={48} className="text-amber-500" />
+            <h2 className="text-xl font-bold">需要管理员权限</h2>
+            <p className="text-sm text-default-400">当前账号不是管理员，无法访问管理后台。</p>
+            <div className="flex gap-2 mt-2">
+              <Button as={Link} to="/" variant="flat">返回首页</Button>
+              <Button as={Link} to="/auth" color="primary" onClick={() => logout()}>切换账号</Button>
+            </div>
+          </CardBody>
+        </Card>
+      </div>
     )
   }
 
   return (
-    <section className="lj-admin-page">
-      <div className="lj-admin-inner">
-        <header className="lj-admin-header">
-          <div>
-            <h1 className="lj-page-title" style={{ display: 'inline-flex', alignItems: 'center', gap: 10 }}>
-              <Crown size={24} style={{ color: 'var(--lj-brand-light)' }} />
-              凌镜社团管理后台
-            </h1>
-            <p className="lj-page-subtitle">平台式可视化审核 · 用户管理 · 数据统计</p>
+    <>
+      <section className="lj-page-header">
+        <div className="lj-page-header-inner">
+          <div className="lj-breadcrumb">
+            <Link to="/">首页</Link>
+            <span className="sep">/</span>
+            <span className="current">管理后台</span>
           </div>
-          <div className="lj-admin-head-actions">
-            <Link to="/submit" className="lj-btn-secondary">📝 创作投稿</Link>
-            <Link to="/" className="lj-btn-ghost">返回首页</Link>
+          <h1 className="lj-page-title flex items-center gap-2">
+            <Crown className="text-amber-400" /> 凌镜后台管理
+          </h1>
+          <p className="lj-page-subtitle">审查投稿、管理发布内容、用户权限配置与可视化修改</p>
+        </div>
+      </section>
+
+      <div className="max-w-6xl mx-auto px-4 py-8">
+        {/* 顶部统计面板卡片 */}
+        {stats && (
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+            <Card className="bg-[var(--lj-surface)] border border-[var(--lj-surface-2)] p-1">
+              <CardBody className="flex flex-row items-center gap-4 p-4">
+                <div className="p-3 rounded-xl bg-amber-500/10 text-amber-500">
+                  <Clock size={24} />
+                </div>
+                <div>
+                  <div className="text-xs text-default-400">待审核投稿</div>
+                  <div className="text-2xl font-extrabold">{stats.pendingSubmissions || 0}</div>
+                </div>
+              </CardBody>
+            </Card>
+
+            <Card className="bg-[var(--lj-surface)] border border-[var(--lj-surface-2)] p-1">
+              <CardBody className="flex flex-row items-center gap-4 p-4">
+                <div className="p-3 rounded-xl bg-indigo-500/10 text-indigo-500">
+                  <Image size={24} />
+                </div>
+                <div>
+                  <div className="text-xs text-default-400">展示作品总数</div>
+                  <div className="text-2xl font-extrabold">{stats.photos || 0}</div>
+                </div>
+              </CardBody>
+            </Card>
+
+            <Card className="bg-[var(--lj-surface)] border border-[var(--lj-surface-2)] p-1">
+              <CardBody className="flex flex-row items-center gap-4 p-4">
+                <div className="p-3 rounded-xl bg-emerald-500/10 text-emerald-500">
+                  <FileText size={24} />
+                </div>
+                <div>
+                  <div className="text-xs text-default-400">干货资源文章</div>
+                  <div className="text-2xl font-extrabold">{stats.resources || 0}</div>
+                </div>
+              </CardBody>
+            </Card>
+
+            <Card className="bg-[var(--lj-surface)] border border-[var(--lj-surface-2)] p-1">
+              <CardBody className="flex flex-row items-center gap-4 p-4">
+                <div className="p-3 rounded-xl bg-sky-500/10 text-sky-500">
+                  <Users size={24} />
+                </div>
+                <div>
+                  <div className="text-xs text-default-400">注册成员</div>
+                  <div className="text-2xl font-extrabold">{stats.users || 0}</div>
+                </div>
+              </CardBody>
+            </Card>
           </div>
-        </header>
+        )}
 
         {error && (
-          <div className="lj-form-error" style={{ marginBottom: 16 }}>
-            <AlertTriangle size={18} /> {error}
+          <div className="p-4 mb-6 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-500 flex items-center gap-2 text-sm">
+            <AlertTriangle size={18} />
+            <span>{error}</span>
           </div>
         )}
 
-        {/* ---- 数据统计卡片 ---- */}
-        <div className="lj-admin-stats">
-          <StatCard
-            icon={BarChart3}
-            label="投稿总数"
-            value={stats?.submissions_count ?? '-'}
-            color="#60A5FA"
-            sub={`待审核 ${stats?.pending_count ?? '-'}`}
-          />
-          <StatCard
-            icon={CheckCircle2}
-            label="已通过"
-            value={stats?.approved_count ?? '-'}
-            color="#34D399"
-            sub={`通过率: ${stats?.submissions_count ? Math.round(((stats?.approved_count ?? 0) / stats.submissions_count) * 100) : 0}%`}
-          />
-          <StatCard
-            icon={XCircle}
-            label="未通过"
-            value={stats?.rejected_count ?? '-'}
-            color="#F87171"
-            sub={`拒绝数: ${stats?.rejected_count ?? 0}`}
-          />
-          <StatCard
-            icon={Users}
-            label="注册用户"
-            value={stats?.users_count ?? '-'}
-            color="#C084FC"
-            sub={`作品: ${stats?.by_board?.photo ?? 0} · 资源: ${stats?.by_board?.resource ?? 0} · 日记: ${stats?.by_board?.diary ?? 0}`}
-          />
-        </div>
-
-        {/* ---- Tabs: 投稿 / 内容 / 用户 ---- */}
-        <div className="lj-admin-tabs">
-          <button
-            className={`lj-admin-tab${!usersTab && !contentTab && !siteTab ? ' active' : ''}`}
-            onClick={() => { setUsersTab(false); setContentTab(false); setSiteTab(false) }}
-          >
-            <ShieldAlert size={16} /> 投稿审核 <span className="lj-tab-count">{stats?.pending_count ?? 0}</span>
-          </button>
-          <button
-            className={`lj-admin-tab${siteTab ? ' active' : ''}`}
-            onClick={() => { setUsersTab(false); setContentTab(false); setSiteTab(true) }}
-          >
-            <Edit3 size={16} /> 站点内容
-          </button>
-          <button
-            className={`lj-admin-tab${contentTab ? ' active' : ''}`}
-            onClick={() => { setUsersTab(false); setContentTab(true); setSiteTab(false) }}
-          >
-            <Layers size={16} /> 内容管理
-          </button>
-          <button
-            className={`lj-admin-tab${usersTab ? ' active' : ''}`}
-            onClick={() => { setUsersTab(true); setContentTab(false); setSiteTab(false) }}
-          >
-            <UserCog size={16} /> 用户管理
-          </button>
-        </div>
-
-        {siteTab ? (
-          <>
-            {/* ---- 站点内容管理 ---- */}
-            <div style={{
-              marginBottom: 20,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              flexWrap: 'wrap',
-              gap: 8,
-            }}>
-              <div>
-                <h2 style={{ fontSize: 20, fontWeight: 700, color: 'var(--lj-ink)', margin: '0 0 4px' }}>
-                  固定板块内容管理
-                </h2>
-                <p style={{ fontSize: 13, color: 'var(--lj-ink-3)', margin: 0 }}>
-                  点击「编辑」可直接修改对应页面的文字内容，保存后立即生效。各页面也支持在前台点击「编辑本页」按钮编辑。
-                </p>
+        {/* 核心 Tab 切换 */}
+        <Tabs
+          selectedKey={activeTab}
+          onSelectionChange={(key) => setActiveTab(String(key))}
+          color="primary"
+          variant="solid"
+          size="lg"
+          className="mb-6"
+        >
+          <Tab
+            key="submissions"
+            title={
+              <div className="flex items-center gap-2">
+                <Clock size={16} />
+                <span>投稿审核</span>
+                {stats?.pendingSubmissions > 0 && (
+                  <Chip size="sm" color="danger" variant="solid" className="min-w-5 h-5 px-1 font-bold text-xs">
+                    {stats.pendingSubmissions}
+                  </Chip>
+                )}
               </div>
-              <button className="lj-btn-ghost" onClick={loadSiteInfo} disabled={siteInfoLoading}>
-                {siteInfoLoading ? '加载中…' : '刷新信息'}
-              </button>
-            </div>
+            }
+          />
 
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
-              gap: 16,
-            }}>
-              {SITE_EDIT_QUICK.map((item) => {
-                const IconComp = item.icon
-                const info = siteInfo[item.slug]
-                const hasSaved = info?.saved
-                const updatedAt = info?.updated_at
-                const updatedBy = info?.updated_by
-                return (
-                  <div
-                    key={item.slug}
-                    style={{
-                      background: 'var(--lj-surface)',
-                      border: '1px solid var(--lj-border)',
-                      borderRadius: 14,
-                      padding: 20,
-                      display: 'flex',
-                      flexDirection: 'column',
-                      gap: 12,
-                      transition: 'all 0.18s',
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.borderColor = 'rgba(74, 144, 217, 0.5)'
-                      e.currentTarget.style.boxShadow = '0 4px 20px rgba(74, 144, 217, 0.1)'
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.borderColor = ''
-                      e.currentTarget.style.boxShadow = ''
-                    }}
+          <Tab
+            key="site"
+            title={
+              <div className="flex items-center gap-2">
+                <Edit3 size={16} />
+                <span>站点可视化修改</span>
+              </div>
+            }
+          />
+
+          <Tab
+            key="content"
+            title={
+              <div className="flex items-center gap-2">
+                <Layers size={16} />
+                <span>正式发布内容</span>
+              </div>
+            }
+          />
+
+          <Tab
+            key="users"
+            title={
+              <div className="flex items-center gap-2">
+                <UserCog size={16} />
+                <span>用户权限管理</span>
+              </div>
+            }
+          />
+        </Tabs>
+
+        {/* Tab 1: 投稿审核 */}
+        {activeTab === 'submissions' && (
+          <Card className="bg-[var(--lj-surface)] border border-[var(--lj-surface-2)] shadow-xl p-2 md:p-4">
+            <CardBody className="gap-4">
+              <div className="flex flex-col md:flex-row gap-3 items-center justify-between">
+                <div className="flex items-center gap-2 w-full md:w-auto">
+                  <Select
+                    size="sm"
+                    label="板块"
+                    selectedKeys={[filterBoard]}
+                    onChange={(e) => setFilterBoard(e.target.value)}
+                    className="w-36"
                   >
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                      <div style={{
-                        width: 44, height: 44,
-                        borderRadius: 12,
-                        background: 'linear-gradient(135deg, rgba(74,144,217,0.18), rgba(106,173,232,0.08))',
-                        color: 'var(--lj-brand-light)',
-                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        flexShrink: 0,
-                      }}>
-                        <IconComp size={22} />
-                      </div>
-                      <div>
-                        <div style={{ fontWeight: 700, color: 'var(--lj-ink)', fontSize: 16 }}>
-                          {item.label}
-                        </div>
-                        <div style={{
-                          fontSize: 12,
-                          color: 'var(--lj-ink-3)',
-                          fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace',
-                        }}>
-                          {item.path}
-                        </div>
-                      </div>
-                    </div>
+                    {BOARDS.map((b) => (
+                      <SelectItem key={b.key} value={b.key}>{b.label}</SelectItem>
+                    ))}
+                  </Select>
 
-                    <div style={{
-                      fontSize: 12,
-                      color: 'var(--lj-ink-2)',
-                      padding: '8px 12px',
-                      background: hasSaved ? 'rgba(16, 185, 129, 0.06)' : 'rgba(148, 163, 184, 0.06)',
-                      borderRadius: 8,
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: 6,
-                    }}>
-                      {hasSaved ? (
-                        <>
-                          <CheckCircle2 size={13} style={{ color: '#10b981', flexShrink: 0 }} />
-                          <span>已自定义 · 更新于 {fmtTime(updatedAt)}{updatedBy ? ` · UID ${updatedBy}` : ''}</span>
-                        </>
-                      ) : (
-                        <>
-                          <Clock size={13} style={{ color: 'var(--lj-ink-3)', flexShrink: 0 }} />
-                          <span>使用默认内容（尚未自定义编辑）</span>
-                        </>
-                      )}
-                    </div>
+                  <Select
+                    size="sm"
+                    label="审核状态"
+                    selectedKeys={[filterStatus]}
+                    onChange={(e) => setFilterStatus(e.target.value)}
+                    className="w-36"
+                  >
+                    {STATUSES.map((s) => (
+                      <SelectItem key={s.key} value={s.key}>{s.label}</SelectItem>
+                    ))}
+                  </Select>
+                </div>
 
-                    <div style={{ display: 'flex', gap: 8, marginTop: 'auto' }}>
-                      <button
-                        className="lj-btn-primary"
-                        style={{
-                          padding: '9px 16px',
-                          fontSize: 13,
-                          flex: 1,
-                          justifyContent: 'center',
-                        }}
-                        onClick={() => openSiteQuickEditor(item.slug)}
-                      >
-                        <Edit3 size={14} /> 编辑内容
-                      </button>
-                      <Link
-                        to={item.path}
-                        className="lj-btn-secondary"
-                        style={{
-                          padding: '9px 14px',
-                          fontSize: 13,
-                          textDecoration: 'none',
-                          display: 'inline-flex',
-                          alignItems: 'center',
-                          gap: 4,
-                        }}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        title="在新标签页查看页面"
-                      >
-                        <ExternalLink size={14} /> 查看
-                      </Link>
-                    </div>
-                  </div>
-                )
-              })}
-            </div>
-          </>
-        ) : contentTab ? (
-          <>
-            {/* ---- 内容管理板块选择 ---- */}
-            <div className="lj-admin-filters">
-              <div className="lj-filter-group">
-                <label className="lj-filter-label"><Layers size={14} /> 板块</label>
-                <div className="lj-chip-group">
-                  {CONTENT_TYPES.map((c) => {
-                    const Icon = c.icon
-                    return (
-                      <button
-                        key={c.key}
-                        className={`lj-chip${contentType === c.key ? ' active' : ''}`}
-                        onClick={() => setContentType(c.key)}
-                      >
-                        <Icon size={14} /> {c.label}
-                      </button>
-                    )
-                  })}
-                </div>
-              </div>
-              <button className="lj-btn-ghost" onClick={loadContent}>刷新</button>
-            </div>
-
-            {/* ---- 内容列表 ---- */}
-            {contentLoading ? (
-              <div className="lj-empty"><p style={{ color: 'var(--lj-ink-2)' }}>加载中...</p></div>
-            ) : contentList.length === 0 ? (
-              <div className="lj-empty">
-                <CheckCircle2 size={32} style={{ color: 'var(--lj-ink-3)' }} />
-                <p style={{ color: 'var(--lj-ink-2)' }}>当前板块暂无内容。</p>
-              </div>
-            ) : (
-              <div className="lj-sub-list">
-                {contentList.map((item) => (
-                  <ContentCard
-                    key={item.id}
-                    item={item}
-                    type={contentType}
-                    onDelete={() => handleDeleteContent(item.id)}
-                    acting={acting === item.id}
-                  />
-                ))}
-              </div>
-            )}
-          </>
-        ) : !usersTab ? (
-          <>
-            {/* ---- 过滤栏 ---- */}
-            <div className="lj-admin-filters">
-              <div className="lj-filter-group">
-                <label className="lj-filter-label"><Filter size={14} /> 状态</label>
-                <div className="lj-chip-group">
-                  {STATUSES.map((s) => {
-                    const Icon = s.icon
-                    return (
-                      <button
-                        key={s.key}
-                        className={`lj-chip${filterStatus === s.key ? ' active' : ''}`}
-                        onClick={() => setFilterStatus(s.key)}
-                      >
-                        <Icon size={14} /> {s.label}
-                      </button>
-                    )
-                  })}
-                </div>
-              </div>
-              <div className="lj-filter-group">
-                <label className="lj-filter-label"><Filter size={14} /> 板块</label>
-                <div className="lj-chip-group">
-                  {BOARDS.map((b) => {
-                    const Icon = b.icon
-                    return (
-                      <button
-                        key={b.key}
-                        className={`lj-chip${filterBoard === b.key ? ' active' : ''}`}
-                        onClick={() => setFilterBoard(b.key)}
-                      >
-                        <Icon size={14} /> {b.label}
-                      </button>
-                    )
-                  })}
-                </div>
-              </div>
-              <div className="lj-search-wrap">
-                <Search size={15} />
-                <input
-                  placeholder="搜索标题 / 作者 / 提交者 / ID…"
+                <Input
+                  size="sm"
+                  placeholder="搜索标题 / 提交者..."
                   value={search}
-                  onChange={(e) => setSearch(e.target.value)}
+                  onValueChange={setSearch}
+                  startContent={<Search size={16} className="text-default-400" />}
+                  className="w-full md:w-64"
                 />
               </div>
-              <button className="lj-btn-ghost" onClick={loadAll}>刷新</button>
-            </div>
 
-            {/* ---- 投稿列表 ---- */}
-            {filteredList.length === 0 ? (
-              <div className="lj-empty">
-                <CheckCircle2 size={32} style={{ color: 'var(--lj-ink-3)' }} />
-                <p style={{ color: 'var(--lj-ink-2)' }}>当前筛选条件下没有内容。</p>
-              </div>
-            ) : (
-              <div className="lj-sub-list">
-                {filteredList.map((s) => (
-                  <SubmissionCard
-                    key={s.id}
-                    s={s}
-                    onPreview={() => setPreview(s)}
-                    onApprove={() => handleReview(s.id, 'approved')}
-                    onReject={() => handleReview(s.id, 'rejected')}
-                    onDelete={() => handleDelete(s.id)}
-                    acting={acting === s.id}
-                  />
-                ))}
-              </div>
-            )}
-          </>
-        ) : (
-          /* ---- 用户管理表格 ---- */
-          <div className="lj-user-table-wrap">
-            <table className="lj-user-table">
-              <thead>
-                <tr>
-                  <th style={{ width: 60 }}>头像</th>
-                  <th>ID</th>
-                  <th>用户名</th>
-                  <th>邮箱</th>
-                  <th>昵称</th>
-                  <th>角色</th>
-                  <th>注册时间</th>
-                  <th style={{ width: 120 }}>操作</th>
-                </tr>
-              </thead>
-              <tbody>
-                {users.map((u) => (
-                  <tr key={u.id}>
-                    <td>
-                      <div
-                        className="lj-user-avatar-sm"
-                        style={{
-                          width: 40,
-                          height: 40,
-                          borderRadius: '50%',
-                          background: u.avatar
-                            ? `center/cover no-repeat url(${u.avatar})`
-                            : 'linear-gradient(135deg,#4A90D9,#6AADE8)',
-                          color: '#fff',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          fontSize: 15,
-                          fontWeight: 600,
-                          border: '1px solid rgba(255,255,255,0.1)',
-                          flexShrink: 0,
-                        }}
-                      >
-                        {!u.avatar && (u.nickname || u.username || '?').slice(0, 1).toUpperCase()}
-                      </div>
-                    </td>
-                    <td>{u.id}</td>
-                    <td>{u.username}</td>
-                    <td>{u.email}</td>
-                    <td>{u.nickname || '-'}</td>
-                    <td>
-                      {u.role === 'admin' ? (
-                        <span className="lj-role-chip admin">🛡 管理员</span>
-                      ) : (
-                        <span className="lj-role-chip member">👤 成员</span>
-                      )}
-                    </td>
-                    <td>{fmtTime(u.created_at)}</td>
-                    <td>
-                      <div className="lj-dropdown">
-                        <button className="lj-btn-ghost" disabled={acting === `user-${u.id}`}>
-                          {acting === `user-${u.id}` ? '处理中…' : (
-                            <><ChevronDown size={14} /> 操作</>
-                          )}
-                        </button>
-                        <div className="lj-dropdown-menu">
-                          <button onClick={() => handleRole(u.id, u.role === 'admin' ? 'member' : 'admin')}>
-                            <UserCog size={14} />
-                            {u.role === 'admin' ? '降为成员' : '设为管理员'}
-                          </button>
-                          <button
-                            onClick={() => handleDeleteUser(u)}
-                            style={{ color: '#f87171' }}
+              {/* 投稿列表 Table */}
+              <Table aria-label="投稿管理列表" shadow="none" classNames={{ wrapper: 'p-0 bg-transparent' }}>
+                <TableHeader>
+                  <TableColumn>ID / 板块</TableColumn>
+                  <TableColumn>标题 / 内容摘要</TableColumn>
+                  <TableColumn>提交者</TableColumn>
+                  <TableColumn>状态</TableColumn>
+                  <TableColumn>时间</TableColumn>
+                  <TableColumn align="center">操作</TableColumn>
+                </TableHeader>
+                <TableBody emptyContent="暂无符合条件的投稿记录">
+                  {filteredList.map((s) => {
+                    const p = s.payload || {}
+                    const isBusy = acting === s.id
+                    return (
+                      <TableRow key={s.id}>
+                        <TableCell>
+                          <div className="flex flex-col gap-1">
+                            <span className="font-bold text-xs">#{s.id}</span>
+                            <Chip size="sm" variant="flat" color="primary">
+                              {s.board === 'photo' ? '作品' : s.board === 'resource' ? '资源' : '日记'}
+                            </Chip>
+                          </div>
+                        </TableCell>
+
+                        <TableCell>
+                          <div className="font-bold text-sm">{p.title || '(无标题)'}</div>
+                          {p.cat && <span className="text-xs text-default-400 font-mono">[{p.cat}]</span>}
+                        </TableCell>
+
+                        <TableCell>
+                          <span className="text-xs">{s.submitter_uname || s.submitter_name || `UID ${s.submitter_id}`}</span>
+                        </TableCell>
+
+                        <TableCell>
+                          <Chip
+                            size="sm"
+                            variant="flat"
+                            color={s.status === 'approved' ? 'success' : s.status === 'rejected' ? 'danger' : 'warning'}
                           >
-                            <XCircle size={14} />
-                            删除账号
-                          </button>
-                        </div>
+                            {s.status === 'approved' ? '已通过' : s.status === 'rejected' ? '未通过' : '待审核'}
+                          </Chip>
+                        </TableCell>
+
+                        <TableCell>
+                          <span className="text-xs text-default-400">{fmtTime(s.created_at)}</span>
+                        </TableCell>
+
+                        <TableCell>
+                          <div className="flex items-center justify-center gap-1">
+                            <Button size="sm" isIconOnly variant="flat" onClick={() => setPreview(s)} title="预览">
+                              <Eye size={15} />
+                            </Button>
+
+                            {s.status !== 'approved' && (
+                              <Button
+                                size="sm"
+                                color="success"
+                                variant="flat"
+                                isLoading={isBusy}
+                                onClick={() => handleReview(s.id, 'approved')}
+                              >
+                                通过
+                              </Button>
+                            )}
+
+                            {s.status !== 'rejected' && (
+                              <Button
+                                size="sm"
+                                color="warning"
+                                variant="flat"
+                                isLoading={isBusy}
+                                onClick={() => handleReview(s.id, 'rejected')}
+                              >
+                                驳回
+                              </Button>
+                            )}
+
+                            <Button
+                              size="sm"
+                              isIconOnly
+                              color="danger"
+                              variant="flat"
+                              isLoading={isBusy}
+                              onClick={() => handleDeleteSub(s.id)}
+                              title="删除"
+                            >
+                              <Trash2 size={15} />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    )
+                  })}
+                </TableBody>
+              </Table>
+            </CardBody>
+          </Card>
+        )}
+
+        {/* Tab 2: 站点可视化修改 */}
+        {activeTab === 'site' && (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {SITE_EDIT_QUICK.map((item) => {
+              const Icon = item.icon
+              return (
+                <Card key={item.slug} className="bg-[var(--lj-surface)] border border-[var(--lj-surface-2)] p-2">
+                  <CardBody className="flex flex-row items-center justify-between gap-4 p-4">
+                    <div className="flex items-center gap-3">
+                      <div className="p-3 rounded-xl bg-[var(--lj-brand)]/10 text-[var(--lj-brand)]">
+                        <Icon size={24} />
                       </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+                      <div>
+                        <h3 className="font-bold text-base">{item.label}</h3>
+                        <p className="text-xs text-default-400 mt-1">{item.desc}</p>
+                      </div>
+                    </div>
+
+                    <Button
+                      size="sm"
+                      color="primary"
+                      onClick={() => openSiteQuickEditor(item.slug)}
+                      startContent={<Edit3 size={14} />}
+                    >
+                      修改
+                    </Button>
+                  </CardBody>
+                </Card>
+              )
+            })}
           </div>
+        )}
+
+        {/* Tab 3: 正式内容管理 */}
+        {activeTab === 'content' && (
+          <Card className="bg-[var(--lj-surface)] border border-[var(--lj-surface-2)] shadow-xl p-2 md:p-4">
+            <CardBody className="gap-4">
+              <div className="flex items-center gap-3">
+                <Select
+                  size="sm"
+                  label="正式板块"
+                  selectedKeys={[contentType]}
+                  onChange={(e) => setContentType(e.target.value)}
+                  className="w-48"
+                >
+                  <SelectItem key="photo" value="photo">作品展示</SelectItem>
+                  <SelectItem key="resource" value="resource">资源库干货</SelectItem>
+                  <SelectItem key="diary" value="diary">社团日记</SelectItem>
+                </Select>
+              </div>
+
+              {contentLoading ? (
+                <div className="flex justify-center py-12">
+                  <Spinner color="primary" label="加载内容列表中..." />
+                </div>
+              ) : (
+                <Table aria-label="正式发布内容列表" shadow="none" classNames={{ wrapper: 'p-0 bg-transparent' }}>
+                  <TableHeader>
+                    <TableColumn>ID</TableColumn>
+                    <TableColumn>标题</TableColumn>
+                    <TableColumn>作者</TableColumn>
+                    <TableColumn align="center">操作</TableColumn>
+                  </TableHeader>
+                  <TableBody emptyContent="该板块暂无发布内容">
+                    {contentList.map((item) => (
+                      <TableRow key={item.id}>
+                        <TableCell><span className="font-bold text-xs">#{item.id}</span></TableCell>
+                        <TableCell><span className="font-bold text-sm">{item.title}</span></TableCell>
+                        <TableCell><span className="text-xs">{item.author || item.submitter_name || '-'}</span></TableCell>
+                        <TableCell>
+                          <div className="flex justify-center">
+                            <Button
+                              size="sm"
+                              color="danger"
+                              variant="flat"
+                              isLoading={acting === item.id}
+                              onClick={() => handleDeleteContentItem(contentType, item.id)}
+                              startContent={<Trash2 size={14} />}
+                            >
+                              删除
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              )}
+            </CardBody>
+          </Card>
+        )}
+
+        {/* Tab 4: 用户权限管理 */}
+        {activeTab === 'users' && (
+          <Card className="bg-[var(--lj-surface)] border border-[var(--lj-surface-2)] shadow-xl p-2 md:p-4">
+            <CardBody className="gap-4">
+              <Table aria-label="用户管理列表" shadow="none" classNames={{ wrapper: 'p-0 bg-transparent' }}>
+                <TableHeader>
+                  <TableColumn>UID</TableColumn>
+                  <TableColumn>用户名</TableColumn>
+                  <TableColumn>邮箱</TableColumn>
+                  <TableColumn>角色</TableColumn>
+                  <TableColumn align="center">操作</TableColumn>
+                </TableHeader>
+                <TableBody emptyContent="暂无注册用户">
+                  {users.map((u) => (
+                    <TableRow key={u.id}>
+                      <TableCell><span className="font-bold text-xs">#{u.id}</span></TableCell>
+                      <TableCell><span className="font-bold text-sm">{u.username}</span></TableCell>
+                      <TableCell><span className="text-xs text-default-400">{u.email}</span></TableCell>
+                      <TableCell>
+                        <Chip
+                          size="sm"
+                          variant="flat"
+                          color={u.role === 'admin' ? 'warning' : 'default'}
+                          startContent={u.role === 'admin' ? <Crown size={12} className="text-amber-400" /> : null}
+                        >
+                          {u.role === 'admin' ? '管理员' : '普通成员'}
+                        </Chip>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center justify-center gap-2">
+                          {u.role === 'admin' ? (
+                            <Button size="sm" variant="flat" onClick={() => handleRole(u.id, 'member')}>
+                              降级为成员
+                            </Button>
+                          ) : (
+                            <Button size="sm" color="warning" variant="flat" onClick={() => handleRole(u.id, 'admin')}>
+                              设为管理员
+                            </Button>
+                          )}
+                          <Button size="sm" color="danger" variant="flat" onClick={() => handleDeleteUser(u.id, u.username)}>
+                            删除
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </CardBody>
+          </Card>
         )}
       </div>
 
-      {preview && <SubmissionPreview s={preview} onClose={() => setPreview(null)} />}
+      <SubmissionPreview s={preview} onClose={() => setPreview(null)} />
 
-      {/* 固定板块内容编辑弹窗 */}
-      <SiteContentEditor
-        slug={siteEditorSlug || 'home'}
-        open={siteEditorOpen && !!siteEditorSlug}
-        initialContent={siteEditorContent}
-        onClose={() => {
-          setSiteEditorOpen(false)
-          setSiteEditorSlug(null)
-        }}
-        onSaved={(saved) => {
-          // 保存后更新本地缓存，避免重复打开时读取旧缓存
-          if (siteEditorSlug) {
-            setSiteEditorContent(mergeSiteContent(SITE_DEFAULTS[siteEditorSlug] || {}, saved))
-          }
-          // 如果在站点内容 tab，刷新信息以显示最新更新时间
-          if (siteTab) loadSiteInfo()
-        }}
-      />
-    </section>
-  )
-}
-
-function StatCard({ icon: Icon, label, value, sub, color }) {
-  return (
-    <div className="lj-stat-card">
-      <div className="lj-stat-icon" style={{ background: `${color}22`, color }}>
-        <Icon size={22} />
-      </div>
-      <div className="lj-stat-body">
-        <span className="lj-stat-label">{label}</span>
-        <span className="lj-stat-value">{value}</span>
-        {sub && <span className="lj-stat-sub">{sub}</span>}
-      </div>
-    </div>
-  )
-}
-
-function SubmissionCard({ s, onPreview, onApprove, onReject, onDelete, acting }) {
-  const p = s.payload || {}
-  const boardInfo =
-    s.board === 'photo'
-      ? { label: '作品', icon: Image, cover: p.image || p.grad }
-      : s.board === 'resource'
-        ? { label: '资源', icon: FileText, cover: p.coverGrad }
-        : { label: '日记', icon: BookOpen, cover: 'linear-gradient(135deg,#6366F1,#8B5CF6)' }
-  const Icon = boardInfo.icon
-  const isActing = acting
-
-  return (
-    <article className={`lj-sub-card lj-status-${s.status}`}>
-      <div
-        className="lj-sub-cover"
-        style={
-          s.board === 'photo' && p.image
-            ? { backgroundImage: `url(${p.image})`, backgroundSize: 'cover', backgroundPosition: 'center' }
-            : { background: boardInfo.cover || GRAD_FALLBACK }
-        }
-      >
-        <Icon size={22} style={{ opacity: 0.85 }} />
-      </div>
-
-      <div className="lj-sub-body">
-        <div className="lj-sub-headline">
-          <h3>{p.title || p.name || '（无标题）'}</h3>
-          <span className={`lj-status-chip lj-status-${s.status}`}>
-            {s.status === 'pending' && '⏳ 待审核'}
-            {s.status === 'approved' && '✅ 已通过'}
-            {s.status === 'rejected' && '❌ 未通过'}
-          </span>
-        </div>
-        <div className="lj-sub-meta">
-          <span className="lj-my-board">{boardInfo.label}</span>
-          {p.cat && <span>分类: {p.cat}</span>}
-          <span>提交者: {s.submitter_uname || s.submitter_name || `UID ${s.submitter_id}`}</span>
-          <span>{fmtTime(s.created_at)}</span>
-        </div>
-        <p className="lj-sub-excerpt">
-          {s.board === 'photo'
-            ? (p.desc || '暂无作品描述').slice(0, 100)
-            : s.board === 'resource'
-              ? (p.summary || p.full_desc || p.fullDesc || '').slice(0, 120)
-              : (p.content || '').slice(0, 120)}
-        </p>
-        <div className="lj-sub-actions">
-          <button className="lj-btn-ghost" onClick={onPreview}>
-            <Eye size={14} /> 预览
-          </button>
-          {s.status !== 'approved' && (
-            <button
-              className="lj-btn-primary"
-              onClick={onApprove}
-              disabled={isActing}
-              style={{ display: 'inline-flex', gap: 6, alignItems: 'center' }}
-            >
-              <CheckCircle2 size={14} />
-              {isActing ? '处理中…' : '通过'}
-            </button>
-          )}
-          {s.status !== 'rejected' && (
-            <button
-              className="lj-btn-secondary"
-              onClick={onReject}
-              disabled={isActing}
-              style={{ display: 'inline-flex', gap: 6, alignItems: 'center' }}
-            >
-              <XCircle size={14} />
-              拒绝
-            </button>
-          )}
-          <button
-            className="lj-btn-danger"
-            onClick={onDelete}
-            disabled={isActing}
-            style={{ display: 'inline-flex', gap: 6, alignItems: 'center' }}
-          >
-            <Trash2 size={14} />
-            删除
-          </button>
-        </div>
-      </div>
-    </article>
-  )
-}
-
-function ContentCard({ item, type, onDelete, acting }) {
-  const isSubmission = item.from_submission || item.id >= 10000
-  let cover = GRAD_FALLBACK
-  let title = ''
-  let excerpt = ''
-  let meta = ''
-
-  if (type === 'photo') {
-    cover = item.image ? undefined : (item.grad || GRAD_FALLBACK)
-    title = item.title || '（无标题）'
-    excerpt = (item.desc || '暂无描述').slice(0, 100)
-    meta = `${item.cat || '摄影'} · ${item.author || '佚名'} · ${item.likes || 0} 赞`
-  } else if (type === 'resource') {
-    cover = item.coverGrad || 'linear-gradient(135deg,#667EEA,#764BA2)'
-    title = item.title || '（无标题）'
-    excerpt = (item.summary || item.fullDesc || '').slice(0, 120)
-    meta = `${item.cat || '资源'} · ${item.author || '佚名'} · ${item.views || 0} 浏览`
-  } else {
-    cover = 'linear-gradient(135deg,#6366F1,#8B5CF6)'
-    title = item.title || '（无标题）'
-    excerpt = (item.content || '').slice(0, 120)
-    meta = `${item.date || ''} · ${item.author || '佚名'} · ${item.mood || ''}`
-  }
-
-  return (
-    <article className="lj-sub-card lj-status-approved">
-      <div
-        className="lj-sub-cover"
-        style={
-          type === 'photo' && item.image
-            ? { backgroundImage: `url(${item.image})`, backgroundSize: 'cover', backgroundPosition: 'center' }
-            : { background: cover }
-        }
-      >
-        {type === 'photo' && <Image size={22} style={{ opacity: 0.85 }} />}
-        {type === 'resource' && <FileText size={22} style={{ opacity: 0.85 }} />}
-        {type === 'diary' && <BookOpen size={22} style={{ opacity: 0.85 }} />}
-      </div>
-      <div className="lj-sub-body">
-        <div className="lj-sub-headline">
-          <h3>{title}</h3>
-          <span className="lj-status-chip lj-status-approved">
-            {isSubmission ? '📝 投稿' : '📦 原始'}
-          </span>
-        </div>
-        <div className="lj-sub-meta">
-          <span>{meta}</span>
-          <span>ID: {item.id}</span>
-        </div>
-        <p className="lj-sub-excerpt">{excerpt}</p>
-        <div className="lj-sub-actions">
-          <button
-            className="lj-btn-danger"
-            onClick={onDelete}
-            disabled={acting}
-            style={{ display: 'inline-flex', gap: 6, alignItems: 'center' }}
-          >
-            <Trash2 size={14} />
-            {acting ? '删除中…' : '删除内容'}
-          </button>
-        </div>
-      </div>
-    </article>
+      {siteEditorOpen && (
+        <SiteContentEditor
+          slug={siteEditorSlug}
+          open={siteEditorOpen}
+          initialContent={siteEditorContent}
+          onClose={() => setSiteEditorOpen(false)}
+          onSaved={() => loadSiteInfo()}
+        />
+      )}
+    </>
   )
 }
 

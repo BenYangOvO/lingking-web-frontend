@@ -1,5 +1,6 @@
 import { useState, useMemo, useRef } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
+import { Card, CardBody, Tabs, Tab, Input, Select, SelectItem, Textarea, Button, Chip, Spinner } from '@heroui/react'
 import { Upload, FileText, BookImage, BookOpen, Send, CheckCircle, AlertCircle, Eye, ImagePlus, X } from 'lucide-react'
 import { submitWork, listMySubmissions, uploadImage } from '../api'
 import { isLoggedIn } from '../auth'
@@ -99,379 +100,388 @@ function Submit() {
         payload = {
           title: pTitle.trim(),
           cat: pCat,
-          author: pAuthor.trim(),
-          desc: pDesc.trim(),
-          image: pImage.trim() || null,
+          author: pAuthor.trim() || undefined,
+          desc: pDesc.trim() || undefined,
+          image: pImage.trim() || undefined,
           grad: pGrad,
-          likes: 0,
         }
       } else if (board === 'resource') {
-        if (!rTitle.trim()) throw new Error('请填写标题')
-        if (!rSummary.trim() && !rFull.trim()) throw new Error('请填写简介或正文')
+        if (!rTitle.trim()) throw new Error('请填写资源/干货标题')
         payload = {
           title: rTitle.trim(),
           cat: rCat,
-          author: rAuthor.trim(),
-          summary: rSummary.trim(),
-          fullDesc: rFull.trim(),
-          views: 0,
-          downloads: 0,
-          coverGrad: GRAD_PRESETS[(rCat.length + rTitle.length) % GRAD_PRESETS.length],
+          author: rAuthor.trim() || undefined,
+          summary: rSummary.trim() || undefined,
+          fullContent: rFull.trim() || undefined,
         }
       } else if (board === 'diary') {
         if (!dTitle.trim()) throw new Error('请填写日记标题')
-        if (!dContent.trim()) throw new Error('请填写日记内容')
+        if (!dContent.trim()) throw new Error('请填写日记正文')
         payload = {
-          date: dDate,
+          date: dDate || new Date().toISOString().slice(0, 10),
           title: dTitle.trim(),
-          author: dAuthor.trim(),
+          author: dAuthor.trim() || undefined,
           mood: dMood,
           content: dContent.trim(),
         }
       }
-      await submitWork(board, payload)
-      setSuccess(
-        '提交成功！管理员将尽快审核，审核通过后会自动出现在对应板块中。',
-      )
-      // 重置当前表单
-      if (board === 'photo') setPTitle(''); setPDesc(''); setPImage('')
-      if (board === 'resource') { setRTitle(''); setRSummary(''); setRFull('') }
-      if (board === 'diary') { setDTitle(''); setDContent('') }
-      setTimeout(() => setSuccess(''), 6000)
+      const res = await submitWork(board, payload)
+      setSuccess(res.message || '投稿提交成功，管理员审核通过后将正式公开发布！')
+      if (board === 'photo') {
+        setPTitle(''); setPDesc(''); setPImage(''); setPPreview(''); setPAuthor('')
+      } else if (board === 'resource') {
+        setRTitle(''); setRSummary(''); setRFull(''); setRAuthor('')
+      } else if (board === 'diary') {
+        setDTitle(''); setDContent(''); setDAuthor('')
+      }
     } catch (err) {
-      setError(err.message || '提交失败，请稍后重试')
+      setError(err.message || '提交失败')
     } finally {
       setLoading(false)
     }
   }
 
   async function loadMine() {
+    if (!isLoggedIn()) return
     try {
-      const res = await listMySubmissions()
-      setMine(res.submissions || [])
+      const data = await listMySubmissions()
+      setMine(data.submissions || [])
       setShowMine(true)
     } catch (err) {
-      setError(err.message || '无法加载我的投稿')
+      setError(err.message || '加载我的投稿失败')
     }
   }
 
-  async function handlePhotoFileChange(e) {
-    const file = e.target.files && e.target.files[0]
-    if (!file) return
-    // 安全清空 input，防止同一个文件被视为没改无法再次 onChange
+  const handlePickFile = async (e) => {
+    const file = e.target.files?.[0]
     e.target.value = ''
-    setError('')
-    setSuccess('')
+    if (!file) return
+    const localUrl = URL.createObjectURL(file)
+    setPPreview(localUrl)
     setPUploading(true)
-    setPUploadProgress(5)
-    setPPreview(URL.createObjectURL(file))
+    setError('')
+    setPUploadProgress(0)
     try {
-      const res = await uploadImage(file, {
-        onProgress: (p) => setPUploadProgress(p),
-      })
-      setPImage(res.url || '')
-      setSuccess('图片上传成功！已自动填入图片链接，可继续填写作品信息')
+      const res = await uploadImage(file, { onProgress: (pct) => setPUploadProgress(pct) })
+      setPImage(res.url)
     } catch (err) {
+      setError(err.message || '上传失败')
       setPPreview('')
-      setError(err.message || '图片上传失败')
     } finally {
       setPUploading(false)
     }
   }
 
-  function clearPhotoUpload() {
-    setPImage('')
-    setPPreview('')
-    setPUploadProgress(0)
-    if (pFileRef.current) pFileRef.current.value = ''
-  }
-
-  if (!isLoggedIn()) {
-    return (
-      <section className="lj-submit-page">
-        <div className="lj-submit-card">
-          <div className="lj-submit-login-hint">
-            <AlertCircle size={40} style={{ color: 'var(--lj-brand)' }} />
-            <h2>请先登录</h2>
-            <p>登录后即可向社团网站投稿，作品/资源/日记经管理员审核通过后会展示在对应板块。</p>
-            <Link to="/auth" className="lj-btn-primary">前往登录 / 注册</Link>
+  return (
+    <>
+      <section className="lj-page-header">
+        <div className="lj-page-header-inner">
+          <div className="lj-breadcrumb">
+            <Link to="/">首页</Link>
+            <span className="sep">/</span>
+            <span className="current">投稿作品</span>
           </div>
+          <h1 className="lj-page-title">在线投稿</h1>
+          <p className="lj-page-subtitle">欢迎投稿你的摄影作品、技术干货或外拍日记（提交后需管理员审核）</p>
         </div>
       </section>
-    )
-  }
 
-  return (
-    <section className="lj-submit-page">
-      <div className="lj-submit-inner">
-        <header className="lj-submit-header">
-          <div>
-            <h1 className="lj-page-title">创作投稿</h1>
-            <p className="lj-page-subtitle">
-              选择目标板块，按对应格式提交内容 — 管理员审核通过后即可上线展示
-            </p>
-          </div>
-          <button className="lj-btn-ghost" onClick={loadMine} style={{ display: 'inline-flex', gap: 6, alignItems: 'center' }}>
-            <Eye size={16} />
-            {showMine ? '隐藏我的投稿' : '查看我的投稿'}
-          </button>
-        </header>
-
-        {showMine && mine && (
-          <div className="lj-my-submissions">
-            <h3>我的投稿（{mine.length}）</h3>
-            {mine.length === 0 ? (
-              <p style={{ color: 'var(--lj-ink-3)' }}>还没有投稿记录，从下面的表单开始创作吧 ✨</p>
-            ) : (
-              <ul className="lj-my-list">
-                {mine.map((s) => (
-                  <li key={s.id} className={`lj-my-item lj-status-${s.status}`}>
-                    <div className="lj-my-main">
-                      <span className="lj-my-board">
-                        {s.board === 'photo' ? '作品' : s.board === 'resource' ? '资源' : '日记'}
-                      </span>
-                      <span className="lj-my-title">
-                        {(s.payload && (s.payload.title || s.payload.name)) || '（无标题）'}
-                      </span>
-                    </div>
-                    <span className={`lj-status-chip lj-status-${s.status}`}>
-                      {s.status === 'pending' && '⏳ 待审核'}
-                      {s.status === 'approved' && '✅ 已通过'}
-                      {s.status === 'rejected' && '❌ 未通过'}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
-        )}
-
-        <div className="lj-submit-board-tabs">
+      <div className="lj-submit-container max-w-4xl mx-auto px-4 py-8">
+        <div className="flex flex-col md:flex-row gap-4 mb-8 items-stretch">
           {BOARDS.map((b) => {
             const Icon = b.icon
             const active = board === b.key
             return (
-              <button
+              <Card
                 key={b.key}
-                className={`lj-board-tab${active ? ' active' : ''}`}
-                onClick={() => {
-                  setBoard(b.key)
-                  setError('')
-                  setSuccess('')
-                }}
+                isPressable
+                onClick={() => { setBoard(b.key); setError(''); setSuccess('') }}
+                className={`flex-1 border transition-all ${
+                  active
+                    ? 'border-[var(--lj-brand)] bg-[var(--lj-surface-2)]/60 shadow-lg shadow-indigo-500/10'
+                    : 'border-[var(--lj-surface-2)] bg-[var(--lj-surface)] hover:border-default-400'
+                }`}
               >
-                <Icon size={18} />
-                <div className="lj-board-tab-body">
-                  <strong>{b.label}</strong>
-                  <span>{b.desc}</span>
-                </div>
-              </button>
+                <CardBody className="p-4 flex flex-row items-center gap-3">
+                  <div className={`p-3 rounded-xl ${active ? 'bg-[var(--lj-brand)] text-white' : 'bg-default-100 text-default-500'}`}>
+                    <Icon size={22} />
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-base">{b.label}</h3>
+                    <p className="text-xs text-default-400 mt-0.5 line-clamp-1">{b.desc}</p>
+                  </div>
+                </CardBody>
+              </Card>
             )
           })}
         </div>
 
-        <div className="lj-submit-hint">
-          <Upload size={16} /> {currentBoard.hint}
-        </div>
-
-        {success && (
-          <div className="lj-form-success">
-            <CheckCircle size={18} /> {success}
-          </div>
-        )}
-        {error && (
-          <div className="lj-form-error">
-            <AlertCircle size={18} /> {error}
-          </div>
-        )}
-
-        <form className="lj-submit-form" onSubmit={handleSubmit}>
-          {board === 'photo' && (
-            <div className="lj-form-grid">
-              <div className="lj-form-group">
-                <label className="lj-form-label">* 作品名</label>
-                <input className="lj-form-input" value={pTitle} onChange={(e) => setPTitle(e.target.value)} placeholder="例如：晨光中的城市" />
+        <Card className="bg-[var(--lj-surface)] border border-[var(--lj-surface-2)] shadow-xl p-2 md:p-6">
+          <CardBody className="gap-6">
+            <div className="flex items-center justify-between border-b border-[var(--lj-surface-2)] pb-4">
+              <div>
+                <h2 className="text-xl font-bold">{currentBoard.label} 投稿</h2>
+                <p className="text-xs text-default-400 mt-1">{currentBoard.hint}</p>
               </div>
-              <div className="lj-form-group">
-                <label className="lj-form-label">分类</label>
-                <select className="lj-form-input" value={pCat} onChange={(e) => setPCat(e.target.value)}>
-                  {PHOTO_CATEGORIES.map((c) => (
-                    <option key={c} value={c}>{c}</option>
-                  ))}
-                </select>
-              </div>
-              <div className="lj-form-group">
-                <label className="lj-form-label">署名（留空则使用你的用户名）</label>
-                <input className="lj-form-input" value={pAuthor} onChange={(e) => setPAuthor(e.target.value)} placeholder="例如：张明远" />
-              </div>
-              <div className="lj-form-group" style={{ gridColumn: '1 / -1' }}>
-                <label className="lj-form-label">作品图片 * <span style={{ fontWeight: 400, color: 'var(--lj-ink-3)' }}>（推荐上传本地文件，也可填写链接）</span></label>
+              {isLoggedIn() && (
+                <Button
+                  size="sm"
+                  variant="flat"
+                  color="primary"
+                  onClick={loadMine}
+                  startContent={<Eye size={14} />}
+                >
+                  查看我的历史投稿
+                </Button>
+              )}
+            </div>
 
-                <div style={{ display: 'flex', gap: 12, alignItems: 'center', marginBottom: 10 }}>
-                  <input
-                    ref={pFileRef}
-                    type="file"
-                    accept="image/*"
-                    style={{ display: 'none' }}
-                    onChange={handlePhotoFileChange}
+            {error && (
+              <div className="p-3 text-sm rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-500 flex items-center gap-2">
+                <AlertCircle size={16} />
+                <span>{error}</span>
+              </div>
+            )}
+
+            {success && (
+              <div className="p-3 text-sm rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-500 flex items-center gap-2">
+                <CheckCircle size={16} />
+                <span>{success}</span>
+              </div>
+            )}
+
+            <form onSubmit={handleSubmit} className="flex flex-col gap-5">
+              {board === 'photo' && (
+                <>
+                  <Input
+                    label="作品名称"
+                    placeholder="如：夜幕星河 / 街头掠影"
+                    value={pTitle}
+                    onValueChange={setPTitle}
+                    variant="bordered"
+                    isRequired
                   />
-                  <button
-                    type="button"
-                    className="lj-btn-secondary"
-                    disabled={pUploading}
-                    onClick={() => pFileRef.current && pFileRef.current.click()}
-                    style={{ display: 'inline-flex', gap: 6, alignItems: 'center', padding: '10px 16px', opacity: pUploading ? 0.6 : 1 }}
-                  >
-                    <ImagePlus size={16} />
-                    {pUploading ? `上传中 ${pUploadProgress}%` : '选择本地图片上传'}
-                  </button>
-                  <span style={{ fontSize: 12, color: 'var(--lj-ink-3)' }}>
-                    支持 JPG / PNG / WEBP，单张 ≤ 10MB
-                  </span>
-                  {(pPreview || pImage) && (
-                    <button
-                      type="button"
-                      className="lj-btn-ghost"
-                      onClick={clearPhotoUpload}
-                      style={{ padding: '6px 10px', color: '#F87171', borderColor: 'rgba(248,113,113,0.3)', marginLeft: 'auto' }}
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <Select
+                      label="作品分类"
+                      selectedKeys={[pCat]}
+                      onChange={(e) => setPCat(e.target.value)}
+                      variant="bordered"
                     >
-                      <X size={14} /> 清除图片
-                    </button>
-                  )}
-                </div>
+                      {PHOTO_CATEGORIES.map((c) => (
+                        <SelectItem key={c} value={c}>{c}</SelectItem>
+                      ))}
+                    </Select>
 
-                {pUploading && (
-                  <div style={{ width: '100%', height: 6, background: 'var(--lj-bg-alt)', borderRadius: 3, marginBottom: 10, overflow: 'hidden' }}>
-                    <div style={{ height: '100%', width: `${pUploadProgress}%`, background: 'linear-gradient(90deg, var(--lj-brand), #22d3ee)', transition: 'width .2s' }} />
-                  </div>
-                )}
-
-                {(pPreview || pImage) && (
-                  <div style={{ borderRadius: 10, padding: 8, border: '1px solid var(--lj-border)', marginBottom: 10, background: 'var(--lj-bg-alt)', display: 'flex', gap: 12, alignItems: 'center' }}>
-                    <img
-                      src={pPreview || pImage}
-                      alt="上传预览"
-                      style={{ width: 96, height: 96, objectFit: 'cover', borderRadius: 8, background: pGrad }}
-                      onError={(e) => { e.currentTarget.style.background = pGrad; e.currentTarget.style.opacity = 0 }}
+                    <Input
+                      label="作者署名（可选）"
+                      placeholder="留空则自动使用你当前登录的用户名"
+                      value={pAuthor}
+                      onValueChange={setPAuthor}
+                      variant="bordered"
                     />
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontSize: 13, fontWeight: 500, marginBottom: 4 }}>✅ 已设置作品封面</div>
-                      <div style={{ fontSize: 12, color: 'var(--lj-ink-3)', wordBreak: 'break-all' }}>
-                        {pImage || '(本地预览中... 上传完成后自动填入)'}
-                      </div>
+                  </div>
+
+                  <Textarea
+                    label="作品简介 / 拍摄故事（可选）"
+                    placeholder="分享拍摄时的参数、镜头选择或创作心得..."
+                    value={pDesc}
+                    onValueChange={setPDesc}
+                    variant="bordered"
+                    minRows={3}
+                  />
+
+                  <div className="flex flex-col gap-2">
+                    <label className="text-xs font-semibold text-default-600">作品图片 / 封面预览</label>
+                    <div className="flex flex-col sm:flex-row items-center gap-4">
+                      <Button
+                        size="md"
+                        color="primary"
+                        variant="flat"
+                        onClick={() => pFileRef.current?.click()}
+                        isLoading={pUploading}
+                        startContent={!pUploading && <ImagePlus size={18} />}
+                      >
+                        {pUploading ? `上传中 ${pUploadProgress}%` : '选择本地作品图片上传'}
+                      </Button>
+                      <input ref={pFileRef} type="file" accept="image/*" hidden onChange={handlePickFile} />
+                      <span className="text-xs text-default-400">支持 jpg / png / webp 格式（≤10MB）</span>
                     </div>
+
+                    {(pPreview || pImage) && (
+                      <div className="relative mt-2 w-48 h-32 rounded-xl overflow-hidden border border-[var(--lj-surface-2)] group">
+                        <img src={pPreview || pImage} alt="预览" className="w-full h-full object-cover" />
+                        <Button
+                          isIconOnly
+                          size="sm"
+                          color="danger"
+                          variant="solid"
+                          className="absolute top-1 right-1 opacity-80 hover:opacity-100 min-w-6 h-6"
+                          onClick={() => { setPImage(''); setPPreview('') }}
+                        >
+                          <X size={14} />
+                        </Button>
+                      </div>
+                    )}
                   </div>
-                )}
+                </>
+              )}
 
-                <label className="lj-form-label" style={{ marginTop: 4, fontSize: 12, color: 'var(--lj-ink-3)' }}>
-                  或填写图片网络链接（可选，如已有图床）
-                </label>
-                <input className="lj-form-input" value={pImage} onChange={(e) => { setPImage(e.target.value); setPPreview('') }} placeholder="https://... （上传了本地图可忽略此项）" />
-              </div>
-              <div className="lj-form-group" style={{ gridColumn: '1 / -1' }}>
-                <label className="lj-form-label">作品简介（可选）</label>
-                <textarea className="lj-form-input" rows={3} value={pDesc} onChange={(e) => setPDesc(e.target.value)} placeholder="一句话介绍这张作品的拍摄背景或灵感…" />
-              </div>
-              <div className="lj-form-group" style={{ gridColumn: '1 / -1' }}>
-                <label className="lj-form-label">封面配色（无图时使用）</label>
-                <div className="lj-grad-presets">
-                  {GRAD_PRESETS.map((g, i) => (
-                    <button
-                      type="button"
-                      key={i}
-                      style={{ background: g }}
-                      className={`lj-grad-opt${pGrad === g ? ' active' : ''}`}
-                      onClick={() => setPGrad(g)}
-                      aria-label="选择封面配色"
+              {board === 'resource' && (
+                <>
+                  <Input
+                    label="干货标题"
+                    placeholder="如：《人像构图五大要素》"
+                    value={rTitle}
+                    onValueChange={setRTitle}
+                    variant="bordered"
+                    isRequired
+                  />
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <Select
+                      label="资源分类"
+                      selectedKeys={[rCat]}
+                      onChange={(e) => setRCat(e.target.value)}
+                      variant="bordered"
+                    >
+                      {RESOURCE_CATEGORIES.map((c) => (
+                        <SelectItem key={c} value={c}>{c}</SelectItem>
+                      ))}
+                    </Select>
+
+                    <Input
+                      label="作者署名（可选）"
+                      placeholder="留空则自动使用用户名"
+                      value={rAuthor}
+                      onValueChange={setRAuthor}
+                      variant="bordered"
                     />
-                  ))}
-                </div>
-              </div>
-            </div>
-          )}
+                  </div>
 
-          {board === 'resource' && (
-            <div className="lj-form-grid">
-              <div className="lj-form-group">
-                <label className="lj-form-label">* 标题</label>
-                <input className="lj-form-input" value={rTitle} onChange={(e) => setRTitle(e.target.value)} placeholder="例如：人像摄影入门完全指南" />
-              </div>
-              <div className="lj-form-group">
-                <label className="lj-form-label">分类</label>
-                <select className="lj-form-input" value={rCat} onChange={(e) => setRCat(e.target.value)}>
-                  {RESOURCE_CATEGORIES.map((c) => (
-                    <option key={c} value={c}>{c}</option>
-                  ))}
-                </select>
-              </div>
-              <div className="lj-form-group" style={{ gridColumn: '1 / -1' }}>
-                <label className="lj-form-label">署名（留空则使用你的用户名）</label>
-                <input className="lj-form-input" value={rAuthor} onChange={(e) => setRAuthor(e.target.value)} placeholder="例如：李晨曦" />
-              </div>
-              <div className="lj-form-group" style={{ gridColumn: '1 / -1' }}>
-                <label className="lj-form-label">* 内容简介</label>
-                <textarea className="lj-form-input" rows={2} value={rSummary} onChange={(e) => setRSummary(e.target.value)} placeholder="卡片上展示的一句话描述，例如：从构图到用光…系统学习人像摄影核心技巧" />
-              </div>
-              <div className="lj-form-group" style={{ gridColumn: '1 / -1' }}>
-                <label className="lj-form-label">完整正文 / 干货内容</label>
-                <textarea className="lj-form-input" rows={10} value={rFull} onChange={(e) => setRFull(e.target.value)} placeholder="在这里写完整内容，包含步骤、要点、示例等…" />
-              </div>
-            </div>
-          )}
+                  <Textarea
+                    label="内容简介"
+                    placeholder="简要概括文章核心点，将展示在列表卡片中"
+                    value={rSummary}
+                    onValueChange={setRSummary}
+                    variant="bordered"
+                    minRows={2}
+                  />
 
-          {board === 'diary' && (
-            <div className="lj-form-grid">
-              <div className="lj-form-group">
-                <label className="lj-form-label">日期</label>
-                <input className="lj-form-input" type="date" value={dDate} onChange={(e) => setDDate(e.target.value)} />
-              </div>
-              <div className="lj-form-group">
-                <label className="lj-form-label">心情</label>
-                <select className="lj-form-input" value={dMood} onChange={(e) => setDMood(e.target.value)}>
-                  {MOOD_OPTIONS.map((m) => (
-                    <option key={m.key} value={m.key}>{m.label}</option>
-                  ))}
-                </select>
-              </div>
-              <div className="lj-form-group" style={{ gridColumn: '1 / -1' }}>
-                <label className="lj-form-label">* 日记标题</label>
-                <input className="lj-form-input" value={dTitle} onChange={(e) => setDTitle(e.target.value)} placeholder="例如：春日樱花外拍记录" />
-              </div>
-              <div className="lj-form-group" style={{ gridColumn: '1 / -1' }}>
-                <label className="lj-form-label">署名（留空则使用你的用户名）</label>
-                <input className="lj-form-input" value={dAuthor} onChange={(e) => setDAuthor(e.target.value)} placeholder="例如：小曦光" />
-              </div>
-              <div className="lj-form-group" style={{ gridColumn: '1 / -1' }}>
-                <label className="lj-form-label">* 日记内容</label>
-                <textarea className="lj-form-input" rows={10} value={dContent} onChange={(e) => setDContent(e.target.value)} placeholder="写下今天发生的事、拍摄的故事、社团活动的点滴…" />
-              </div>
-            </div>
-          )}
+                  <Textarea
+                    label="完整正文（支持 Markdown 格式）"
+                    placeholder="在此编写干货全文，可使用 # 标题、*斜体*、**粗体**、代码块等..."
+                    value={rFull}
+                    onValueChange={setRFull}
+                    variant="bordered"
+                    minRows={8}
+                  />
+                </>
+              )}
 
-          <div className="lj-submit-actions">
-            <button type="submit" className="lj-btn-primary" disabled={loading} style={{ display: 'inline-flex', gap: 6, alignItems: 'center' }}>
-              <Send size={16} />
-              {loading ? '提交中…' : '提交审核'}
-            </button>
-            <button
-              type="button"
-              className="lj-btn-ghost"
-              onClick={() =>
-                navigate(
-                  board === 'photo'
-                    ? '/gallery'
-                    : board === 'resource'
-                      ? '/resources'
-                      : '/diary',
-                )
-              }
-            >
-              返回板块页面
-            </button>
+              {board === 'diary' && (
+                <>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <Input
+                      type="date"
+                      label="记录日期"
+                      value={dDate}
+                      onValueChange={setDDate}
+                      variant="bordered"
+                    />
+
+                    <Select
+                      label="拍摄心情"
+                      selectedKeys={[dMood]}
+                      onChange={(e) => setDMood(e.target.value)}
+                      variant="bordered"
+                    >
+                      {MOOD_OPTIONS.map((m) => (
+                        <SelectItem key={m.key} value={m.key}>{m.label}</SelectItem>
+                      ))}
+                    </Select>
+
+                    <Input
+                      label="作者署名（可选）"
+                      placeholder="留空则自动使用用户名"
+                      value={dAuthor}
+                      onValueChange={setDAuthor}
+                      variant="bordered"
+                    />
+                  </div>
+
+                  <Input
+                    label="日记标题"
+                    placeholder="如：2026 校园早樱采风记"
+                    value={dTitle}
+                    onValueChange={setDTitle}
+                    variant="bordered"
+                    isRequired
+                  />
+
+                  <Textarea
+                    label="日记正文"
+                    placeholder="记录今日拍摄经历、遇到的趣事或灵感闪现..."
+                    value={dContent}
+                    onValueChange={setDContent}
+                    variant="bordered"
+                    minRows={6}
+                    isRequired
+                  />
+                </>
+              )}
+
+              <Button
+                type="submit"
+                color="primary"
+                size="lg"
+                isLoading={loading}
+                startContent={!loading && <Send size={18} />}
+                className="w-full font-bold shadow-md shadow-indigo-500/20 mt-4"
+              >
+                {loading ? '提交中…' : '提交投稿'}
+              </Button>
+            </form>
+          </CardBody>
+        </Card>
+
+        {showMine && mine && (
+          <div className="mt-8">
+            <h3 className="text-lg font-bold mb-4 flex items-center justify-between">
+              <span>我的历史投稿记录</span>
+              <Button size="sm" variant="light" onClick={() => setShowMine(false)}>隐藏</Button>
+            </h3>
+            <div className="grid grid-cols-1 gap-3">
+              {mine.length === 0 ? (
+                <p className="text-default-400 text-sm py-4 text-center">暂无历史投稿记录</p>
+              ) : (
+                mine.map((sub) => (
+                  <Card key={sub.id} className="bg-[var(--lj-surface)] border border-[var(--lj-surface-2)] p-2">
+                    <CardBody className="flex flex-row items-center justify-between p-3">
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <Chip size="sm" variant="flat" color="primary">{sub.board}</Chip>
+                          <span className="font-bold text-sm">{sub.title}</span>
+                        </div>
+                        <p className="text-xs text-default-400 mt-1">提交于 {new Date(sub.created_at).toLocaleString()}</p>
+                      </div>
+                      <Chip
+                        size="sm"
+                        variant="flat"
+                        color={sub.status === 'approved' ? 'success' : sub.status === 'rejected' ? 'danger' : 'warning'}
+                      >
+                        {sub.status === 'approved' ? '已通过' : sub.status === 'rejected' ? '已驳回' : '待审核'}
+                      </Chip>
+                    </CardBody>
+                  </Card>
+                ))
+              )}
+            </div>
           </div>
-        </form>
+        )}
       </div>
-    </section>
+    </>
   )
 }
 

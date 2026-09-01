@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link, NavLink, useNavigate } from 'react-router-dom'
+import { Button, Tooltip } from '@heroui/react'
 import { Menu, LogIn, UserPlus, LogOut, PenLine, Shield, Crown, UserCircle2, Sun, Moon, Sparkles } from 'lucide-react'
 import { isLoggedIn, getUsername, logout, onAuthChange, isAdmin } from '../auth'
 import { getTheme, toggleTheme, getParticlesEnabled, toggleParticles, onPrefsChange } from '../prefs'
@@ -26,7 +27,6 @@ function Navbar() {
   useEffect(() => {
     const sync = (info) => setUserInfo(info || { loggedIn: isLoggedIn(), username: getUsername(), role: isAdmin() ? 'admin' : 'member' })
     const unsubAuth = onAuthChange(sync)
-    // 订阅主题/粒子开关变化（Navbar 内切换后同步按钮图标状态）
     const unsubPrefs = onPrefsChange(() => {
       setThemeState(getTheme())
       setParticlesOn(getParticlesEnabled())
@@ -73,68 +73,142 @@ function Navbar() {
           ))}
         </ul>
 
-        <div className="lj-nav-actions">
-          {/* 主题切换：白色简约版 / 深色原版 */}
-          <button
-            className="lj-btn-secondary lj-nav-toggle"
-            onClick={handleToggleTheme}
-            title={theme === 'light' ? '切换回深色原版' : '切换白色简约版'}
-            aria-label="切换主题"
-          >
-            {theme === 'light' ? <Moon size={16} /> : <Sun size={16} />}
-          </button>
-          {/* 鼠标粒子拖曳效果开关 */}
-          <button
-            className={`lj-btn-secondary lj-nav-toggle${particlesOn ? ' lj-nav-toggle-on' : ''}`}
-            onClick={handleToggleParticles}
-            title={particlesOn ? '关闭鼠标粒子拖曳效果' : '开启鼠标粒子拖曳效果'}
-            aria-label="切换鼠标粒子效果"
-          >
-            <Sparkles size={16} />
-          </button>
+        <div className="lj-nav-actions flex items-center gap-2">
+          {/* 主题切换按钮 */}
+          <Tooltip content={theme === 'light' ? '切换回深色原版' : '切换白色简约版'}>
+            <Button
+              isIconOnly
+              size="sm"
+              variant="flat"
+              className="bg-[var(--lj-surface-2)] text-[var(--lj-ink)] hover:bg-[var(--lj-surface)] min-w-8 h-8 rounded-lg"
+              onClick={handleToggleTheme}
+              aria-label="切换主题"
+            >
+              {theme === 'light' ? <Moon size={16} /> : <Sun size={16} />}
+            </Button>
+          </Tooltip>
+
+          {/* 粒子效果开关 */}
+          <Tooltip content={particlesOn ? '关闭鼠标粒子拖曳效果' : '开启鼠标粒子拖曳效果'}>
+            <Button
+              isIconOnly
+              size="sm"
+              variant={particlesOn ? 'solid' : 'flat'}
+              color={particlesOn ? 'primary' : 'default'}
+              className={`min-w-8 h-8 rounded-lg ${
+                !particlesOn ? 'bg-[var(--lj-surface-2)] text-[var(--lj-ink)] hover:bg-[var(--lj-surface)]' : ''
+              }`}
+              onClick={handleToggleParticles}
+              aria-label="切换鼠标粒子效果"
+            >
+              <Sparkles size={16} />
+            </Button>
+          </Tooltip>
+
           {loggedIn ? (
             <>
-              <span className="lj-nav-user" title={username}>
+              <div className="lj-nav-user flex items-center gap-1 font-medium text-sm text-[var(--lj-ink)] px-2">
                 {role === 'admin' && (
-                  <Crown size={14} style={{ color: '#FBBF24', marginRight: 4, verticalAlign: '-2px' }} />
+                  <Crown size={14} className="text-amber-400 inline-block" />
                 )}
-                {username}
-              </span>
-              <Link to="/submit" className="lj-btn-secondary" onClick={() => setMenuOpen(false)} title="投稿">
-                <PenLine size={16} />
-              </Link>
+                <span>{username}</span>
+              </div>
+
+              <Tooltip content="投稿">
+                <Button
+                  as={Link}
+                  to="/submit"
+                  isIconOnly
+                  size="sm"
+                  variant="flat"
+                  className="bg-[var(--lj-surface-2)] text-[var(--lj-ink)] hover:bg-[var(--lj-surface)] min-w-8 h-8 rounded-lg"
+                  onClick={() => setMenuOpen(false)}
+                >
+                  <PenLine size={16} />
+                </Button>
+              </Tooltip>
+
               {role === 'admin' && (
-                <Link to="/admin" className="lj-btn-secondary" onClick={() => setMenuOpen(false)} title="审核后台">
-                  <Shield size={16} />
-                </Link>
+                <Tooltip content="审核后台">
+                  <Button
+                    as={Link}
+                    to="/admin"
+                    isIconOnly
+                    size="sm"
+                    variant="flat"
+                    className="bg-[var(--lj-surface-2)] text-[var(--lj-ink)] hover:bg-[var(--lj-surface)] min-w-8 h-8 rounded-lg"
+                    onClick={() => setMenuOpen(false)}
+                  >
+                    <Shield size={16} />
+                  </Button>
+                </Tooltip>
               )}
-              <Link to="/profile" className="lj-btn-secondary" onClick={() => setMenuOpen(false)} title="个人资料">
-                <UserCircle2 size={16} />
-              </Link>
-              <button className="lj-btn-secondary" onClick={handleLogout} title="退出登录">
-                <LogOut size={16} />
-              </button>
+
+              <Tooltip content="个人资料">
+                <Button
+                  as={Link}
+                  to="/profile"
+                  isIconOnly
+                  size="sm"
+                  variant="flat"
+                  className="bg-[var(--lj-surface-2)] text-[var(--lj-ink)] hover:bg-[var(--lj-surface)] min-w-8 h-8 rounded-lg"
+                  onClick={() => setMenuOpen(false)}
+                >
+                  <UserCircle2 size={16} />
+                </Button>
+              </Tooltip>
+
+              <Tooltip content="退出登录">
+                <Button
+                  isIconOnly
+                  size="sm"
+                  variant="flat"
+                  color="danger"
+                  className="min-w-8 h-8 rounded-lg"
+                  onClick={handleLogout}
+                >
+                  <LogOut size={16} />
+                </Button>
+              </Tooltip>
             </>
           ) : (
             <>
-              <Link to="/auth" className="lj-btn-secondary" onClick={() => setMenuOpen(false)}>
-                <LogIn size={16} style={{ width: 16, height: 16 }} />
+              <Button
+                as={Link}
+                to="/auth"
+                size="sm"
+                variant="flat"
+                className="bg-[var(--lj-surface-2)] text-[var(--lj-ink)] hover:bg-[var(--lj-surface)] rounded-lg text-xs px-3"
+                onClick={() => setMenuOpen(false)}
+                startContent={<LogIn size={15} />}
+              >
                 登录
-              </Link>
-              <Link to="/auth" className="lj-btn-primary" onClick={() => setMenuOpen(false)}>
-                <UserPlus size={16} style={{ width: 16, height: 16 }} />
+              </Button>
+              <Button
+                as={Link}
+                to="/auth"
+                size="sm"
+                color="primary"
+                className="rounded-lg text-xs px-3 font-medium"
+                onClick={() => setMenuOpen(false)}
+                startContent={<UserPlus size={15} />}
+              >
                 注册
-              </Link>
+              </Button>
             </>
           )}
-          <button
-            className="lj-nav-hamburger"
+
+          <Button
+            isIconOnly
+            size="sm"
+            variant="flat"
+            className="lj-nav-hamburger md:hidden min-w-9 h-9"
             aria-label="菜单"
             aria-expanded={menuOpen}
             onClick={() => setMenuOpen((v) => !v)}
           >
-            <Menu style={{ width: 22, height: 22 }} />
-          </button>
+            <Menu size={20} />
+          </Button>
         </div>
       </div>
     </nav>

@@ -1,10 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import '../styles/pages/about.css'
-import '../styles/components/site-content-editor.css'
-import {
-  Search, ChevronDown, Edit3,
-} from 'lucide-react'
+import { Input, Card, CardBody, Button, Spinner, Chip } from '@heroui/react'
+import { Search, ChevronDown, Edit3 } from 'lucide-react'
 import { getSiteContent } from '../api'
 import { isAdmin } from '../auth'
 import SiteContentEditor from '../components/SiteContentEditor'
@@ -16,6 +13,8 @@ import {
   ABOUT_VALUE_ICONS,
   ABOUT_SPONSOR_ICONS,
 } from '../siteContentDefaults'
+import '../styles/pages/about.css'
+import '../styles/components/site-content-editor.css'
 
 function About() {
   const [pageContent, setPageContent] = useState(SITE_DEFAULTS.about)
@@ -52,70 +51,60 @@ function About() {
       </section>
 
       {/* Search */}
-      <section className="lj-search-section">
-        <div className="lj-search-wrap">
-          <div className="lj-search-icon">
-            <Search style={{ width: 20, height: 20 }} />
-          </div>
-          <input type="text" className="lj-search-input" placeholder="搜索作品、成员、日记..." aria-label="搜索" />
-        </div>
+      <section className="lj-search-section max-w-xl mx-auto px-4 my-8">
+        <Input
+          size="lg"
+          placeholder="搜索作品、成员、日记..."
+          startContent={<Search size={20} className="text-default-400" />}
+          variant="bordered"
+          className="w-full"
+        />
       </section>
 
       <div className="lj-glow-line" />
 
       {/* 联系我们 */}
       <section className="lj-section">
-        <div className="lj-section-inner">
-          <h2 className="lj-section-title">
+        <div className="lj-section-inner max-w-6xl mx-auto px-4">
+          {isAdminUser && (
+            <div className="flex justify-end mb-4">
+              <Button
+                size="sm"
+                color="primary"
+                variant="flat"
+                onClick={() => setEditorOpen(true)}
+                startContent={<Edit3 size={14} />}
+              >
+                编辑关于我们内容
+              </Button>
+            </div>
+          )}
+
+          <h2 className="lj-section-title text-center mb-8">
             {pageContent?.section_contact_title || '联系我们'}
           </h2>
-          <div className="lj-contact-grid">
-            {loading && <div style={{ gridColumn: '1/-1', textAlign: 'center', padding: 40, color: '#6b7280' }}>加载中...</div>}
-            {!loading && contactCards.map((c, idx) => {
-              const IconComp = ABOUT_CONTACT_ICONS[idx % ABOUT_CONTACT_ICONS.length]
-              return (
-                <div className="lj-contact-card" key={c.platform + '-' + idx}>
-                  <div className="lj-contact-icon">
-                    <IconComp style={{ width: 20, height: 20 }} />
-                  </div>
-                  <div className="lj-contact-platform">{c.platform}</div>
-                  <div className="lj-contact-handle">{c.handle}</div>
-                  <div className="lj-contact-desc">{c.desc}</div>
-                </div>
-              )
-            })}
-          </div>
-        </div>
-      </section>
 
-      <div className="lj-glow-line" />
-
-      {/* 关于凌镜 */}
-      <section className="lj-section">
-        <div className="lj-section-inner">
-          <h2 className="lj-section-title">
-            {pageContent?.section_about_title || '关于凌镜'}
-          </h2>
-          <div className="lj-mission">
-            <MarkdownText className="lj-mission-text">{pageContent?.mission || '凌镜——以镜头为镜，映照世间万象'}</MarkdownText>
-          </div>
-          <div className="lj-values-grid">
-            {values.map((v, idx) => {
-              const IconComp = ABOUT_VALUE_ICONS[idx % ABOUT_VALUE_ICONS.length]
-              return (
-                <div className="lj-value-card" key={v.name + '-' + idx}>
-                  <div className="lj-value-icon">
-                    <IconComp style={{ width: 22, height: 22 }} />
-                  </div>
-                  <h3 className="lj-value-name">{v.name}</h3>
-                  <p className="lj-value-desc">{v.desc}</p>
-                </div>
-              )
-            })}
-          </div>
-          {pageContent?.history_summary && (
-            <div className="lj-history-summary">
-              <MarkdownText>{pageContent.history_summary}</MarkdownText>
+          {loading ? (
+            <div className="flex justify-center py-12">
+              <Spinner color="primary" label="加载中..." />
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+              {contactCards.map((c, idx) => {
+                const IconComp = ABOUT_CONTACT_ICONS[idx % ABOUT_CONTACT_ICONS.length]
+                return (
+                  <Card key={c.platform + '-' + idx} className="bg-[var(--lj-surface)] border border-[var(--lj-surface-2)] shadow-md">
+                    <CardBody className="flex flex-col items-center text-center p-5 gap-2">
+                      <div className="p-3 rounded-full bg-[var(--lj-brand)]/10 text-[var(--lj-brand)] mb-1">
+                        <IconComp size={22} />
+                      </div>
+                      <h3 className="font-bold text-base">{c.platform}</h3>
+                      <p className="text-xs text-[var(--lj-brand)] font-medium">{c.handle}</p>
+                      <p className="text-xs text-default-400 line-clamp-2 mt-1">{c.desc}</p>
+                    </CardBody>
+                  </Card>
+                )
+              })}
             </div>
           )}
         </div>
@@ -123,80 +112,49 @@ function About() {
 
       <div className="lj-glow-line" />
 
-      {/* 合作与赞助 */}
+      {/* 核心理念 */}
       <section className="lj-section">
-        <div className="lj-section-inner">
-          <h2 className="lj-section-title">
-            {pageContent?.section_sponsor_title || '合作与赞助'}
+        <div className="lj-section-inner max-w-5xl mx-auto px-4">
+          <h2 className="lj-section-title text-center mb-6">
+            {pageContent?.section_about_title || '关于凌镜'}
           </h2>
-          <div className="lj-sponsor-body">
-            {pageContent?.section_sponsor_desc && (
-              <MarkdownText className="lj-sponsor-desc">{pageContent.section_sponsor_desc}</MarkdownText>
-            )}
-            <div className="lj-sponsor-cards">
-              {sponsors.map((s, idx) => {
-                const IconComp = ABOUT_SPONSOR_ICONS[idx % ABOUT_SPONSOR_ICONS.length]
+
+          <div className="bg-[var(--lj-surface)] border border-[var(--lj-surface-2)] p-6 rounded-2xl shadow-xl mb-12">
+            <MarkdownText className="text-base leading-relaxed text-[var(--lj-ink)] text-center">
+              {pageContent?.mission || '凌镜——以镜头为镜，映照世间万象'}
+            </MarkdownText>
+          </div>
+
+          {values.length > 0 && (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {values.map((v, idx) => {
+                const IconComp = ABOUT_VALUE_ICONS[idx % ABOUT_VALUE_ICONS.length]
                 return (
-                  <div className="lj-sponsor-card" key={s.name + '-' + idx}>
-                    <div className="lj-sponsor-icon">
-                      <IconComp style={{ width: 18, height: 18 }} />
-                    </div>
-                    <div>
-                      <div className="lj-sponsor-name">{s.name}</div>
-                      <div className="lj-sponsor-type">{s.type}</div>
-                    </div>
-                  </div>
+                  <Card key={v.title} className="bg-[var(--lj-surface)] border border-[var(--lj-surface-2)] p-2">
+                    <CardBody className="gap-2 p-4">
+                      <div className="p-2.5 w-fit rounded-xl bg-[var(--lj-brand)]/10 text-[var(--lj-brand)]">
+                        <IconComp size={20} />
+                      </div>
+                      <h4 className="font-bold text-base">{v.title}</h4>
+                      <p className="text-xs text-default-400 leading-relaxed">{v.desc}</p>
+                    </CardBody>
+                  </Card>
                 )
               })}
             </div>
-          </div>
+          )}
         </div>
       </section>
 
-      <div className="lj-glow-line" />
-
-      {/* FAQ */}
-      <section className="lj-section">
-        <div className="lj-section-inner">
-          <h2 className="lj-section-title">
-            {pageContent?.section_faq_title || '常见问题'}
-          </h2>
-          <div className="lj-faq-list">
-            {faqs.map((f, idx) => (
-              <details className="lj-faq-item" key={(f.q || '') + '-' + idx}>
-                <summary className="lj-faq-summary">
-                  {f.q}
-                  <span className="lj-faq-chevron">
-                    <ChevronDown style={{ width: 18, height: 18 }} />
-                  </span>
-                </summary>
-                <div className="lj-faq-answer">{f.a}</div>
-              </details>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* 管理员：编辑悬浮按钮 + 编辑弹窗 */}
-      {isAdminUser && (
-        <button
-          className="lj-edit-fab"
-          onClick={() => setEditorOpen(true)}
-          title="编辑关于凌镜内容"
-        >
-          <Edit3 size={16} /> 编辑本页
-        </button>
+      {editorOpen && (
+        <SiteContentEditor
+          slug="about"
+          open={editorOpen}
+          initialContent={pageContent}
+          onClose={() => setEditorOpen(false)}
+          onSaved={(newVal) => setPageContent(newVal)}
+        />
       )}
-
-      <SiteContentEditor
-        slug="about"
-        open={editorOpen}
-        initialContent={pageContent}
-        onClose={() => setEditorOpen(false)}
-        onSaved={(saved) => {
-          setPageContent(mergeSiteContent(SITE_DEFAULTS.about, saved))
-        }}
-      />
     </>
   )
 }

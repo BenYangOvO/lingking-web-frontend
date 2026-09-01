@@ -1,18 +1,17 @@
 import { useState, useRef } from 'react'
+import { Button, Tooltip, Tabs, Tab, Textarea } from '@heroui/react'
 import { Bold, Italic, List, Quote, Code, Eye, Pencil, Link as LinkIcon } from 'lucide-react'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import '../styles/components/markdown-editor.css'
 
 /**
- * 轻量 Markdown 富文本编辑器
- * props: value(string), onChange(string), placeholder(string)
+ * 轻量 Markdown 富文本编辑器 (HeroUI 增强版)
  */
 export default function MarkdownEditor({ value, onChange, placeholder }) {
-  const [preview, setPreview] = useState(false)
+  const [activeTab, setActiveTab] = useState('write')
   const taRef = useRef(null)
 
-  // 包裹选中文本（行内格式：粗体、斜体、链接、代码）
   const wrap = (before, after = '', ph = '文本') => {
     const ta = taRef.current
     if (!ta) return
@@ -27,7 +26,6 @@ export default function MarkdownEditor({ value, onChange, placeholder }) {
     })
   }
 
-  // 在当前行首插入前缀（块级格式：标题、列表、引用）
   const prefixLine = (prefix) => {
     const ta = taRef.current
     if (!ta) return
@@ -53,39 +51,68 @@ export default function MarkdownEditor({ value, onChange, placeholder }) {
   ]
 
   return (
-    <div className="lj-md-editor">
-      <div className="lj-md-toolbar">
-        <div className="lj-md-tools">
+    <div className="lj-md-editor border border-[var(--lj-surface-2)] rounded-xl overflow-hidden bg-[var(--lj-surface)]">
+      <div className="lj-md-toolbar flex items-center justify-between px-3 py-2 border-b border-[var(--lj-surface-2)] bg-[var(--lj-surface-2)]/30">
+        <div className="lj-md-tools flex items-center gap-1">
           {tools.map((t, i) => (
-            <button key={i} type="button" className="lj-md-tool" onClick={t.fn} title={t.label}>
-              {t.icon ? <t.icon size={15} /> : <span className="lj-md-tool-text">{t.text}</span>}
-            </button>
+            <Tooltip key={i} content={t.label}>
+              <Button
+                isIconOnly
+                size="sm"
+                variant="flat"
+                className="min-w-7 h-7 bg-transparent hover:bg-[var(--lj-surface-2)] text-[var(--lj-ink-2)]"
+                onClick={t.fn}
+              >
+                {t.icon ? <t.icon size={14} /> : <span className="font-bold text-xs">{t.text}</span>}
+              </Button>
+            </Tooltip>
           ))}
         </div>
-        <button
-          type="button"
-          className={`lj-md-mode${preview ? ' active' : ''}`}
-          onClick={() => setPreview(!preview)}
+
+        <Tabs
+          selectedKey={activeTab}
+          onSelectionChange={(key) => setActiveTab(String(key))}
+          size="sm"
+          color="primary"
+          variant="flat"
+          aria-label="编辑器模式"
         >
-          {preview ? <><Pencil size={14} /> 编辑</> : <><Eye size={14} /> 预览</>}
-        </button>
+          <Tab
+            key="write"
+            title={
+              <div className="flex items-center gap-1 text-xs">
+                <Pencil size={13} />
+                <span>编辑</span>
+              </div>
+            }
+          />
+          <Tab
+            key="preview"
+            title={
+              <div className="flex items-center gap-1 text-xs">
+                <Eye size={13} />
+                <span>预览</span>
+              </div>
+            }
+          />
+        </Tabs>
       </div>
-      {preview ? (
-        <div className="lj-md-preview lj-markdown">
+
+      {activeTab === 'preview' ? (
+        <div className="lj-md-preview lj-markdown p-4 min-h-[160px]">
           {value ? (
             <ReactMarkdown remarkPlugins={[remarkGfm]}>{value}</ReactMarkdown>
           ) : (
-            <span style={{ color: 'var(--lj-ink-3)' }}>暂无内容，切换到编辑模式开始输入</span>
+            <span className="text-[var(--lj-ink-3)] italic text-sm">暂无内容，切换到编辑模式开始输入</span>
           )}
         </div>
       ) : (
         <textarea
           ref={taRef}
-          className="lj-md-textarea"
-          rows={Math.max(4, Math.min(12, (value || '').split('\n').length + 1))}
-          value={value || ''}
-          placeholder={placeholder || '输入内容… 支持 Markdown 语法'}
+          className="lj-md-textarea w-full p-4 bg-transparent text-[var(--lj-ink)] outline-none border-none resize-y min-h-[160px] text-sm font-sans"
+          value={value}
           onChange={(e) => onChange(e.target.value)}
+          placeholder={placeholder || '支持 Markdown 语法，使用顶部工具栏快速插入格式...'}
         />
       )}
     </div>

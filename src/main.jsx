@@ -1,6 +1,7 @@
 import React from 'react'
 import ReactDOM from 'react-dom/client'
 import { BrowserRouter } from 'react-router-dom'
+import { NextUIProvider as HeroUIProvider } from '@nextui-org/react'
 import App from './App'
 import { applyTheme } from './prefs'
 import './styles/globals.css'
@@ -23,8 +24,10 @@ applyTheme()
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
-    <BrowserRouter>
-      <App />
-    </BrowserRouter>
+    <HeroUIProvider>
+      <BrowserRouter>
+        <App />
+      </BrowserRouter>
+    </HeroUIProvider>
   </React.StrictMode>,
 )

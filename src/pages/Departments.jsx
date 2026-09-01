@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
+import { Card, CardBody, Chip, Button, Spinner } from '@heroui/react'
 import {
   Camera,
   Cpu,
@@ -30,7 +31,6 @@ import {
 import '../styles/pages/departments.css'
 import '../styles/components/site-content-editor.css'
 
-// 职责图标映射（按职责标签关键字匹配）
 const RESP_ICON_BY_LABEL = {
   '周常外拍': MapPin, '主题摄影': Palette, '影展策划': Image, '作品评审': Star,
   '网站运维': Globe, '后期教学': SlidersHorizontal, '器材评测': Scan, '技术分享': Share2,
@@ -71,91 +71,80 @@ function Departments() {
         </div>
       </section>
 
-      <div className="lj-dept-section">
-        {loading && <div style={{ textAlign: 'center', padding: 40, color: '#6b7280' }}>加载部门中...</div>}
-        {!loading && departments.map((d) => {
-          const IconComp = DEPT_ICON_MAP[d.name] || Camera
-          const responsibilities = d.responsibilities || []
-          const stats = d.stats || []
-          return (
-            <div className="lj-dept-card" key={d.name}>
-              <div className="lj-dept-card-head">
-                <div className="lj-dept-icon-wrap">
-                  <IconComp style={{ width: 22, height: 22 }} />
-                </div>
-                <div className="lj-dept-card-head-text">
-                  <div className="lj-dept-name">
-                    {d.name}
-                    <span className="lj-dept-count-tag">{d.count}+ 成员</span>
-                  </div>
-                  <MarkdownText className="lj-dept-desc">{d.desc}</MarkdownText>
-                </div>
-              </div>
-              {responsibilities.length > 0 && (
-                <div className="lj-dept-responsibilities">
-                  {responsibilities.map((r) => {
-                    const label = r.label || r
-                    const Icon = respIconFor(label)
-                    return (
-                      <span className="lj-resp-tag" key={label}>
-                        <Icon style={{ width: 14, height: 14 }} /> {label}
-                      </span>
-                    )
-                  })}
-                </div>
-              )}
-              {stats.length > 0 && (
-                <div className="lj-dept-stats">
-                  {stats.map((s) => (
-                    <div className="lj-dept-stat" key={s.label}>
-                      <div className="lj-dept-stat-value">{s.value}</div>
-                      <div className="lj-dept-stat-label">{s.label}</div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          )
-        })}
-      </div>
-
-      <div className="lj-join-section">
-        <div className="lj-join-card">
-          <h2 className="lj-join-title">{pageContent?.section_join_title || '想加入我们？'}</h2>
-          <MarkdownText className="lj-join-desc">
-            {pageContent?.section_join_desc || '无论你是摄影新手还是技术达人，凌镜都有属于你的位置。我们每学期初开放招新，欢迎关注我们的公众号获取最新招募信息。加入凌镜，和志同道合的伙伴一起成长。'}
-          </MarkdownText>
-          <div className="lj-join-actions">
-            <Link to="/about" className="lj-btn-primary" style={{ padding: '12px 28px', fontSize: 15 }}>
-              了解招新详情
-            </Link>
-            <Link to="/about" className="lj-btn-secondary" style={{ padding: '12px 28px', fontSize: 15 }}>
-              联系我们
-            </Link>
+      <div className="max-w-6xl mx-auto px-4 py-12">
+        {isAdminUser && (
+          <div className="flex justify-end mb-6">
+            <Button
+              size="sm"
+              color="primary"
+              variant="flat"
+              onClick={() => setEditorOpen(true)}
+              startContent={<Edit3 size={14} />}
+            >
+              编辑部门介绍
+            </Button>
           </div>
-        </div>
+        )}
+
+        {loading && (
+          <div className="flex justify-center py-16">
+            <Spinner color="primary" label="加载部门中..." size="lg" />
+          </div>
+        )}
+
+        {!loading && (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {departments.map((d) => {
+              const IconComp = DEPT_ICON_MAP[d.name] || Camera
+              const responsibilities = d.responsibilities || []
+              const stats = d.stats || []
+              return (
+                <Card key={d.name} className="bg-[var(--lj-surface)] border border-[var(--lj-surface-2)] shadow-lg p-2">
+                  <CardBody className="gap-4 p-5">
+                    <div className="flex items-center gap-3">
+                      <div className="p-3 rounded-xl bg-[var(--lj-brand)]/10 text-[var(--lj-brand)]">
+                        <IconComp size={24} />
+                      </div>
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <h3 className="font-bold text-lg">{d.name}</h3>
+                          <Chip size="sm" variant="flat" color="primary">{d.count}+ 成员</Chip>
+                        </div>
+                      </div>
+                    </div>
+
+                    <MarkdownText className="text-xs text-default-400 leading-relaxed">{d.desc}</MarkdownText>
+
+                    {responsibilities.length > 0 && (
+                      <div className="flex flex-wrap gap-1.5 pt-2 border-t border-[var(--lj-surface-2)]">
+                        {responsibilities.map((r) => {
+                          const label = r.label || r
+                          const Icon = respIconFor(label)
+                          return (
+                            <Chip key={label} size="sm" variant="flat" startContent={<Icon size={12} />}>
+                              {label}
+                            </Chip>
+                          )
+                        })}
+                      </div>
+                    )}
+                  </CardBody>
+                </Card>
+              )
+            })}
+          </div>
+        )}
       </div>
 
-      {/* 管理员：编辑悬浮按钮 + 编辑弹窗 */}
-      {isAdminUser && (
-        <button
-          className="lj-edit-fab"
-          onClick={() => setEditorOpen(true)}
-          title="编辑部门介绍内容"
-        >
-          <Edit3 size={16} /> 编辑本页
-        </button>
+      {editorOpen && (
+        <SiteContentEditor
+          slug="departments"
+          open={editorOpen}
+          initialContent={pageContent}
+          onClose={() => setEditorOpen(false)}
+          onSaved={(newVal) => setPageContent(newVal)}
+        />
       )}
-
-      <SiteContentEditor
-        slug="departments"
-        open={editorOpen}
-        initialContent={pageContent}
-        onClose={() => setEditorOpen(false)}
-        onSaved={(saved) => {
-          setPageContent(mergeSiteContent(SITE_DEFAULTS.departments, saved))
-        }}
-      />
     </>
   )
 }

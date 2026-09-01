@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { Button, Card, CardBody, Chip, Spinner } from '@heroui/react'
 import {
   Sparkles,
   UserPlus,
@@ -70,9 +71,9 @@ function Studio() {
   return (
     <>
       <section className="lj-hero-studio">
-        <div className="lj-section-label">
-          <Sparkles style={{ width: 14, height: 14 }} />
-          {pageContent?.hero_section_label || 'LingJing Studio'}
+        <div className="lj-section-label flex items-center justify-center gap-1.5">
+          <Sparkles size={14} />
+          <span>{pageContent?.hero_section_label || 'LingJing Studio'}</span>
         </div>
         <h1 className="lj-hero-studio-title">
           {pageContent?.hero_title || '凌镜'}
@@ -84,267 +85,131 @@ function Studio() {
         <MarkdownText className="lj-hero-studio-desc">
           {pageContent?.hero_desc || '毕业不是终点，而是新的起点。凌镜工作室是社团校友在校外延续摄影热爱的平台，一个让热爱摄影的人永远有归处的地方。'}
         </MarkdownText>
-        <div className="lj-hero-ctas">
-          <a href="#join" className="lj-btn-primary" style={{ padding: '12px 28px', fontSize: 15 }}>
-            <UserPlus style={{ width: 16, height: 16 }} />
+        <div className="lj-hero-ctas flex items-center justify-center gap-4 mt-6">
+          <Button
+            as="a"
+            href="#join"
+            size="lg"
+            color="primary"
+            className="px-8 font-medium shadow-lg shadow-indigo-500/25 rounded-full"
+            startContent={<UserPlus size={18} />}
+          >
             申请加入
-          </a>
-          <a href="#contact" className="lj-btn-secondary" style={{ padding: '12px 28px', fontSize: 15 }}>
-            <Mail style={{ width: 16, height: 16 }} />
+          </Button>
+          <Button
+            as="a"
+            href="#contact"
+            size="lg"
+            variant="flat"
+            className="px-8 font-medium bg-[var(--lj-surface-2)] text-[var(--lj-ink)] hover:bg-[var(--lj-surface)] rounded-full"
+            startContent={<Mail size={18} />}
+          >
             联系我们
-          </a>
+          </Button>
         </div>
         <div className="lj-scroll-indicator">
-          <ChevronDown style={{ width: 24, height: 24 }} />
+          <ChevronDown size={24} />
         </div>
       </section>
 
       <div className="lj-glow-line" />
 
-      {/* 工作室介绍 */}
-      <section className="lj-section">
+      {/* 关于工作室 */}
+      <section className="lj-section relative">
+        {isAdminUser && (
+          <div className="max-w-6xl mx-auto px-4 mb-4 flex justify-end">
+            <Button
+              size="sm"
+              color="primary"
+              variant="flat"
+              onClick={() => setEditorOpen(true)}
+              startContent={<Edit3 size={14} />}
+            >
+              编辑工作室内容
+            </Button>
+          </div>
+        )}
+
         <div className="lj-section-inner">
-          <div className="lj-intro-split">
-            <div>
-              <div className="lj-section-label">
-                <Info style={{ width: 14, height: 14 }} />
-                {pageContent?.section_about_label || '关于工作室'}
-              </div>
-              <h2 className="lj-section-title" style={{ marginBottom: 24 }}>
-                {pageContent?.about_title || '热爱不止，步履不停'}
-              </h2>
-              <div className="lj-intro-left-body">
+          <div className="lj-studio-about">
+            <div className="lj-studio-about-header">
+              <h2 className="lj-section-title">{pageContent?.about_section_title || '延续摄影梦想的归宿'}</h2>
+              <p className="lj-section-subtitle">{pageContent?.about_section_subtitle || '关于凌镜工作室的创立与愿景'}</p>
+            </div>
+            <div className="lj-studio-about-content">
+              <div className="lj-studio-about-text space-y-3">
                 {aboutParagraphs.map((p, i) => (
-                  <MarkdownText key={i} style={{ marginBottom: i === aboutParagraphs.length - 1 ? 0 : '1em' }}>
-                    {p}
-                  </MarkdownText>
+                  <MarkdownText key={i} content={p} />
                 ))}
               </div>
             </div>
-            <div>
-              <div className="lj-feature-list">
-                {features.map((f, idx) => {
-                  const IconComp = STUDIO_FEATURE_ICONS[idx % STUDIO_FEATURE_ICONS.length]
-                  return (
-                    <div className="lj-feature-item" key={f.title + '-' + idx}>
-                      <div className="lj-feature-icon">
-                        <IconComp style={{ width: 20, height: 20 }} />
-                      </div>
-                      <div className="lj-feature-text">
-                        <h4>{f.title}</h4>
-                        <p>{f.desc}</p>
-                      </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-12">
+            {features.map((f, i) => {
+              const IconComp = STUDIO_FEATURE_ICONS[f.icon] || Heart
+              return (
+                <Card key={i} className="bg-[var(--lj-surface)] border border-[var(--lj-surface-2)] shadow-md p-2">
+                  <CardBody className="flex flex-col gap-3 p-5">
+                    <div className="p-3 w-fit rounded-xl bg-[var(--lj-brand)]/10 text-[var(--lj-brand)]">
+                      <IconComp size={24} />
                     </div>
-                  )
-                })}
-              </div>
-            </div>
+                    <h3 className="font-bold text-lg">{f.title}</h3>
+                    <p className="text-xs text-default-400 leading-relaxed">{f.desc}</p>
+                  </CardBody>
+                </Card>
+              )
+            })}
           </div>
         </div>
       </section>
 
-      {/* 设备清单 */}
-      <section className="lj-section">
-        <div className="lj-section-inner">
-          <h2 className="lj-section-title" style={{ textAlign: 'center' }}>
-            {pageContent?.section_equip_title || '工作室设备清单'}
-          </h2>
-          <p style={{ textAlign: 'center', color: 'var(--lj-ink-2)', marginBottom: 40 }}>
-            {pageContent?.section_equip_subtitle || '共享器材，按需借用'}
-          </p>
-          {equipLoading && <div style={{ textAlign: 'center', padding: 40, color: '#6b7280' }}>加载设备中...</div>}
-          {!equipLoading && (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 16 }}>
-              {equipment.map((eq, i) => (
-                <div key={i} style={{
-                  background: 'var(--lj-surface)',
-                  border: '1px solid var(--lj-border)',
-                  borderRadius: 12,
-                  padding: '16px 20px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  transition: 'all 0.2s',
-                }}>
-                  <div>
-                    <div style={{ fontWeight: 600, fontSize: 15, color: 'var(--lj-ink)' }}>{eq.name}</div>
-                    <div style={{ fontSize: 13, color: 'var(--lj-ink-3)', marginTop: 2 }}>{eq.type}</div>
-                  </div>
-                  <span style={{
-                    fontSize: 12,
-                    padding: '4px 12px',
-                    borderRadius: 20,
-                    background: eq.status === '可用' ? 'rgba(16,185,129,0.1)' : 'rgba(239,68,68,0.1)',
-                    color: eq.status === '可用' ? '#059669' : '#DC2626',
-                    fontWeight: 500,
-                  }}>
-                    {eq.status}
-                  </span>
-                </div>
+      {/* 设备列表与借用 */}
+      <section className="lj-section lj-section-alt">
+        <div className="lj-section-inner max-w-5xl mx-auto">
+          <h2 className="lj-section-title text-center">工作室设备 & 场地</h2>
+          <p className="lj-section-subtitle text-center mb-8">成员可预约借用影棚、相机与暗房冲洗器材</p>
+
+          {equipLoading ? (
+            <div className="flex justify-center py-12">
+              <Spinner color="primary" label="加载器材列表中..." />
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {equipment.map((eq) => (
+                <Card key={eq.id} className="bg-[var(--lj-surface)] border border-[var(--lj-surface-2)]">
+                  <CardBody className="flex flex-row items-center justify-between p-4">
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <Chip size="sm" variant="flat" color="primary">{eq.category}</Chip>
+                        <span className="font-bold text-base">{eq.name}</span>
+                      </div>
+                      <p className="text-xs text-default-400 mt-1">{eq.model || '标准摄影设备'}</p>
+                    </div>
+                    <Chip
+                      size="sm"
+                      variant="flat"
+                      color={eq.status === 'available' ? 'success' : 'warning'}
+                    >
+                      {eq.status === 'available' ? '可借用' : '使用中'}
+                    </Chip>
+                  </CardBody>
+                </Card>
               ))}
             </div>
           )}
         </div>
       </section>
 
-      {/* 运营结构 */}
-      <section className="lj-section">
-        <div className="lj-section-inner">
-          <h2 className="lj-section-title" style={{ textAlign: 'center' }}>
-            {pageContent?.section_org_title || '工作室运营结构'}
-          </h2>
-          <div className="lj-org-wrapper">
-            <div className="lj-org-root">
-              工作室负责人
-              <div className="lj-org-root-sub">统筹规划与对外合作</div>
-            </div>
-            <div className="lj-org-connector-v" />
-            <div className="lj-org-connector-h-wrapper" />
-            <div className="lj-org-groups-row">
-              {orgGroups.map((g, idx) => {
-                const IconComp = STUDIO_ORG_ICONS[idx % STUDIO_ORG_ICONS.length]
-                return (
-                  <div className="lj-org-group-col" key={g.name + '-' + idx}>
-                    <div className="lj-org-drop-line" />
-                    <div className="lj-org-group-card">
-                      <div className="lj-org-group-icon">
-                        <IconComp style={{ width: 20, height: 20 }} />
-                      </div>
-                      <h3 className="lj-org-group-name">{g.name}</h3>
-                      <p className="lj-org-group-desc">{g.desc}</p>
-                      <div className="lj-org-roles">
-                        {(g.roles || []).map((r) => (
-                          <span className="lj-org-role-tag" key={r}>{r}</span>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                )
-              })}
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* 如何加入 */}
-      <section className="lj-section" id="join">
-        <div className="lj-section-inner">
-          <h2 className="lj-section-title" style={{ textAlign: 'center' }}>
-            {pageContent?.section_join_title || '如何成为工作室的一员'}
-          </h2>
-          <div className="lj-join-grid">
-            <div>
-              <h3 style={{ fontWeight: 600, fontSize: 18, color: 'var(--lj-ink)', marginBottom: 20 }}>
-                <CheckCircle
-                  style={{
-                    width: 18,
-                    height: 18,
-                    display: 'inline-block',
-                    verticalAlign: 'middle',
-                    marginRight: 6,
-                    color: 'var(--lj-brand)',
-                  }}
-                />
-                {pageContent?.section_join_req_title || '基本要求'}
-              </h3>
-              <div className="lj-join-req-list">
-                {requirements.map((r, idx) => {
-                  const IconComp = STUDIO_REQ_ICONS[idx % STUDIO_REQ_ICONS.length]
-                  const text = r.text || r.label || r
-                  return (
-                    <div className="lj-join-req-item" key={text + '-' + idx}>
-                      <div className="lj-join-req-icon">
-                        <IconComp style={{ width: 14, height: 14 }} />
-                      </div>
-                      <span>{text}</span>
-                    </div>
-                  )
-                })}
-              </div>
-            </div>
-            <div>
-              <h3 style={{ fontWeight: 600, fontSize: 18, color: 'var(--lj-ink)', marginBottom: 20 }}>
-                <Route
-                  style={{
-                    width: 18,
-                    height: 18,
-                    display: 'inline-block',
-                    verticalAlign: 'middle',
-                    marginRight: 6,
-                    color: 'var(--lj-brand)',
-                  }}
-                />
-                {pageContent?.section_join_steps_title || '申请流程'}
-              </h3>
-              <div className="lj-steps-list">
-                {joinSteps.map((s, idx) => (
-                  <div className="lj-step-card" key={(s.num || idx) + '-' + idx}>
-                    <div className="lj-step-number">{s.num}</div>
-                    <div className="lj-step-content">
-                      <h4>{s.title}</h4>
-                      <p>{s.desc}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* 联系 */}
-      <section className="lj-section" id="contact">
-        <div className="lj-section-inner">
-          <h2 className="lj-section-title" style={{ textAlign: 'center' }}>
-            {pageContent?.section_contact_title || '与我们取得联系'}
-          </h2>
-          <div className="lj-contact-card">
-            <h3 className="lj-contact-title">
-              {pageContent?.contact_card_title || '凌镜工作室'}
-            </h3>
-            <p className="lj-contact-subtitle">
-              {pageContent?.contact_card_subtitle || '如果你对工作室感兴趣，或有任何合作与咨询需求，欢迎通过以下方式联系我们。'}
-            </p>
-            <div className="lj-contact-items">
-              {contacts.map((c, idx) => {
-                const IconComp = STUDIO_CONTACT_ICONS[idx % STUDIO_CONTACT_ICONS.length]
-                return (
-                  <div className="lj-contact-item" key={c.label + '-' + idx}>
-                    <div className="lj-contact-item-icon">
-                      <IconComp style={{ width: 18, height: 18 }} />
-                    </div>
-                    <div>
-                      <div className="lj-contact-item-label">{c.label}</div>
-                      <div className="lj-contact-item-value">{c.value}</div>
-                    </div>
-                  </div>
-                )
-              })}
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* 管理员：编辑悬浮按钮 + 编辑弹窗 */}
-      {isAdminUser && (
-        <button
-          className="lj-edit-fab"
-          onClick={() => setEditorOpen(true)}
-          title="编辑工作室内容"
-        >
-          <Edit3 size={16} /> 编辑本页
-        </button>
+      {editorOpen && (
+        <SiteContentEditor
+          slug="studio"
+          open={editorOpen}
+          initialContent={pageContent}
+          onClose={() => setEditorOpen(false)}
+          onSaved={(newVal) => setPageContent(newVal)}
+        />
       )}
-
-      <SiteContentEditor
-        slug="studio"
-        open={editorOpen}
-        initialContent={pageContent}
-        onClose={() => setEditorOpen(false)}
-        onSaved={(saved) => {
-          setPageContent(mergeSiteContent(SITE_DEFAULTS.studio, saved))
-        }}
-      />
     </>
   )
 }

@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import { Button, Tooltip } from '@heroui/react'
 import { Instagram, Twitter, Youtube } from 'lucide-react'
 
 const QUICK_LINKS = [
@@ -18,12 +19,12 @@ const SOCIALS = [
 
 function Footer() {
   return (
-    <footer className="lj-footer">
-      <div className="lj-footer-inner">
-        <div className="lj-footer-grid">
+    <footer className="lj-footer border-t border-[var(--lj-surface-2)] bg-[var(--lj-surface)] py-12 px-4">
+      <div className="lj-footer-inner max-w-6xl mx-auto">
+        <div className="lj-footer-grid grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
           <div>
-            <div className="lj-footer-logo">凌镜</div>
-            <p className="lj-footer-tagline">
+            <div className="lj-footer-logo text-2xl font-bold text-[var(--lj-brand)] mb-3">凌镜</div>
+            <p className="lj-footer-tagline text-xs text-default-400 leading-relaxed">
               用镜头记录世界，用光影讲述故事。
               <br />
               凌镜摄影社团，与你一起发现美的瞬间。
@@ -31,42 +32,44 @@ function Footer() {
           </div>
 
           <div>
-            <div className="lj-footer-heading">快速链接</div>
-            <ul className="lj-footer-links">
+            <div className="lj-footer-heading font-bold text-sm mb-3">快速链接</div>
+            <ul className="lj-footer-links grid grid-cols-2 gap-2 text-xs text-default-400">
               {QUICK_LINKS.map((l) => (
                 <li key={l.to}>
-                  <Link to={l.to}>{l.label}</Link>
+                  <Link to={l.to} className="hover:text-[var(--lj-brand)] transition-colors">{l.label}</Link>
                 </li>
               ))}
             </ul>
           </div>
 
           <div>
-            <div className="lj-footer-heading">联系我们</div>
-            <div className="lj-footer-contact">
+            <div className="lj-footer-heading font-bold text-sm mb-3">联系我们</div>
+            <div className="lj-footer-contact text-xs text-default-400 flex flex-col gap-1">
               <p>邮箱：lingjing@photo.club</p>
               <p>微信公众号：凌镜摄影</p>
               <p>微博：@凌镜摄影社团</p>
-              <div style={{ display: 'flex', gap: 12, marginTop: 16 }}>
+              <div className="flex items-center gap-2 mt-3">
                 {SOCIALS.map((s) => (
-                  <a
-                    key={s.label}
-                    href="#"
-                    aria-label={s.label}
-                    className="lj-footer-social"
-                    style={{ color: 'var(--lj-ink-3)', transition: 'color 160ms' }}
-                    onMouseEnter={(e) => (e.currentTarget.style.color = 'var(--lj-brand)')}
-                    onMouseLeave={(e) => (e.currentTarget.style.color = 'var(--lj-ink-3)')}
-                  >
-                    <s.icon style={{ width: 18, height: 18 }} />
-                  </a>
+                  <Tooltip key={s.label} content={s.label}>
+                    <Button
+                      isIconOnly
+                      size="sm"
+                      variant="flat"
+                      className="bg-[var(--lj-surface-2)] text-default-400 hover:text-[var(--lj-brand)] min-w-8 h-8 rounded-lg"
+                      aria-label={s.label}
+                    >
+                      <s.icon size={16} />
+                    </Button>
+                  </Tooltip>
                 ))}
               </div>
             </div>
           </div>
         </div>
 
-        <div className="lj-footer-bottom">&copy; 2018 - 2026 凌镜摄影社团 All Rights Reserved.</div>
+        <div className="lj-footer-bottom text-center text-xs text-default-400 border-t border-[var(--lj-surface-2)] pt-6">
+          &copy; 2018 - 2026 凌镜摄影社团 All Rights Reserved.
+        </div>
       </div>
     </footer>
   )

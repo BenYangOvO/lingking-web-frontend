@@ -1,12 +1,12 @@
 import { useState, useEffect } from 'react'
 import { Link, useParams, useNavigate } from 'react-router-dom'
+import { Button, Chip, Spinner } from '@heroui/react'
 import { Heart, ChevronDown, ZoomIn } from 'lucide-react'
 import { api } from '../api'
 import PhotoDetail from '../components/PhotoDetail'
 import '../styles/pages/gallery.css'
 
 const FILTERS = ['全部', '风光', '人像', '街拍', '纪实', '创意', '建筑']
-
 const PHOTO_ASPECTS = ['3/4', '1/1', '4/5', '3/2', '2/3', '1/1', '4/3', '3/4', '1/1', '3/5', '16/9', '4/5']
 
 function Gallery() {
@@ -16,7 +16,7 @@ function Gallery() {
   const [filter, setFilter] = useState('全部')
   const [visible, setVisible] = useState(9)
   const [loading, setLoading] = useState(true)
-  const [detailIdx, setDetailIdx] = useState(null) // 当前打开的作品在 filtered 数组中的索引；null 表示关闭
+  const [detailIdx, setDetailIdx] = useState(null)
 
   useEffect(() => {
     api('/photos').then((data) => {
@@ -27,7 +27,6 @@ function Gallery() {
 
   const filtered = filter === '全部' ? photos : photos.filter((p) => p.cat === filter)
 
-  // 当 URL 中带有 :id 时，自动在列表中匹配并打开详情；无 :id 时关闭
   useEffect(() => {
     if (!id) {
       setDetailIdx(null)
@@ -47,7 +46,6 @@ function Gallery() {
     }
   }, [id, photos, filter])
 
-  // 切换分类
   const switchFilter = (f) => {
     setFilter(f)
     setVisible(9)
@@ -56,7 +54,6 @@ function Gallery() {
   }
 
   const buildBackground = (photo) => {
-    // 1. 优先使用用户上传的真实图片（投稿通过 /uploads/xxx 路径，静态作品也可能带 http 外链）
     if (photo.image) {
       const src = String(photo.image).trim()
       if (src.startsWith('/') || src.startsWith('http://') || src.startsWith('https://') || src.startsWith('data:')) {
@@ -68,7 +65,6 @@ function Gallery() {
         }
       }
     }
-    // 2. 回退渐变：静态 grad 是颜色列表 "#A,#B,#C"；投稿 grad 是完整 "linear-gradient(135deg, ...)"
     const g = String(photo.grad || '').trim()
     const gradCss = g.startsWith('linear-gradient') ? g : `linear-gradient(135deg, ${g || '#2D5F8A,#4A90D9,#6AADE8'})`
     return {
@@ -100,40 +96,56 @@ function Gallery() {
         </div>
       </section>
 
-      <div className="lj-filter-bar">
+      <div className="lj-filter-bar flex flex-wrap items-center justify-center gap-2 my-6">
         {FILTERS.map((f) => (
-          <button
+          <Button
             key={f}
-            className={`lj-filter-btn${filter === f ? ' active' : ''}`}
+            size="sm"
+            variant={filter === f ? 'solid' : 'flat'}
+            color={filter === f ? 'primary' : 'default'}
+            className={`rounded-full px-4 text-xs font-medium transition-all ${
+              filter !== f ? 'bg-[var(--lj-surface-2)] text-[var(--lj-ink-2)] hover:bg-[var(--lj-surface)]' : 'shadow-md shadow-indigo-500/20'
+            }`}
             onClick={() => switchFilter(f)}
           >
             {f}
-          </button>
+          </Button>
         ))}
       </div>
 
       <div className="lj-masonry-grid">
-        {loading && <div style={{ gridColumn: '1/-1', textAlign: 'center', padding: 40, color: '#6b7280' }}>加载作品中...</div>}
-        {!loading && filtered.length === 0 && <div style={{ gridColumn: '1/-1', textAlign: 'center', padding: 40, color: '#6b7280' }}>暂无作品</div>}
+        {loading && (
+          <div className="col-span-full flex flex-col items-center justify-center py-16 gap-3 text-default-400">
+            <Spinner color="primary" label="加载作品中..." size="lg" />
+          </div>
+        )}
+        {!loading && filtered.length === 0 && (
+          <div className="col-span-full text-center py-16 text-default-400">暂无作品</div>
+        )}
         {!loading && filtered.slice(0, visible).map((p, idx) => (
           <Link
             to={`/gallery/${p.uuid || p.id}`}
-            className="lj-photo-card"
+            className="lj-photo-card group"
             key={p.uuid || p.id || p.title}
             title="点击查看作品详情"
             style={{ display: 'block', textDecoration: 'none', color: 'inherit' }}
           >
             <div className="lj-photo-card-img" style={getStyle(p, idx)}>
               <div className="lj-photo-view-icon">
-                <ZoomIn style={{ width: 20, height: 20 }} />
+                <ZoomIn size={20} />
               </div>
               <div className="lj-photo-card-overlay">
                 <div className="lj-photo-card-title">{p.title}</div>
-                <div className="lj-photo-card-meta">
+                <div className="lj-photo-card-meta flex items-center justify-between">
                   <span className="lj-photo-card-author">{p.author}</span>
-                  <span className="lj-photo-card-likes">
-                    <Heart style={{ width: 13, height: 13 }} /> {p.likes}
-                  </span>
+                  <Chip
+                    size="sm"
+                    variant="flat"
+                    className="bg-black/40 text-rose-300 border-0"
+                    startContent={<Heart size={12} className="fill-current" />}
+                  >
+                    {p.likes}
+                  </Chip>
                 </div>
               </div>
             </div>
@@ -142,11 +154,17 @@ function Gallery() {
       </div>
 
       {visible < filtered.length && (
-        <div className="lj-load-more-wrap">
-          <button className="lj-btn-secondary" style={{ padding: '12px 32px', fontSize: 15 }} onClick={() => setVisible((v) => v + 9)}>
+        <div className="lj-load-more-wrap text-center my-8">
+          <Button
+            size="lg"
+            color="primary"
+            variant="flat"
+            className="px-8 font-medium rounded-full"
+            onClick={() => setVisible((v) => v + 9)}
+            endContent={<ChevronDown size={18} />}
+          >
             加载更多作品
-            <ChevronDown style={{ width: 15, height: 15 }} />
-          </button>
+          </Button>
         </div>
       )}
 

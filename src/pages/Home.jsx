@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
+import { Button, Card, CardBody, Chip } from '@heroui/react'
 import {
   Image,
   UserPlus,
@@ -44,7 +45,6 @@ function Home() {
   const [loading, setLoading] = useState(true)
   const [detailIdx, setDetailIdx] = useState(null)
 
-  // 站点可编辑内容
   const [homeContent, setHomeContent] = useState(SITE_DEFAULTS.home)
   const [deptsContent, setDeptsContent] = useState(SITE_DEFAULTS.departments)
   const [siteLoaded, setSiteLoaded] = useState(false)
@@ -78,18 +78,30 @@ function Home() {
       <section className="lj-hero">
         <h1 className="lj-hero-title">{homeContent?.hero_title || '凌镜'}</h1>
         <p className="lj-hero-subtitle">{homeContent?.hero_subtitle || '用镜头记录世界，用光影讲述故事'}</p>
-        <div className="lj-hero-ctas">
-          <Link to="/gallery" className="lj-btn-primary" style={{ padding: '12px 28px', fontSize: 15 }}>
-            <Image style={{ width: 16, height: 16 }} />
+        <div className="lj-hero-ctas flex items-center justify-center gap-4 mt-6">
+          <Button
+            as={Link}
+            to="/gallery"
+            size="lg"
+            color="primary"
+            className="px-8 font-medium shadow-lg shadow-indigo-500/25 rounded-full"
+            startContent={<Image size={18} />}
+          >
             探索作品
-          </Link>
-          <Link to="/about" className="lj-btn-secondary" style={{ padding: '12px 28px', fontSize: 15 }}>
-            <UserPlus style={{ width: 16, height: 16 }} />
+          </Button>
+          <Button
+            as={Link}
+            to="/about"
+            size="lg"
+            variant="flat"
+            className="px-8 font-medium bg-[var(--lj-surface-2)] text-[var(--lj-ink)] hover:bg-[var(--lj-surface)] rounded-full"
+            startContent={<UserPlus size={18} />}
+          >
             加入我们
-          </Link>
+          </Button>
         </div>
         <div className="lj-scroll-indicator">
-          <ChevronDown style={{ width: 24, height: 24 }} />
+          <ChevronDown size={24} />
         </div>
       </section>
 
@@ -98,130 +110,137 @@ function Home() {
       {/* Featured Works */}
       <section className="lj-section">
         <div className="lj-section-inner">
-          <h2 className="lj-section-title">{homeContent?.section_featured_title || '精选作品'}</h2>
-          <div className="lj-featured-grid">
-            {loading && <div style={{ gridColumn: '1/-1', textAlign: 'center', padding: 40, color: '#6b7280' }}>加载中...</div>}
-            {!loading && photos.map((w, idx) => (
-              <Link
-                to={`/gallery/${w.uuid || w.id}`}
-                className="lj-featured-card"
-                key={w.uuid || w.id || w.title}
-                title="点击查看作品详情"
-                style={{ display: 'block', textDecoration: 'none', color: 'inherit' }}
+          <div className="lj-section-header">
+            <div>
+              <h2 className="lj-section-title">精选作品</h2>
+              <p className="lj-section-subtitle">来自社团成员的近期创作</p>
+            </div>
+            <Button
+              as={Link}
+              to="/gallery"
+              variant="light"
+              color="primary"
+              endContent={<ArrowRight size={16} />}
+            >
+              查看全部
+            </Button>
+          </div>
+
+          <div className="lj-cards-grid">
+            {photos.map((p, idx) => (
+              <div
+                key={p.id || p.uuid || p.title}
+                className="lj-card group cursor-pointer overflow-hidden rounded-2xl border border-[var(--lj-surface-2)]"
+                style={cardBg(p)}
+                onClick={() => setDetailIdx(idx)}
               >
-                <div className="lj-featured-card-img" style={cardBg(w)} />
-                <div className="lj-featured-card-body">
-                  <h3 className="lj-featured-card-title">{w.title}</h3>
-                  <div className="lj-featured-card-meta">
-                    <span className="lj-featured-card-author">摄影：{w.author}</span>
-                    <span className="lj-tag">{w.cat}</span>
-                  </div>
+                <div className="lj-card-overlay">
+                  <div className="lj-card-tag">{p.cat}</div>
+                  <h3 className="lj-card-title">{p.title}</h3>
+                  <p className="lj-card-author">BY {p.author}</p>
                 </div>
-              </Link>
+              </div>
             ))}
           </div>
-          <div style={{ textAlign: 'center', marginTop: 48 }}>
-            <Link to="/gallery" className="lj-btn-secondary">
-              查看全部作品
-              <ArrowRight style={{ width: 14, height: 14 }} />
-            </Link>
-          </div>
         </div>
       </section>
 
-      <div className="lj-glow-line" />
+      {/* About Section */}
+      <section className="lj-section lj-section-alt relative">
+        {isAdminUser && (
+          <div className="max-w-6xl mx-auto px-4 mb-4 flex justify-end">
+            <Button
+              size="sm"
+              color="primary"
+              variant="flat"
+              onClick={() => setEditorOpen(true)}
+              startContent={<Edit3 size={14} />}
+            >
+              编辑首页文案
+            </Button>
+          </div>
+        )}
 
-      {/* Club Intro */}
-      <section className="lj-section">
         <div className="lj-section-inner">
-          <div className="lj-intro-grid">
+          <div className="lj-about-grid">
             <div>
-              <h2 className="lj-section-title" style={{ marginBottom: 24 }}>
-                {homeContent?.section_about_title || '关于凌镜'}
-              </h2>
-              <div className="lj-intro-body">
-                {introParagraphs.map((p, i) => (
-                  <MarkdownText key={i} style={{ marginBottom: i === introParagraphs.length - 1 ? 0 : 16 }}>
-                    {p}
-                  </MarkdownText>
+              <h2 className="lj-section-title">{homeContent?.about_section_title || '关于凌镜摄影社团'}</h2>
+              <div className="lj-about-text space-y-3">
+                {introParagraphs.map((pText, i) => (
+                  <MarkdownText key={i} content={pText} />
                 ))}
               </div>
-            </div>
-            <div>
-              <div className="lj-stats-grid">
-                {stats.map((s) => (
-                  <div className="lj-stat-card" key={s.label}>
-                    <div className="lj-stat-number">{s.value}</div>
-                    <div className="lj-stat-label">{s.label}</div>
+              <div className="lj-stats-row flex flex-wrap gap-6 mt-6">
+                {stats.map((s, i) => (
+                  <div key={i} className="lj-stat-item">
+                    <div className="lj-stat-num text-3xl font-extrabold text-[var(--lj-brand)]">{s.value}</div>
+                    <div className="lj-stat-label text-xs text-default-400 mt-1">{s.label}</div>
                   </div>
                 ))}
               </div>
             </div>
+
+            <div className="lj-depts-preview grid grid-cols-1 gap-3">
+              {depts.map((d) => {
+                const IconComponent = DEPT_ICON_MAP[d.icon] || Camera
+                return (
+                  <Card key={d.name} className="bg-[var(--lj-surface)] border border-[var(--lj-surface-2)]">
+                    <CardBody className="flex flex-row items-center gap-4 p-4">
+                      <div className="lj-dept-icon p-3 rounded-xl bg-[var(--lj-brand)]/10 text-[var(--lj-brand)]">
+                        <IconComponent size={22} />
+                      </div>
+                      <div>
+                        <h4 className="font-bold text-base">{d.name}</h4>
+                        <p className="text-xs text-default-400 mt-0.5 line-clamp-1">{d.desc}</p>
+                      </div>
+                    </CardBody>
+                  </Card>
+                )
+              })}
+            </div>
           </div>
         </div>
       </section>
 
-      <div className="lj-glow-line" />
-
-      {/* Departments Preview */}
-      <section className="lj-section">
-        <div className="lj-section-inner">
-          <h2 className="lj-section-title">{homeContent?.section_depts_title || '部门一览'}</h2>
-          <div className="lj-dept-grid">
-            {!siteLoaded && <div style={{ gridColumn: '1/-1', textAlign: 'center', padding: 40, color: '#6b7280' }}>加载中...</div>}
-            {siteLoaded && depts.map((d) => {
-              const IconComp = DEPT_ICON_MAP[d.name] || Camera
-              return (
-                <div className="lj-dept-card" key={d.name}>
-                  <div className="lj-dept-icon">
-                    <IconComp style={{ width: 22, height: 22 }} />
-                  </div>
-                  <h3 className="lj-dept-name">{d.name}</h3>
-                  <p className="lj-dept-desc">{d.desc}</p>
-                  <div className="lj-dept-count">成员 {d.count}+ 人</div>
-                </div>
-              )
-            })}
-          </div>
-          <div style={{ textAlign: 'center', marginTop: 48 }}>
-            <Link to="/departments" className="lj-btn-secondary">
-              了解更多部门
-              <ArrowRight style={{ width: 14, height: 14 }} />
-            </Link>
+      {/* CTA */}
+      <section className="lj-cta-section text-center py-16 px-4">
+        <div className="lj-cta-inner max-w-2xl mx-auto">
+          <h2 className="text-3xl font-extrabold mb-3">{homeContent?.cta_title || '探索更多摄影之美'}</h2>
+          <p className="text-sm text-default-400 mb-6">{homeContent?.cta_subtitle || '浏览更多作品、阅读摄影干货教程，或者提交你自己的得意之作'}</p>
+          <div className="flex justify-center gap-4">
+            <Button
+              as={Link}
+              to="/gallery"
+              size="lg"
+              color="primary"
+              className="px-8 font-medium rounded-full"
+              startContent={<Image size={18} />}
+            >
+              浏览作品展示
+            </Button>
           </div>
         </div>
       </section>
 
       <PhotoDetail
-        open={detailIdx !== null}
+        open={detailIdx !== null && detailIdx >= 0 && detailIdx < photos.length}
         photo={detailIdx !== null ? photos[detailIdx] : null}
         list={photos}
         currentIndex={detailIdx ?? 0}
         onClose={() => setDetailIdx(null)}
-        onPrev={() => setDetailIdx((i) => (i === null || i <= 0 ? 0 : i - 1))}
-        onNext={() => setDetailIdx((i) => (i === null ? 0 : Math.min(photos.length - 1, i + 1)))}
+        onPrev={() => detailIdx > 0 && setDetailIdx((i) => i - 1)}
+        onNext={() => detailIdx < photos.length - 1 && setDetailIdx((i) => i + 1)}
       />
 
-      {/* 管理员：编辑悬浮按钮 + 编辑弹窗 */}
-      {isAdminUser && (
-        <button
-          className="lj-edit-fab"
-          onClick={() => setEditorOpen(true)}
-          title="编辑首页内容"
-        >
-          <Edit3 size={16} /> 编辑本页
-        </button>
+      {editorOpen && (
+        <SiteContentEditor
+          slug="home"
+          open={editorOpen}
+          initialContent={homeContent}
+          onClose={() => setEditorOpen(false)}
+          onSaved={(newVal) => setHomeContent(newVal)}
+        />
       )}
-
-      <SiteContentEditor
-        slug="home"
-        open={editorOpen}
-        initialContent={homeContent}
-        onClose={() => setEditorOpen(false)}
-        onSaved={(saved) => {
-          setHomeContent(mergeSiteContent(SITE_DEFAULTS.home, saved))
-        }}
-      />
     </>
   )
 }
